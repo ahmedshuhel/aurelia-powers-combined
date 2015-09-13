@@ -5,7 +5,7 @@ var config = {
   force: true,
   packagePath: '.',
   bundles: {
-    "dist/aurelia": {
+    "aurelia": {
       includes: [
         'aurelia-bootstrapper',
         'aurelia-fetch-client',

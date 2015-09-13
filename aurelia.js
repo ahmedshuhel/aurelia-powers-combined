@@ -1,7 +1,7 @@
 "bundle";
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/router@0.12.0", ["github:aurelia/router@0.12.0/aurelia-router"], function(main) {
+define("github:aurelia/logging-console@0.7.1", ["github:aurelia/logging-console@0.7.1/aurelia-logging-console"], function(main) {
   return main;
 });
 
@@ -9,1460 +9,81 @@ _removeDefine();
 })();
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/router@0.12.0/aurelia-router", ["exports", "npm:core-js@0.9.18", "github:aurelia/logging@0.7.0", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/route-recognizer@0.7.0", "github:aurelia/history@0.7.0", "github:aurelia/event-aggregator@0.8.0"], function(exports, _coreJs, _aureliaLogging, _aureliaDependencyInjection, _aureliaRouteRecognizer, _aureliaHistory, _aureliaEventAggregator) {
+define("github:aurelia/logging-console@0.7.1/aurelia-logging-console", ["exports", "github:aurelia/logging@0.7.0"], function(exports, _aureliaLogging) {
   'use strict';
   exports.__esModule = true;
-  var _createClass = (function() {
-    function defineProperties(target, props) {
-      for (var i = 0; i < props.length; i++) {
-        var descriptor = props[i];
-        descriptor.enumerable = descriptor.enumerable || false;
-        descriptor.configurable = true;
-        if ('value' in descriptor)
-          descriptor.writable = true;
-        Object.defineProperty(target, descriptor.key, descriptor);
-      }
-    }
-    return function(Constructor, protoProps, staticProps) {
-      if (protoProps)
-        defineProperties(Constructor.prototype, protoProps);
-      if (staticProps)
-        defineProperties(Constructor, staticProps);
-      return Constructor;
-    };
-  })();
-  exports.createRouteFilterStep = createRouteFilterStep;
-  exports.processPotential = processPotential;
-  exports.normalizeAbsolutePath = normalizeAbsolutePath;
-  exports.createRootedPath = createRootedPath;
-  exports.resolveUrl = resolveUrl;
-  exports.isNavigationCommand = isNavigationCommand;
-  exports.buildNavigationPlan = buildNavigationPlan;
-  exports.loadNewRoute = loadNewRoute;
-  function _inherits(subClass, superClass) {
-    if (typeof superClass !== 'function' && superClass !== null) {
-      throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass);
-    }
-    subClass.prototype = Object.create(superClass && superClass.prototype, {constructor: {
-        value: subClass,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }});
-    if (superClass)
-      Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-  }
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
       throw new TypeError('Cannot call a class as a function');
     }
   }
-  var RouteFilterContainer = (function() {
-    RouteFilterContainer.inject = function inject() {
-      return [_aureliaDependencyInjection.Container];
-    };
-    function RouteFilterContainer(container) {
-      _classCallCheck(this, RouteFilterContainer);
-      this.container = container;
-      this.filters = {};
-      this.filterCache = {};
+  (function(global) {
+    global.console = global.console || {};
+    var con = global.console;
+    var prop = undefined;
+    var method = undefined;
+    var empty = {};
+    var dummy = function dummy() {};
+    var properties = 'memory'.split(',');
+    var methods = ('assert,clear,count,debug,dir,dirxml,error,exception,group,' + 'groupCollapsed,groupEnd,info,log,markTimeline,profile,profiles,profileEnd,' + 'show,table,time,timeEnd,timeline,timelineEnd,timeStamp,trace,warn').split(',');
+    while (prop = properties.pop())
+      if (!con[prop])
+        con[prop] = empty;
+    while (method = methods.pop())
+      if (!con[method])
+        con[method] = dummy;
+  })(typeof window === 'undefined' ? undefined : window);
+  if (Function.prototype.bind && window.console && typeof console.log === 'object') {
+    ['log', 'info', 'warn', 'error', 'assert', 'dir', 'clear', 'profile', 'profileEnd'].forEach(function(method) {
+      console[method] = this.bind(console[method], console);
+    }, Function.prototype.call);
+  }
+  var ConsoleAppender = (function() {
+    function ConsoleAppender() {
+      _classCallCheck(this, ConsoleAppender);
     }
-    RouteFilterContainer.prototype.addStep = function addStep(name, step) {
-      var index = arguments.length <= 2 || arguments[2] === undefined ? -1 : arguments[2];
-      var filter = this.filters[name];
-      if (!filter) {
-        filter = this.filters[name] = [];
+    ConsoleAppender.prototype.debug = function debug(logger) {
+      for (var _len = arguments.length,
+          rest = Array(_len > 1 ? _len - 1 : 0),
+          _key = 1; _key < _len; _key++) {
+        rest[_key - 1] = arguments[_key];
       }
-      if (index === -1) {
-        index = filter.length;
-      }
-      filter.splice(index, 0, step);
-      this.filterCache = {};
+      console.debug.apply(console, ['DEBUG [' + logger.id + ']'].concat(rest));
     };
-    RouteFilterContainer.prototype.getFilterSteps = function getFilterSteps(name) {
-      if (this.filterCache[name]) {
-        return this.filterCache[name];
+    ConsoleAppender.prototype.info = function info(logger) {
+      for (var _len2 = arguments.length,
+          rest = Array(_len2 > 1 ? _len2 - 1 : 0),
+          _key2 = 1; _key2 < _len2; _key2++) {
+        rest[_key2 - 1] = arguments[_key2];
       }
-      var steps = [];
-      var filter = this.filters[name];
-      if (!filter) {
-        return steps;
-      }
-      for (var i = 0,
-          l = filter.length; i < l; i++) {
-        if (typeof filter[i] === 'string') {
-          steps.push.apply(steps, this.getFilterSteps(filter[i]));
-        } else {
-          steps.push(this.container.get(filter[i]));
-        }
-      }
-      this.filterCache[name] = steps;
-      return steps;
+      console.info.apply(console, ['INFO [' + logger.id + ']'].concat(rest));
     };
-    return RouteFilterContainer;
+    ConsoleAppender.prototype.warn = function warn(logger) {
+      for (var _len3 = arguments.length,
+          rest = Array(_len3 > 1 ? _len3 - 1 : 0),
+          _key3 = 1; _key3 < _len3; _key3++) {
+        rest[_key3 - 1] = arguments[_key3];
+      }
+      console.warn.apply(console, ['WARN [' + logger.id + ']'].concat(rest));
+    };
+    ConsoleAppender.prototype.error = function error(logger) {
+      for (var _len4 = arguments.length,
+          rest = Array(_len4 > 1 ? _len4 - 1 : 0),
+          _key4 = 1; _key4 < _len4; _key4++) {
+        rest[_key4 - 1] = arguments[_key4];
+      }
+      console.error.apply(console, ['ERROR [' + logger.id + ']'].concat(rest));
+    };
+    return ConsoleAppender;
   })();
-  exports.RouteFilterContainer = RouteFilterContainer;
-  function createRouteFilterStep(name) {
-    function create(routeFilterContainer) {
-      return new RouteFilterStep(name, routeFilterContainer);
-    }
-    create.inject = function() {
-      return [RouteFilterContainer];
-    };
-    return create;
-  }
-  var RouteFilterStep = (function() {
-    function RouteFilterStep(name, routeFilterContainer) {
-      _classCallCheck(this, RouteFilterStep);
-      this.isMultiStep = true;
-      this.name = name;
-      this.routeFilterContainer = routeFilterContainer;
-    }
-    RouteFilterStep.prototype.getSteps = function getSteps() {
-      return this.routeFilterContainer.getFilterSteps(this.name);
-    };
-    return RouteFilterStep;
-  })();
-  function createResult(ctx, next) {
-    return {
-      status: next.status,
-      context: ctx,
-      output: next.output,
-      completed: next.status === pipelineStatus.completed
-    };
-  }
-  var pipelineStatus = {
-    completed: 'completed',
-    canceled: 'canceled',
-    rejected: 'rejected',
-    running: 'running'
-  };
-  exports.pipelineStatus = pipelineStatus;
-  var Pipeline = (function() {
-    function Pipeline() {
-      _classCallCheck(this, Pipeline);
-      this.steps = [];
-    }
-    Pipeline.prototype.withStep = function withStep(step) {
-      var run = undefined;
-      if (typeof step === 'function') {
-        run = step;
-      } else if (step.isMultiStep) {
-        var steps = step.getSteps();
-        for (var i = 0,
-            l = steps.length; i < l; i++) {
-          this.withStep(steps[i]);
-        }
-        return this;
-      } else {
-        run = step.run.bind(step);
-      }
-      this.steps.push(run);
-      return this;
-    };
-    Pipeline.prototype.run = function run(ctx) {
-      var index = -1;
-      var steps = this.steps;
-      function next() {
-        index++;
-        if (index < steps.length) {
-          var currentStep = steps[index];
-          try {
-            return currentStep(ctx, next);
-          } catch (e) {
-            return next.reject(e);
-          }
-        } else {
-          return next.complete();
-        }
-      }
-      next.complete = function(output) {
-        next.status = pipelineStatus.completed;
-        next.output = output;
-        return Promise.resolve(createResult(ctx, next));
-      };
-      next.cancel = function(reason) {
-        next.status = pipelineStatus.canceled;
-        next.output = reason;
-        return Promise.resolve(createResult(ctx, next));
-      };
-      next.reject = function(error) {
-        next.status = pipelineStatus.rejected;
-        next.output = error;
-        return Promise.resolve(createResult(ctx, next));
-      };
-      next.status = pipelineStatus.running;
-      return next();
-    };
-    return Pipeline;
-  })();
-  exports.Pipeline = Pipeline;
-  var NavigationInstruction = (function() {
-    function NavigationInstruction(fragment, queryString, params, queryParams, config, parentInstruction) {
-      _classCallCheck(this, NavigationInstruction);
-      this.fragment = fragment;
-      this.queryString = queryString;
-      this.params = params || {};
-      this.queryParams = queryParams;
-      this.config = config;
-      this.viewPortInstructions = {};
-      this.parentInstruction = parentInstruction;
-      var ancestorParams = [];
-      var current = this;
-      do {
-        var currentParams = Object.assign({}, current.params);
-        if (current.config.hasChildRouter) {
-          delete currentParams[current.getWildCardName()];
-        }
-        ancestorParams.unshift(currentParams);
-        current = current.parentInstruction;
-      } while (current);
-      var allParams = Object.assign.apply(Object, [{}, queryParams].concat(ancestorParams));
-      this.lifecycleArgs = [allParams, config, this];
-    }
-    NavigationInstruction.prototype.addViewPortInstruction = function addViewPortInstruction(viewPortName, strategy, moduleId, component) {
-      var viewportInstruction = this.viewPortInstructions[viewPortName] = {
-        name: viewPortName,
-        strategy: strategy,
-        moduleId: moduleId,
-        component: component,
-        childRouter: component.childRouter,
-        lifecycleArgs: this.lifecycleArgs.slice()
-      };
-      return viewportInstruction;
-    };
-    NavigationInstruction.prototype.getWildCardName = function getWildCardName() {
-      var wildcardIndex = this.config.route.lastIndexOf('*');
-      return this.config.route.substr(wildcardIndex + 1);
-    };
-    NavigationInstruction.prototype.getWildcardPath = function getWildcardPath() {
-      var wildcardName = this.getWildCardName();
-      var path = this.params[wildcardName] || '';
-      if (this.queryString) {
-        path += '?' + this.queryString;
-      }
-      return path;
-    };
-    NavigationInstruction.prototype.getBaseUrl = function getBaseUrl() {
-      if (!this.params) {
-        return this.fragment;
-      }
-      var wildcardName = this.getWildCardName();
-      var path = this.params[wildcardName] || '';
-      if (!path) {
-        return this.fragment;
-      }
-      return this.fragment.substr(0, this.fragment.lastIndexOf(path));
-    };
-    return NavigationInstruction;
-  })();
-  exports.NavigationInstruction = NavigationInstruction;
-  var NavModel = (function() {
-    function NavModel(router, relativeHref) {
-      _classCallCheck(this, NavModel);
-      this.isActive = false;
-      this.title = null;
-      this.href = null;
-      this.relativeHref = null;
-      this.settings = {};
-      this.config = null;
-      this.router = router;
-      this.relativeHref = relativeHref;
-    }
-    NavModel.prototype.setTitle = function setTitle(title) {
-      this.title = title;
-      if (this.isActive) {
-        this.router.updateTitle();
-      }
-    };
-    return NavModel;
-  })();
-  exports.NavModel = NavModel;
-  function processPotential(obj, resolve, reject) {
-    if (obj && typeof obj.then === 'function') {
-      var dfd = obj.then(resolve);
-      if (typeof dfd['catch'] === 'function') {
-        return dfd['catch'](reject);
-      } else if (typeof dfd.fail === 'function') {
-        return dfd.fail(reject);
-      }
-      return dfd;
-    }
-    try {
-      return resolve(obj);
-    } catch (error) {
-      return reject(error);
-    }
-  }
-  function normalizeAbsolutePath(path, hasPushState) {
-    if (!hasPushState && path[0] !== '#') {
-      path = '#' + path;
-    }
-    return path;
-  }
-  function createRootedPath(fragment, baseUrl, hasPushState) {
-    if (isAbsoluteUrl.test(fragment)) {
-      return fragment;
-    }
-    var path = '';
-    if (baseUrl.length && baseUrl[0] !== '/') {
-      path += '/';
-    }
-    path += baseUrl;
-    if ((!path.length || path[path.length - 1] !== '/') && fragment[0] !== '/') {
-      path += '/';
-    }
-    if (path.length && path[path.length - 1] === '/' && fragment[0] === '/') {
-      path = path.substring(0, path.length - 1);
-    }
-    return normalizeAbsolutePath(path + fragment, hasPushState);
-  }
-  function resolveUrl(fragment, baseUrl, hasPushState) {
-    if (isRootedPath.test(fragment)) {
-      return normalizeAbsolutePath(fragment, hasPushState);
-    }
-    return createRootedPath(fragment, baseUrl, hasPushState);
-  }
-  var isRootedPath = /^#?\//;
-  var isAbsoluteUrl = /^([a-z][a-z0-9+\-.]*:)?\/\//i;
-  function isNavigationCommand(obj) {
-    return obj && typeof obj.navigate === 'function';
-  }
-  var Redirect = (function() {
-    function Redirect(url) {
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-      _classCallCheck(this, Redirect);
-      this.url = url;
-      this.options = Object.assign({
-        trigger: true,
-        replace: true
-      }, options);
-      this.shouldContinueProcessing = false;
-    }
-    Redirect.prototype.setRouter = function setRouter(router) {
-      this.router = router;
-    };
-    Redirect.prototype.navigate = function navigate(appRouter) {
-      var navigatingRouter = this.options.useAppRouter ? appRouter : this.router || appRouter;
-      navigatingRouter.navigate(this.url, this.options);
-    };
-    return Redirect;
-  })();
-  exports.Redirect = Redirect;
-  var RouterConfiguration = (function() {
-    function RouterConfiguration() {
-      _classCallCheck(this, RouterConfiguration);
-      this.instructions = [];
-      this.options = {};
-      this.pipelineSteps = [];
-    }
-    RouterConfiguration.prototype.addPipelineStep = function addPipelineStep(name, step) {
-      this.pipelineSteps.push({
-        name: name,
-        step: step
-      });
-      return this;
-    };
-    RouterConfiguration.prototype.map = function map(route) {
-      if (Array.isArray(route)) {
-        route.forEach(this.map.bind(this));
-        return this;
-      }
-      return this.mapRoute(route);
-    };
-    RouterConfiguration.prototype.mapRoute = function mapRoute(config) {
-      this.instructions.push(function(router) {
-        var routeConfigs = [];
-        if (Array.isArray(config.route)) {
-          for (var i = 0,
-              ii = config.route.length; i < ii; ++i) {
-            var current = Object.assign({}, config);
-            current.route = config.route[i];
-            routeConfigs.push(current);
-          }
-        } else {
-          routeConfigs.push(Object.assign({}, config));
-        }
-        var navModel = undefined;
-        for (var i = 0,
-            ii = routeConfigs.length; i < ii; ++i) {
-          var routeConfig = routeConfigs[i];
-          routeConfig.settings = routeConfig.settings || {};
-          if (!navModel) {
-            navModel = router.createNavModel(routeConfig);
-          }
-          router.addRoute(routeConfig, navModel);
-        }
-      });
-      return this;
-    };
-    RouterConfiguration.prototype.mapUnknownRoutes = function mapUnknownRoutes(config) {
-      this.unknownRouteConfig = config;
-      return this;
-    };
-    RouterConfiguration.prototype.exportToRouter = function exportToRouter(router) {
-      var instructions = this.instructions;
-      for (var i = 0,
-          ii = instructions.length; i < ii; ++i) {
-        instructions[i](router);
-      }
-      if (this.title) {
-        router.title = this.title;
-      }
-      if (this.unknownRouteConfig) {
-        router.handleUnknownRoutes(this.unknownRouteConfig);
-      }
-      router.options = this.options;
-      var pipelineSteps = this.pipelineSteps;
-      if (pipelineSteps.length) {
-        if (!router.isRoot) {
-          throw new Error('Pipeline steps can only be added to the root router');
-        }
-        var filterContainer = router.container.get(RouteFilterContainer);
-        for (var i = 0,
-            ii = pipelineSteps.length; i < ii; ++i) {
-          var _pipelineSteps$i = pipelineSteps[i];
-          var _name = _pipelineSteps$i.name;
-          var step = _pipelineSteps$i.step;
-          filterContainer.addStep(_name, step);
-        }
-      }
-    };
-    return RouterConfiguration;
-  })();
-  exports.RouterConfiguration = RouterConfiguration;
-  var activationStrategy = {
-    noChange: 'no-change',
-    invokeLifecycle: 'invoke-lifecycle',
-    replace: 'replace'
-  };
-  exports.activationStrategy = activationStrategy;
-  function buildNavigationPlan(navigationContext, forceLifecycleMinimum) {
-    var prev = navigationContext.prevInstruction;
-    var next = navigationContext.nextInstruction;
-    var plan = {};
-    if ('redirect' in next.config) {
-      var redirectLocation = resolveUrl(next.config.redirect, getInstructionBaseUrl(next));
-      if (next.queryString) {
-        redirectLocation += '?' + next.queryString;
-      }
-      return Promise.reject(new Redirect(redirectLocation));
-    }
-    if (prev) {
-      var newParams = hasDifferentParameterValues(prev, next);
-      var pending = [];
-      var _loop = function(viewPortName) {
-        var prevViewPortInstruction = prev.viewPortInstructions[viewPortName];
-        var nextViewPortConfig = next.config.viewPorts[viewPortName];
-        var viewPortPlan = plan[viewPortName] = {
-          name: viewPortName,
-          config: nextViewPortConfig,
-          prevComponent: prevViewPortInstruction.component,
-          prevModuleId: prevViewPortInstruction.moduleId
-        };
-        if (prevViewPortInstruction.moduleId !== nextViewPortConfig.moduleId) {
-          viewPortPlan.strategy = activationStrategy.replace;
-        } else if ('determineActivationStrategy' in prevViewPortInstruction.component.bindingContext) {
-          var _prevViewPortInstruction$component$bindingContext;
-          viewPortPlan.strategy = (_prevViewPortInstruction$component$bindingContext = prevViewPortInstruction.component.bindingContext).determineActivationStrategy.apply(_prevViewPortInstruction$component$bindingContext, next.lifecycleArgs);
-        } else if (next.config.activationStrategy) {
-          viewPortPlan.strategy = next.config.activationStrategy;
-        } else if (newParams || forceLifecycleMinimum) {
-          viewPortPlan.strategy = activationStrategy.invokeLifecycle;
-        } else {
-          viewPortPlan.strategy = activationStrategy.noChange;
-        }
-        if (viewPortPlan.strategy !== activationStrategy.replace && prevViewPortInstruction.childRouter) {
-          var path = next.getWildcardPath();
-          var task = prevViewPortInstruction.childRouter.createNavigationInstruction(path, next).then(function(childInstruction) {
-            viewPortPlan.childNavigationContext = prevViewPortInstruction.childRouter.createNavigationContext(childInstruction);
-            return buildNavigationPlan(viewPortPlan.childNavigationContext, viewPortPlan.strategy === activationStrategy.invokeLifecycle).then(function(childPlan) {
-              viewPortPlan.childNavigationContext.plan = childPlan;
-            });
-          });
-          pending.push(task);
-        }
-      };
-      for (var viewPortName in prev.viewPortInstructions) {
-        _loop(viewPortName);
-      }
-      return Promise.all(pending).then(function() {
-        return plan;
-      });
-    }
-    for (var viewPortName in next.config.viewPorts) {
-      plan[viewPortName] = {
-        name: viewPortName,
-        strategy: activationStrategy.replace,
-        config: next.config.viewPorts[viewPortName]
-      };
-    }
-    return Promise.resolve(plan);
-  }
-  var BuildNavigationPlanStep = (function() {
-    function BuildNavigationPlanStep() {
-      _classCallCheck(this, BuildNavigationPlanStep);
-    }
-    BuildNavigationPlanStep.prototype.run = function run(navigationContext, next) {
-      return buildNavigationPlan(navigationContext).then(function(plan) {
-        navigationContext.plan = plan;
-        return next();
-      })['catch'](next.cancel);
-    };
-    return BuildNavigationPlanStep;
-  })();
-  exports.BuildNavigationPlanStep = BuildNavigationPlanStep;
-  function hasDifferentParameterValues(prev, next) {
-    var prevParams = prev.params;
-    var nextParams = next.params;
-    var nextWildCardName = next.config.hasChildRouter ? next.getWildCardName() : null;
-    for (var key in nextParams) {
-      if (key === nextWildCardName) {
-        continue;
-      }
-      if (prevParams[key] !== nextParams[key]) {
-        return true;
-      }
-    }
-    for (var key in prevParams) {
-      if (key === nextWildCardName) {
-        continue;
-      }
-      if (prevParams[key] !== nextParams[key]) {
-        return true;
-      }
-    }
-    return false;
-  }
-  function getInstructionBaseUrl(instruction) {
-    var instructionBaseUrlParts = [];
-    instruction = instruction.parentInstruction;
-    while (instruction) {
-      instructionBaseUrlParts.unshift(instruction.getBaseUrl());
-      instruction = instruction.parentInstruction;
-    }
-    instructionBaseUrlParts.unshift('/');
-    return instructionBaseUrlParts.join('');
-  }
-  var affirmations = ['yes', 'ok', 'true'];
-  exports.affirmations = affirmations;
-  var CanDeactivatePreviousStep = (function() {
-    function CanDeactivatePreviousStep() {
-      _classCallCheck(this, CanDeactivatePreviousStep);
-    }
-    CanDeactivatePreviousStep.prototype.run = function run(navigationContext, next) {
-      return processDeactivatable(navigationContext.plan, 'canDeactivate', next);
-    };
-    return CanDeactivatePreviousStep;
-  })();
-  exports.CanDeactivatePreviousStep = CanDeactivatePreviousStep;
-  var CanActivateNextStep = (function() {
-    function CanActivateNextStep() {
-      _classCallCheck(this, CanActivateNextStep);
-    }
-    CanActivateNextStep.prototype.run = function run(navigationContext, next) {
-      return processActivatable(navigationContext, 'canActivate', next);
-    };
-    return CanActivateNextStep;
-  })();
-  exports.CanActivateNextStep = CanActivateNextStep;
-  var DeactivatePreviousStep = (function() {
-    function DeactivatePreviousStep() {
-      _classCallCheck(this, DeactivatePreviousStep);
-    }
-    DeactivatePreviousStep.prototype.run = function run(navigationContext, next) {
-      return processDeactivatable(navigationContext.plan, 'deactivate', next, true);
-    };
-    return DeactivatePreviousStep;
-  })();
-  exports.DeactivatePreviousStep = DeactivatePreviousStep;
-  var ActivateNextStep = (function() {
-    function ActivateNextStep() {
-      _classCallCheck(this, ActivateNextStep);
-    }
-    ActivateNextStep.prototype.run = function run(navigationContext, next) {
-      return processActivatable(navigationContext, 'activate', next, true);
-    };
-    return ActivateNextStep;
-  })();
-  exports.ActivateNextStep = ActivateNextStep;
-  function processDeactivatable(plan, callbackName, next, ignoreResult) {
-    var infos = findDeactivatable(plan, callbackName);
-    var i = infos.length;
-    function inspect(val) {
-      if (ignoreResult || shouldContinue(val)) {
-        return iterate();
-      }
-      return next.cancel(val);
-    }
-    function iterate() {
-      if (i--) {
-        try {
-          var controller = infos[i];
-          var result = controller[callbackName]();
-          return processPotential(result, inspect, next.cancel);
-        } catch (error) {
-          return next.cancel(error);
-        }
-      }
-      return next();
-    }
-    return iterate();
-  }
-  function findDeactivatable(plan, callbackName) {
-    var list = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
-    for (var viewPortName in plan) {
-      var viewPortPlan = plan[viewPortName];
-      var prevComponent = viewPortPlan.prevComponent;
-      if ((viewPortPlan.strategy === activationStrategy.invokeLifecycle || viewPortPlan.strategy === activationStrategy.replace) && prevComponent) {
-        var controller = prevComponent.bindingContext;
-        if (callbackName in controller) {
-          list.push(controller);
-        }
-      }
-      if (viewPortPlan.childNavigationContext) {
-        findDeactivatable(viewPortPlan.childNavigationContext.plan, callbackName, list);
-      } else if (prevComponent) {
-        addPreviousDeactivatable(prevComponent, callbackName, list);
-      }
-    }
-    return list;
-  }
-  function addPreviousDeactivatable(component, callbackName, list) {
-    var childRouter = component.childRouter;
-    if (childRouter && childRouter.currentInstruction) {
-      var viewPortInstructions = childRouter.currentInstruction.viewPortInstructions;
-      for (var viewPortName in viewPortInstructions) {
-        var viewPortInstruction = viewPortInstructions[viewPortName];
-        var prevComponent = viewPortInstruction.component;
-        var prevController = prevComponent.bindingContext;
-        if (callbackName in prevController) {
-          list.push(prevController);
-        }
-        addPreviousDeactivatable(prevComponent, callbackName, list);
-      }
-    }
-  }
-  function processActivatable(navigationContext, callbackName, next, ignoreResult) {
-    var infos = findActivatable(navigationContext, callbackName);
-    var length = infos.length;
-    var i = -1;
-    function inspect(val, router) {
-      if (ignoreResult || shouldContinue(val, router)) {
-        return iterate();
-      }
-      return next.cancel(val);
-    }
-    function iterate() {
-      i++;
-      if (i < length) {
-        try {
-          var _ret2 = (function() {
-            var _current$controller;
-            var current = infos[i];
-            var result = (_current$controller = current.controller)[callbackName].apply(_current$controller, current.lifecycleArgs);
-            return {v: processPotential(result, function(val) {
-                return inspect(val, current.router);
-              }, next.cancel)};
-          })();
-          if (typeof _ret2 === 'object')
-            return _ret2.v;
-        } catch (error) {
-          return next.cancel(error);
-        }
-      }
-      return next();
-    }
-    return iterate();
-  }
-  function findActivatable(navigationContext, callbackName, list, router) {
-    if (list === undefined)
-      list = [];
-    var plan = navigationContext.plan;
-    var next = navigationContext.nextInstruction;
-    Object.keys(plan).filter(function(viewPortName) {
-      var viewPortPlan = plan[viewPortName];
-      var viewPortInstruction = next.viewPortInstructions[viewPortName];
-      var controller = viewPortInstruction.component.bindingContext;
-      if ((viewPortPlan.strategy === activationStrategy.invokeLifecycle || viewPortPlan.strategy === activationStrategy.replace) && callbackName in controller) {
-        list.push({
-          controller: controller,
-          lifecycleArgs: viewPortInstruction.lifecycleArgs,
-          router: router
-        });
-      }
-      if (viewPortPlan.childNavigationContext) {
-        findActivatable(viewPortPlan.childNavigationContext, callbackName, list, viewPortInstruction.component.childRouter || router);
-      }
-    });
-    return list;
-  }
-  function shouldContinue(output, router) {
-    if (output instanceof Error) {
-      return false;
-    }
-    if (isNavigationCommand(output)) {
-      if (typeof output.setRouter === 'function') {
-        output.setRouter(router);
-      }
-      return !!output.shouldContinueProcessing;
-    }
-    if (typeof output === 'string') {
-      return affirmations.indexOf(output.toLowerCase()) !== -1;
-    }
-    if (output === undefined) {
-      return true;
-    }
-    return output;
-  }
-  var NavigationContext = (function() {
-    function NavigationContext(router, nextInstruction) {
-      _classCallCheck(this, NavigationContext);
-      this.router = router;
-      this.nextInstruction = nextInstruction;
-      this.currentInstruction = router.currentInstruction;
-      this.prevInstruction = router.currentInstruction;
-    }
-    NavigationContext.prototype.getAllContexts = function getAllContexts() {
-      var acc = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
-      acc.push(this);
-      if (this.plan) {
-        for (var key in this.plan) {
-          this.plan[key].childNavigationContext && this.plan[key].childNavigationContext.getAllContexts(acc);
-        }
-      }
-      return acc;
-    };
-    NavigationContext.prototype.commitChanges = function commitChanges(waitToSwap) {
-      var next = this.nextInstruction;
-      var prev = this.prevInstruction;
-      var viewPortInstructions = next.viewPortInstructions;
-      var router = this.router;
-      var loads = [];
-      var delaySwaps = [];
-      router.currentInstruction = next;
-      if (prev) {
-        prev.config.navModel.isActive = false;
-      }
-      next.config.navModel.isActive = true;
-      router.refreshBaseUrl();
-      router.refreshNavigation();
-      var _loop2 = function(viewPortName) {
-        var viewPortInstruction = viewPortInstructions[viewPortName];
-        var viewPort = router.viewPorts[viewPortName];
-        if (!viewPort) {
-          throw new Error('There was no router-view found in the view for ' + viewPortInstruction.moduleId + '.');
-        }
-        if (viewPortInstruction.strategy === activationStrategy.replace) {
-          if (waitToSwap) {
-            delaySwaps.push({
-              viewPort: viewPort,
-              viewPortInstruction: viewPortInstruction
-            });
-          }
-          loads.push(viewPort.process(viewPortInstruction, waitToSwap).then(function(x) {
-            if ('childNavigationContext' in viewPortInstruction) {
-              return viewPortInstruction.childNavigationContext.commitChanges();
-            }
-          }));
-        } else {
-          if ('childNavigationContext' in viewPortInstruction) {
-            loads.push(viewPortInstruction.childNavigationContext.commitChanges(waitToSwap));
-          }
-        }
-      };
-      for (var viewPortName in viewPortInstructions) {
-        _loop2(viewPortName);
-      }
-      return Promise.all(loads).then(function() {
-        delaySwaps.forEach(function(x) {
-          return x.viewPort.swap(x.viewPortInstruction);
-        });
-      });
-    };
-    NavigationContext.prototype.updateTitle = function updateTitle() {
-      var title = this.buildTitle();
-      if (title) {
-        document.title = title;
-      }
-    };
-    NavigationContext.prototype.buildTitle = function buildTitle() {
-      var separator = arguments.length <= 0 || arguments[0] === undefined ? ' | ' : arguments[0];
-      var next = this.nextInstruction;
-      var title = next.config.navModel.title || '';
-      var viewPortInstructions = next.viewPortInstructions;
-      var childTitles = [];
-      for (var viewPortName in viewPortInstructions) {
-        var viewPortInstruction = viewPortInstructions[viewPortName];
-        if ('childNavigationContext' in viewPortInstruction) {
-          var childTitle = viewPortInstruction.childNavigationContext.buildTitle(separator);
-          if (childTitle) {
-            childTitles.push(childTitle);
-          }
-        }
-      }
-      if (childTitles.length) {
-        title = childTitles.join(separator) + (title ? separator : '') + title;
-      }
-      if (this.router.title) {
-        title += (title ? separator : '') + this.router.title;
-      }
-      return title;
-    };
-    _createClass(NavigationContext, [{
-      key: 'nextInstructions',
-      get: function get() {
-        return this.getAllContexts().map(function(c) {
-          return c.nextInstruction;
-        }).filter(function(c) {
-          return c;
-        });
-      }
-    }, {
-      key: 'currentInstructions',
-      get: function get() {
-        return this.getAllContexts().map(function(c) {
-          return c.currentInstruction;
-        }).filter(function(c) {
-          return c;
-        });
-      }
-    }, {
-      key: 'prevInstructions',
-      get: function get() {
-        return this.getAllContexts().map(function(c) {
-          return c.prevInstruction;
-        }).filter(function(c) {
-          return c;
-        });
-      }
-    }]);
-    return NavigationContext;
-  })();
-  exports.NavigationContext = NavigationContext;
-  var CommitChangesStep = (function() {
-    function CommitChangesStep() {
-      _classCallCheck(this, CommitChangesStep);
-    }
-    CommitChangesStep.prototype.run = function run(navigationContext, next) {
-      return navigationContext.commitChanges(true).then(function() {
-        navigationContext.updateTitle();
-        return next();
-      });
-    };
-    return CommitChangesStep;
-  })();
-  exports.CommitChangesStep = CommitChangesStep;
-  var RouteLoader = (function() {
-    function RouteLoader() {
-      _classCallCheck(this, RouteLoader);
-    }
-    RouteLoader.prototype.loadRoute = function loadRoute(router, config, navigationContext) {
-      throw Error('Route loaders must implement "loadRoute(router, config, navigationContext)".');
-    };
-    return RouteLoader;
-  })();
-  exports.RouteLoader = RouteLoader;
-  var LoadRouteStep = (function() {
-    LoadRouteStep.inject = function inject() {
-      return [RouteLoader];
-    };
-    function LoadRouteStep(routeLoader) {
-      _classCallCheck(this, LoadRouteStep);
-      this.routeLoader = routeLoader;
-    }
-    LoadRouteStep.prototype.run = function run(navigationContext, next) {
-      return loadNewRoute(this.routeLoader, navigationContext).then(next)['catch'](next.cancel);
-    };
-    return LoadRouteStep;
-  })();
-  exports.LoadRouteStep = LoadRouteStep;
-  function loadNewRoute(routeLoader, navigationContext) {
-    var toLoad = determineWhatToLoad(navigationContext);
-    var loadPromises = toLoad.map(function(current) {
-      return loadRoute(routeLoader, current.navigationContext, current.viewPortPlan);
-    });
-    return Promise.all(loadPromises);
-  }
-  function determineWhatToLoad(navigationContext) {
-    var toLoad = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
-    var plan = navigationContext.plan;
-    var next = navigationContext.nextInstruction;
-    for (var viewPortName in plan) {
-      var viewPortPlan = plan[viewPortName];
-      if (viewPortPlan.strategy === activationStrategy.replace) {
-        toLoad.push({
-          viewPortPlan: viewPortPlan,
-          navigationContext: navigationContext
-        });
-        if (viewPortPlan.childNavigationContext) {
-          determineWhatToLoad(viewPortPlan.childNavigationContext, toLoad);
-        }
-      } else {
-        var viewPortInstruction = next.addViewPortInstruction(viewPortName, viewPortPlan.strategy, viewPortPlan.prevModuleId, viewPortPlan.prevComponent);
-        if (viewPortPlan.childNavigationContext) {
-          viewPortInstruction.childNavigationContext = viewPortPlan.childNavigationContext;
-          determineWhatToLoad(viewPortPlan.childNavigationContext, toLoad);
-        }
-      }
-    }
-    return toLoad;
-  }
-  function loadRoute(routeLoader, navigationContext, viewPortPlan) {
-    var moduleId = viewPortPlan.config.moduleId;
-    var next = navigationContext.nextInstruction;
-    return loadComponent(routeLoader, navigationContext, viewPortPlan.config).then(function(component) {
-      var viewPortInstruction = next.addViewPortInstruction(viewPortPlan.name, viewPortPlan.strategy, moduleId, component);
-      var childRouter = component.childRouter;
-      if (childRouter) {
-        var path = next.getWildcardPath();
-        return childRouter.createNavigationInstruction(path, next).then(function(childInstruction) {
-          var childNavigationContext = childRouter.createNavigationContext(childInstruction);
-          viewPortPlan.childNavigationContext = childNavigationContext;
-          return buildNavigationPlan(childNavigationContext).then(function(childPlan) {
-            childNavigationContext.plan = childPlan;
-            viewPortInstruction.childNavigationContext = childNavigationContext;
-            return loadNewRoute(routeLoader, childNavigationContext);
-          });
-        });
-      }
-    });
-  }
-  function loadComponent(routeLoader, navigationContext, config) {
-    var router = navigationContext.router;
-    var lifecycleArgs = navigationContext.nextInstruction.lifecycleArgs;
-    return routeLoader.loadRoute(router, config, navigationContext).then(function(component) {
-      component.router = router;
-      component.config = config;
-      if ('configureRouter' in component.bindingContext) {
-        var _ret4 = (function() {
-          var _component$bindingContext;
-          component.childRouter = component.childContainer.getChildRouter();
-          var routerConfig = new RouterConfiguration();
-          var result = Promise.resolve((_component$bindingContext = component.bindingContext).configureRouter.apply(_component$bindingContext, [routerConfig, component.childRouter].concat(lifecycleArgs)));
-          return {v: result.then(function() {
-              component.childRouter.configure(routerConfig);
-              return component;
-            })};
-        })();
-        if (typeof _ret4 === 'object')
-          return _ret4.v;
-      }
-      return component;
-    });
-  }
-  var Router = (function() {
-    function Router(container, history) {
-      _classCallCheck(this, Router);
-      this.viewPorts = {};
-      this.fallbackOrder = 100;
-      this.recognizer = new _aureliaRouteRecognizer.RouteRecognizer();
-      this.childRecognizer = new _aureliaRouteRecognizer.RouteRecognizer();
-      this.routes = [];
-      this.baseUrl = '';
-      this.isConfigured = false;
-      this.isNavigating = false;
-      this.navigation = [];
-      this.container = container;
-      this.history = history;
-      this.reset();
-    }
-    Router.prototype.registerViewPort = function registerViewPort(viewPort, name) {
-      name = name || 'default';
-      this.viewPorts[name] = viewPort;
-    };
-    Router.prototype.ensureConfigured = function ensureConfigured() {
-      return this._configuredPromise;
-    };
-    Router.prototype.configure = function configure(callbackOrConfig) {
-      this.isConfigured = true;
-      if (typeof callbackOrConfig === 'function') {
-        var _config = new RouterConfiguration();
-        callbackOrConfig(_config);
-        _config.exportToRouter(this);
-      } else {
-        callbackOrConfig.exportToRouter(this);
-      }
-      this.isConfigured = true;
-      this._resolveConfiguredPromise();
-      return this;
-    };
-    Router.prototype.navigate = function navigate(fragment, options) {
-      if (!this.isConfigured && this.parent) {
-        return this.parent.navigate(fragment, options);
-      }
-      return this.history.navigate(resolveUrl(fragment, this.baseUrl, this.history._hasPushState), options);
-    };
-    Router.prototype.navigateToRoute = function navigateToRoute(route, params, options) {
-      var path = this.generate(route, params);
-      return this.navigate(path, options);
-    };
-    Router.prototype.navigateBack = function navigateBack() {
-      this.history.navigateBack();
-    };
-    Router.prototype.createChild = function createChild(container) {
-      var childRouter = new Router(container || this.container.createChild(), this.history);
-      childRouter.parent = this;
-      return childRouter;
-    };
-    Router.prototype.generate = function generate(name, params) {
-      var hasRoute = this.recognizer.hasRoute(name);
-      if ((!this.isConfigured || !hasRoute) && this.parent) {
-        return this.parent.generate(name, params);
-      }
-      if (!hasRoute) {
-        throw new Error('A route with name \'' + name + '\' could not be found. Check that `name: \'' + name + '\'` was specified in the route\'s config.');
-      }
-      var path = this.recognizer.generate(name, params);
-      return createRootedPath(path, this.baseUrl, this.history._hasPushState);
-    };
-    Router.prototype.createNavModel = function createNavModel(config) {
-      var navModel = new NavModel(this, 'href' in config ? config.href : config.route);
-      navModel.title = config.title;
-      navModel.order = config.nav;
-      navModel.href = config.href;
-      navModel.settings = config.settings;
-      navModel.config = config;
-      return navModel;
-    };
-    Router.prototype.addRoute = function addRoute(config, navModel) {
-      validateRouteConfig(config);
-      if (!('viewPorts' in config) && !config.navigationStrategy) {
-        config.viewPorts = {'default': {
-            moduleId: config.moduleId,
-            view: config.view
-          }};
-      }
-      if (!navModel) {
-        navModel = this.createNavModel(config);
-      }
-      this.routes.push(config);
-      var path = config.route;
-      if (path.charAt(0) === '/') {
-        path = path.substr(1);
-      }
-      var state = this.recognizer.add({
-        path: path,
-        handler: config
-      });
-      if (path) {
-        var settings = config.settings;
-        delete config.settings;
-        var withChild = JSON.parse(JSON.stringify(config));
-        config.settings = settings;
-        withChild.route = path + '/*childRoute';
-        withChild.hasChildRouter = true;
-        this.childRecognizer.add({
-          path: withChild.route,
-          handler: withChild
-        });
-        withChild.navModel = navModel;
-        withChild.settings = config.settings;
-      }
-      config.navModel = navModel;
-      if ((navModel.order || navModel.order === 0) && this.navigation.indexOf(navModel) === -1) {
-        if (!navModel.href && navModel.href !== '' && (state.types.dynamics || state.types.stars)) {
-          throw new Error('Invalid route config: dynamic routes must specify an href to be included in the navigation model.');
-        }
-        if (typeof navModel.order !== 'number') {
-          navModel.order = ++this.fallbackOrder;
-        }
-        this.navigation.push(navModel);
-        this.navigation = this.navigation.sort(function(a, b) {
-          return a.order - b.order;
-        });
-      }
-    };
-    Router.prototype.hasRoute = function hasRoute(name) {
-      return !!(this.recognizer.hasRoute(name) || this.parent && this.parent.hasRoute(name));
-    };
-    Router.prototype.hasOwnRoute = function hasOwnRoute(name) {
-      return this.recognizer.hasRoute(name);
-    };
-    Router.prototype.handleUnknownRoutes = function handleUnknownRoutes(config) {
-      var callback = function callback(instruction) {
-        return new Promise(function(resolve, reject) {
-          function done(inst) {
-            inst = inst || instruction;
-            inst.config.route = inst.params.path;
-            resolve(inst);
-          }
-          if (!config) {
-            instruction.config.moduleId = instruction.fragment;
-            done(instruction);
-          } else if (typeof config === 'string') {
-            instruction.config.moduleId = config;
-            done(instruction);
-          } else if (typeof config === 'function') {
-            processPotential(config(instruction), done, reject);
-          } else {
-            instruction.config = config;
-            done(instruction);
-          }
-        });
-      };
-      this.catchAllHandler = callback;
-    };
-    Router.prototype.updateTitle = function updateTitle() {
-      if (this.parent) {
-        return this.parent.updateTitle();
-      }
-      this.currentInstruction.navigationContext.updateTitle();
-    };
-    Router.prototype.reset = function reset() {
-      var _this = this;
-      this.fallbackOrder = 100;
-      this.recognizer = new _aureliaRouteRecognizer.RouteRecognizer();
-      this.childRecognizer = new _aureliaRouteRecognizer.RouteRecognizer();
-      this.routes = [];
-      this.isNavigating = false;
-      this.navigation = [];
-      if (this.isConfigured || !this._configuredPromise) {
-        this._configuredPromise = new Promise(function(resolve) {
-          _this._resolveConfiguredPromise = resolve;
-        });
-      }
-      this.isConfigured = false;
-    };
-    Router.prototype.refreshBaseUrl = function refreshBaseUrl() {
-      if (this.parent) {
-        var baseUrl = this.parent.currentInstruction.getBaseUrl();
-        this.baseUrl = this.parent.baseUrl + baseUrl;
-      }
-    };
-    Router.prototype.refreshNavigation = function refreshNavigation() {
-      var nav = this.navigation;
-      for (var i = 0,
-          _length = nav.length; i < _length; i++) {
-        var current = nav[i];
-        if (!current.href) {
-          current.href = createRootedPath(current.relativeHref, this.baseUrl, this.history._hasPushState);
-        }
-      }
-    };
-    Router.prototype.createNavigationInstruction = function createNavigationInstruction() {
-      var url = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
-      var parentInstruction = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
-      var fragment = url;
-      var queryString = '';
-      var queryIndex = url.indexOf('?');
-      if (queryIndex !== -1) {
-        fragment = url.substr(0, queryIndex);
-        queryString = url.substr(queryIndex + 1);
-      }
-      var results = this.recognizer.recognize(url);
-      if (!results || !results.length) {
-        results = this.childRecognizer.recognize(url);
-      }
-      if ((!results || !results.length) && this.catchAllHandler) {
-        results = [{
-          config: {navModel: {}},
-          handler: this.catchAllHandler,
-          params: {path: fragment}
-        }];
-      }
-      if (results && results.length) {
-        var first = results[0];
-        var _instruction = new NavigationInstruction(fragment, queryString, first.params, first.queryParams || results.queryParams, first.config || first.handler, parentInstruction);
-        if (typeof first.handler === 'function') {
-          return evaluateNavigationStrategy(_instruction, first.handler, first);
-        } else if (first.handler && 'navigationStrategy' in first.handler) {
-          return evaluateNavigationStrategy(_instruction, first.handler.navigationStrategy, first.handler);
-        }
-        return Promise.resolve(_instruction);
-      }
-      return Promise.reject(new Error('Route not found: ' + url));
-    };
-    Router.prototype.createNavigationContext = function createNavigationContext(instruction) {
-      instruction.navigationContext = new NavigationContext(this, instruction);
-      return instruction.navigationContext;
-    };
-    _createClass(Router, [{
-      key: 'isRoot',
-      get: function get() {
-        return false;
-      }
-    }]);
-    return Router;
-  })();
-  exports.Router = Router;
-  function validateRouteConfig(config) {
-    if (typeof config !== 'object') {
-      throw new Error('Invalid Route Config');
-    }
-    if (typeof config.route !== 'string') {
-      throw new Error('Invalid Route Config: You must specify a route pattern.');
-    }
-    if (!('redirect' in config || config.moduleId || config.navigationStrategy || config.viewPorts)) {
-      throw new Error('Invalid Route Config: You must specify a moduleId, redirect, navigationStrategy, or viewPorts.');
-    }
-  }
-  function evaluateNavigationStrategy(instruction, evaluator, context) {
-    return Promise.resolve(evaluator.call(context, instruction)).then(function() {
-      if (!('viewPorts' in instruction.config)) {
-        instruction.config.viewPorts = {'default': {moduleId: instruction.config.moduleId}};
-      }
-      return instruction;
-    });
-  }
-  var PipelineProvider = (function() {
-    PipelineProvider.inject = function inject() {
-      return [_aureliaDependencyInjection.Container];
-    };
-    function PipelineProvider(container) {
-      _classCallCheck(this, PipelineProvider);
-      this.container = container;
-      this.steps = [BuildNavigationPlanStep, CanDeactivatePreviousStep, LoadRouteStep, createRouteFilterStep('authorize'), createRouteFilterStep('modelbind'), CanActivateNextStep, DeactivatePreviousStep, ActivateNextStep, createRouteFilterStep('precommit'), CommitChangesStep, createRouteFilterStep('postcomplete')];
-    }
-    PipelineProvider.prototype.createPipeline = function createPipeline(navigationContext) {
-      var _this2 = this;
-      var pipeline = new Pipeline();
-      this.steps.forEach(function(step) {
-        return pipeline.withStep(_this2.container.get(step));
-      });
-      return pipeline;
-    };
-    return PipelineProvider;
-  })();
-  exports.PipelineProvider = PipelineProvider;
-  var logger = _aureliaLogging.getLogger('app-router');
-  var AppRouter = (function(_Router) {
-    _inherits(AppRouter, _Router);
-    AppRouter.inject = function inject() {
-      return [_aureliaDependencyInjection.Container, _aureliaHistory.History, PipelineProvider, _aureliaEventAggregator.EventAggregator];
-    };
-    function AppRouter(container, history, pipelineProvider, events) {
-      _classCallCheck(this, AppRouter);
-      _Router.call(this, container, history);
-      this.pipelineProvider = pipelineProvider;
-      document.addEventListener('click', handleLinkClick.bind(this), true);
-      this.events = events;
-      this.maxInstructionCount = 10;
-    }
-    AppRouter.prototype.loadUrl = function loadUrl(url) {
-      var _this3 = this;
-      return this.createNavigationInstruction(url).then(function(instruction) {
-        return _this3.queueInstruction(instruction);
-      })['catch'](function(error) {
-        logger.error(error);
-        restorePreviousLocation(_this3);
-      });
-    };
-    AppRouter.prototype.queueInstruction = function queueInstruction(instruction) {
-      var _this4 = this;
-      return new Promise(function(resolve) {
-        instruction.resolve = resolve;
-        _this4.queue.unshift(instruction);
-        _this4.dequeueInstruction();
-      });
-    };
-    AppRouter.prototype.dequeueInstruction = function dequeueInstruction() {
-      var _this5 = this;
-      var instructionCount = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
-      return Promise.resolve().then(function() {
-        if (_this5.isNavigating && !instructionCount) {
-          return undefined;
-        }
-        var instruction = _this5.queue.shift();
-        _this5.queue = [];
-        if (!instruction) {
-          return undefined;
-        }
-        _this5.isNavigating = true;
-        if (!instructionCount) {
-          _this5.events.publish('router:navigation:processing', {instruction: instruction});
-        } else if (instructionCount === _this5.maxInstructionCount - 1) {
-          logger.error(instructionCount + 1 + ' navigation instructions have been attempted without success. Restoring last known good location.');
-          restorePreviousLocation(_this5);
-          return _this5.dequeueInstruction(instructionCount + 1);
-        } else if (instructionCount > _this5.maxInstructionCount) {
-          throw new Error('Maximum navigation attempts exceeded. Giving up.');
-        }
-        var context = _this5.createNavigationContext(instruction);
-        var pipeline = _this5.pipelineProvider.createPipeline(context);
-        return pipeline.run(context).then(function(result) {
-          return processResult(instruction, result, instructionCount, _this5);
-        })['catch'](function(error) {
-          return {output: error instanceof Error ? error : new Error(error)};
-        }).then(function(result) {
-          return resolveInstruction(instruction, result, !!instructionCount, _this5);
-        });
-      });
-    };
-    AppRouter.prototype.registerViewPort = function registerViewPort(viewPort, name) {
-      var _this6 = this;
-      _Router.prototype.registerViewPort.call(this, viewPort, name);
-      if (!this.isActive) {
-        var viewModel = this._findViewModel(viewPort);
-        if ('configureRouter' in viewModel) {
-          var _ret5 = (function() {
-            var config = new RouterConfiguration();
-            var result = Promise.resolve(viewModel.configureRouter(config, _this6));
-            return {v: result.then(function() {
-                _this6.configure(config);
-                _this6.activate();
-              })};
-          })();
-          if (typeof _ret5 === 'object')
-            return _ret5.v;
-        }
-        this.activate();
-      } else {
-        this.dequeueInstruction();
-      }
-    };
-    AppRouter.prototype._findViewModel = function _findViewModel(viewPort) {
-      if (this.container.viewModel) {
-        return this.container.viewModel;
-      }
-      if (viewPort.container) {
-        var container = viewPort.container;
-        while (container) {
-          if (container.viewModel) {
-            this.container.viewModel = container.viewModel;
-            return container.viewModel;
-          }
-          container = container.parent;
-        }
-      }
-    };
-    AppRouter.prototype.activate = function activate(options) {
-      if (this.isActive) {
-        return;
-      }
-      this.isActive = true;
-      this.options = Object.assign({routeHandler: this.loadUrl.bind(this)}, this.options, options);
-      this.history.activate(this.options);
-      this.dequeueInstruction();
-    };
-    AppRouter.prototype.deactivate = function deactivate() {
-      this.isActive = false;
-      this.history.deactivate();
-    };
-    AppRouter.prototype.reset = function reset() {
-      _Router.prototype.reset.call(this);
-      this.queue = [];
-      this.options = null;
-    };
-    _createClass(AppRouter, [{
-      key: 'isRoot',
-      get: function get() {
-        return true;
-      }
-    }]);
-    return AppRouter;
-  })(Router);
-  exports.AppRouter = AppRouter;
-  function findAnchor(el) {
-    while (el) {
-      if (el.tagName === 'A') {
-        return el;
-      }
-      el = el.parentNode;
-    }
-  }
-  function handleLinkClick(evt) {
-    if (!this.isActive) {
-      return;
-    }
-    var target = findAnchor(evt.target);
-    if (!target) {
-      return;
-    }
-    if (this.history._hasPushState) {
-      if (!evt.altKey && !evt.ctrlKey && !evt.metaKey && !evt.shiftKey && targetIsThisWindow(target)) {
-        var _href = target.getAttribute('href');
-        if (_href !== null && !(_href.charAt(0) === '#' || /^[a-z]+:/i.test(_href))) {
-          evt.preventDefault();
-          this.history.navigate(_href);
-        }
-      }
-    }
-  }
-  function targetIsThisWindow(target) {
-    var targetWindow = target.getAttribute('target');
-    return !targetWindow || targetWindow === window.name || targetWindow === '_self' || targetWindow === 'top' && window === window.top;
-  }
-  function processResult(instruction, result, instructionCount, router) {
-    if (!(result && 'completed' in result && 'output' in result)) {
-      result = result || {};
-      result.output = new Error('Expected router pipeline to return a navigation result, but got [' + JSON.stringify(result) + '] instead.');
-    }
-    var finalResult = null;
-    if (isNavigationCommand(result.output)) {
-      result.output.navigate(router);
-    } else {
-      finalResult = result;
-      if (!result.completed) {
-        if (result.output instanceof Error) {
-          logger.error(result.output);
-        }
-        restorePreviousLocation(router);
-      }
-    }
-    return router.dequeueInstruction(instructionCount + 1).then(function(innerResult) {
-      return finalResult || innerResult || result;
-    });
-  }
-  function resolveInstruction(instruction, result, isInnerInstruction, router) {
-    instruction.resolve(result);
-    if (!isInnerInstruction) {
-      router.isNavigating = false;
-      var eventArgs = {
-        instruction: instruction,
-        result: result
-      };
-      var eventName = undefined;
-      if (result.output instanceof Error) {
-        eventName = 'error';
-      } else if (!result.completed) {
-        eventName = 'canceled';
-      } else {
-        var queryString = instruction.queryString ? '?' + instruction.queryString : '';
-        router.history.previousLocation = instruction.fragment + queryString;
-        eventName = 'success';
-      }
-      router.events.publish('router:navigation:' + eventName, eventArgs);
-      router.events.publish('router:navigation:complete', eventArgs);
-    }
-    return result;
-  }
-  function restorePreviousLocation(router) {
-    var previousLocation = router.history.previousLocation;
-    if (previousLocation) {
-      router.navigate(router.history.previousLocation, {
-        trigger: false,
-        replace: true
-      });
-    } else {
-      logger.error('Router navigation failed, and no previous location could be restored.');
-    }
-  }
+  exports.ConsoleAppender = ConsoleAppender;
 });
 
 _removeDefine();
 })();
-System.registerDynamic("npm:core-js@0.9.18", ["npm:core-js@0.9.18/index"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  module.exports = require("npm:core-js@0.9.18/index");
-  global.define = __define;
-  return module.exports;
-});
-
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
 define("github:aurelia/logging@0.7.0", ["github:aurelia/logging@0.7.0/aurelia-logging"], function(main) {
-  return main;
-});
-
-_removeDefine();
-})();
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/dependency-injection@0.10.1", ["github:aurelia/dependency-injection@0.10.1/aurelia-dependency-injection"], function(main) {
   return main;
 });
 
@@ -1590,6 +211,251 @@ define("github:aurelia/logging@0.7.0/aurelia-logging", ["exports"], function(exp
 
 _removeDefine();
 })();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/history-browser@0.8.0", ["github:aurelia/history-browser@0.8.0/aurelia-history-browser"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/history-browser@0.8.0/aurelia-history-browser", ["exports", "npm:core-js@0.9.18", "github:aurelia/history@0.7.0"], function(exports, _coreJs, _aureliaHistory) {
+  'use strict';
+  exports.__esModule = true;
+  exports.configure = configure;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== 'function' && superClass !== null) {
+      throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass);
+    }
+    subClass.prototype = Object.create(superClass && superClass.prototype, {constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }});
+    if (superClass)
+      Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+  var routeStripper = /^#?\/*|\s+$/g;
+  var rootStripper = /^\/+|\/+$/g;
+  var trailingSlash = /\/$/;
+  var absoluteUrl = /^([a-z][a-z0-9+\-.]*:)?\/\//i;
+  function updateHash(location, fragment, replace) {
+    if (replace) {
+      var href = location.href.replace(/(javascript:|#).*$/, '');
+      location.replace(href + '#' + fragment);
+    } else {
+      location.hash = '#' + fragment;
+    }
+  }
+  var BrowserHistory = (function(_History) {
+    _inherits(BrowserHistory, _History);
+    function BrowserHistory() {
+      _classCallCheck(this, BrowserHistory);
+      _History.call(this);
+      this.interval = 50;
+      this.active = false;
+      this.previousFragment = '';
+      this._checkUrlCallback = this.checkUrl.bind(this);
+      if (typeof window !== 'undefined') {
+        this.location = window.location;
+        this.history = window.history;
+      }
+    }
+    BrowserHistory.prototype.getHash = function getHash(window) {
+      var match = (window || this).location.href.match(/#(.*)$/);
+      return match ? match[1] : '';
+    };
+    BrowserHistory.prototype.getFragment = function getFragment(fragment, forcePushState) {
+      var root = undefined;
+      if (!fragment) {
+        if (this._hasPushState || !this._wantsHashChange || forcePushState) {
+          fragment = this.location.pathname + this.location.search;
+          root = this.root.replace(trailingSlash, '');
+          if (!fragment.indexOf(root)) {
+            fragment = fragment.substr(root.length);
+          }
+        } else {
+          fragment = this.getHash();
+        }
+      }
+      return '/' + fragment.replace(routeStripper, '');
+    };
+    BrowserHistory.prototype.activate = function activate(options) {
+      if (this.active) {
+        throw new Error('History has already been activated.');
+      }
+      this.active = true;
+      this.options = Object.assign({}, {root: '/'}, this.options, options);
+      this.root = this.options.root;
+      this._wantsHashChange = this.options.hashChange !== false;
+      this._wantsPushState = !!this.options.pushState;
+      this._hasPushState = !!(this.options.pushState && this.history && this.history.pushState);
+      var fragment = this.getFragment();
+      this.root = ('/' + this.root + '/').replace(rootStripper, '/');
+      if (this._hasPushState) {
+        window.onpopstate = this._checkUrlCallback;
+      } else if (this._wantsHashChange && 'onhashchange' in window) {
+        window.addEventListener('hashchange', this._checkUrlCallback);
+      } else if (this._wantsHashChange) {
+        this._checkUrlTimer = setTimeout(this._checkUrlCallback, this.interval);
+      }
+      this.fragment = fragment;
+      var loc = this.location;
+      var atRoot = loc.pathname.replace(/[^\/]$/, '$&/') === this.root;
+      if (this._wantsHashChange && this._wantsPushState) {
+        if (!this._hasPushState && !atRoot) {
+          this.fragment = this.getFragment(null, true);
+          this.location.replace(this.root + this.location.search + '#' + this.fragment);
+          return true;
+        } else if (this._hasPushState && atRoot && loc.hash) {
+          this.fragment = this.getHash().replace(routeStripper, '');
+          this.history.replaceState({}, document.title, this.root + this.fragment + loc.search);
+        }
+      }
+      if (!this.options.silent) {
+        return this.loadUrl();
+      }
+    };
+    BrowserHistory.prototype.deactivate = function deactivate() {
+      window.onpopstate = null;
+      window.removeEventListener('hashchange', this._checkUrlCallback);
+      clearTimeout(this._checkUrlTimer);
+      this.active = false;
+    };
+    BrowserHistory.prototype.checkUrl = function checkUrl() {
+      var current = this.getFragment();
+      if (this._checkUrlTimer) {
+        clearTimeout(this._checkUrlTimer);
+        this._checkUrlTimer = setTimeout(this._checkUrlCallback, this.interval);
+      }
+      if (current === this.fragment && this.iframe) {
+        current = this.getFragment(this.getHash(this.iframe));
+      }
+      if (current === this.fragment) {
+        return false;
+      }
+      if (this.iframe) {
+        this.navigate(current, false);
+      }
+      this.loadUrl();
+    };
+    BrowserHistory.prototype.loadUrl = function loadUrl(fragmentOverride) {
+      var fragment = this.fragment = this.getFragment(fragmentOverride);
+      return this.options.routeHandler ? this.options.routeHandler(fragment) : false;
+    };
+    BrowserHistory.prototype.navigate = function navigate(fragment, options) {
+      if (fragment && absoluteUrl.test(fragment)) {
+        window.location.href = fragment;
+        return true;
+      }
+      if (!this.active) {
+        return false;
+      }
+      if (options === undefined) {
+        options = {trigger: true};
+      } else if (typeof options === 'boolean') {
+        options = {trigger: options};
+      }
+      fragment = this.getFragment(fragment || '');
+      if (this.fragment === fragment) {
+        return false;
+      }
+      this.fragment = fragment;
+      var url = this.root + fragment;
+      if (fragment === '' && url !== '/') {
+        url = url.slice(0, -1);
+      }
+      if (this._hasPushState) {
+        url = url.replace('//', '/');
+        this.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, url);
+      } else if (this._wantsHashChange) {
+        updateHash(this.location, fragment, options.replace);
+        if (this.iframe && fragment !== this.getFragment(this.getHash(this.iframe))) {
+          if (!options.replace) {
+            this.iframe.document.open().close();
+          }
+          updateHash(this.iframe.location, fragment, options.replace);
+        }
+      } else {
+        return this.location.assign(url);
+      }
+      if (options.trigger) {
+        return this.loadUrl(fragment);
+      }
+      this.previousFragment = fragment;
+    };
+    BrowserHistory.prototype.navigateBack = function navigateBack() {
+      this.history.back();
+    };
+    return BrowserHistory;
+  })(_aureliaHistory.History);
+  exports.BrowserHistory = BrowserHistory;
+  function configure(config) {
+    config.singleton(_aureliaHistory.History, BrowserHistory);
+  }
+});
+
+_removeDefine();
+})();
+System.registerDynamic("npm:core-js@0.9.18", ["npm:core-js@0.9.18/index"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  module.exports = require("npm:core-js@0.9.18/index");
+  global.define = __define;
+  return module.exports;
+});
+
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/history@0.7.0", ["github:aurelia/history@0.7.0/aurelia-history"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/history@0.7.0/aurelia-history", ["exports"], function(exports) {
+  'use strict';
+  exports.__esModule = true;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var History = (function() {
+    function History() {
+      _classCallCheck(this, History);
+    }
+    History.prototype.activate = function activate(options) {
+      throw new Error('History must implement activate().');
+    };
+    History.prototype.deactivate = function deactivate() {
+      throw new Error('History must implement deactivate().');
+    };
+    History.prototype.navigate = function navigate(fragment, options) {
+      throw new Error('History must implement navigate().');
+    };
+    History.prototype.navigateBack = function navigateBack() {
+      throw new Error('History must implement navigateBack().');
+    };
+    return History;
+  })();
+  exports.History = History;
+});
+
+_removeDefine();
+})();
 System.registerDynamic("npm:core-js@0.9.18/index", ["npm:core-js@0.9.18/shim", "npm:core-js@0.9.18/modules/core.dict", "npm:core-js@0.9.18/modules/core.iter-helpers", "npm:core-js@0.9.18/modules/core.$for", "npm:core-js@0.9.18/modules/core.delay", "npm:core-js@0.9.18/modules/core.function.part", "npm:core-js@0.9.18/modules/core.object", "npm:core-js@0.9.18/modules/core.array.turn", "npm:core-js@0.9.18/modules/core.number.iterator", "npm:core-js@0.9.18/modules/core.number.math", "npm:core-js@0.9.18/modules/core.string.escape-html", "npm:core-js@0.9.18/modules/core.date", "npm:core-js@0.9.18/modules/core.global", "npm:core-js@0.9.18/modules/core.log", "npm:core-js@0.9.18/modules/$"], true, function(require, exports, module) {
   ;
   var global = this,
@@ -1614,437 +480,6 @@ System.registerDynamic("npm:core-js@0.9.18/index", ["npm:core-js@0.9.18/shim", "
   return module.exports;
 });
 
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/dependency-injection@0.10.1/aurelia-dependency-injection", ["exports", "npm:core-js@0.9.18", "github:aurelia/metadata@0.8.0", "github:aurelia/logging@0.7.0"], function(exports, _coreJs, _aureliaMetadata, _aureliaLogging) {
-  'use strict';
-  exports.__esModule = true;
-  var _createClass = (function() {
-    function defineProperties(target, props) {
-      for (var i = 0; i < props.length; i++) {
-        var descriptor = props[i];
-        descriptor.enumerable = descriptor.enumerable || false;
-        descriptor.configurable = true;
-        if ('value' in descriptor)
-          descriptor.writable = true;
-        Object.defineProperty(target, descriptor.key, descriptor);
-      }
-    }
-    return function(Constructor, protoProps, staticProps) {
-      if (protoProps)
-        defineProperties(Constructor.prototype, protoProps);
-      if (staticProps)
-        defineProperties(Constructor, staticProps);
-      return Constructor;
-    };
-  })();
-  exports.autoinject = autoinject;
-  exports.inject = inject;
-  exports.registration = registration;
-  exports.transient = transient;
-  exports.singleton = singleton;
-  exports.instanceActivator = instanceActivator;
-  exports.factory = factory;
-  function _inherits(subClass, superClass) {
-    if (typeof superClass !== 'function' && superClass !== null) {
-      throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass);
-    }
-    subClass.prototype = Object.create(superClass && superClass.prototype, {constructor: {
-        value: subClass,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }});
-    if (superClass)
-      Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-  }
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError('Cannot call a class as a function');
-    }
-  }
-  var TransientRegistration = (function() {
-    function TransientRegistration(key) {
-      _classCallCheck(this, TransientRegistration);
-      this.key = key;
-    }
-    TransientRegistration.prototype.register = function register(container, key, fn) {
-      container.registerTransient(this.key || key, fn);
-    };
-    return TransientRegistration;
-  })();
-  exports.TransientRegistration = TransientRegistration;
-  var SingletonRegistration = (function() {
-    function SingletonRegistration(keyOrRegisterInChild) {
-      var registerInChild = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
-      _classCallCheck(this, SingletonRegistration);
-      if (typeof keyOrRegisterInChild === 'boolean') {
-        this.registerInChild = keyOrRegisterInChild;
-      } else {
-        this.key = keyOrRegisterInChild;
-        this.registerInChild = registerInChild;
-      }
-    }
-    SingletonRegistration.prototype.register = function register(container, key, fn) {
-      var destination = this.registerInChild ? container : container.root;
-      destination.registerSingleton(this.key || key, fn);
-    };
-    return SingletonRegistration;
-  })();
-  exports.SingletonRegistration = SingletonRegistration;
-  var Resolver = (function() {
-    function Resolver() {
-      _classCallCheck(this, Resolver);
-    }
-    Resolver.prototype.get = function get(container) {
-      throw new Error('A custom Resolver must implement get(container) and return the resolved instance(s).');
-    };
-    return Resolver;
-  })();
-  exports.Resolver = Resolver;
-  var Lazy = (function(_Resolver) {
-    _inherits(Lazy, _Resolver);
-    function Lazy(key) {
-      _classCallCheck(this, Lazy);
-      _Resolver.call(this);
-      this.key = key;
-    }
-    Lazy.prototype.get = function get(container) {
-      var _this = this;
-      return function() {
-        return container.get(_this.key);
-      };
-    };
-    Lazy.of = function of(key) {
-      return new Lazy(key);
-    };
-    return Lazy;
-  })(Resolver);
-  exports.Lazy = Lazy;
-  var All = (function(_Resolver2) {
-    _inherits(All, _Resolver2);
-    function All(key) {
-      _classCallCheck(this, All);
-      _Resolver2.call(this);
-      this.key = key;
-    }
-    All.prototype.get = function get(container) {
-      return container.getAll(this.key);
-    };
-    All.of = function of(key) {
-      return new All(key);
-    };
-    return All;
-  })(Resolver);
-  exports.All = All;
-  var Optional = (function(_Resolver3) {
-    _inherits(Optional, _Resolver3);
-    function Optional(key) {
-      var checkParent = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
-      _classCallCheck(this, Optional);
-      _Resolver3.call(this);
-      this.key = key;
-      this.checkParent = checkParent;
-    }
-    Optional.prototype.get = function get(container) {
-      if (container.hasHandler(this.key, this.checkParent)) {
-        return container.get(this.key);
-      }
-      return null;
-    };
-    Optional.of = function of(key) {
-      var checkParent = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
-      return new Optional(key, checkParent);
-    };
-    return Optional;
-  })(Resolver);
-  exports.Optional = Optional;
-  var Parent = (function(_Resolver4) {
-    _inherits(Parent, _Resolver4);
-    function Parent(key) {
-      _classCallCheck(this, Parent);
-      _Resolver4.call(this);
-      this.key = key;
-    }
-    Parent.prototype.get = function get(container) {
-      return container.parent ? container.parent.get(this.key) : null;
-    };
-    Parent.of = function of(key) {
-      return new Parent(key);
-    };
-    return Parent;
-  })(Resolver);
-  exports.Parent = Parent;
-  var ClassActivator = (function() {
-    function ClassActivator() {
-      _classCallCheck(this, ClassActivator);
-    }
-    ClassActivator.prototype.invoke = function invoke(fn, args) {
-      return Reflect.construct(fn, args);
-    };
-    _createClass(ClassActivator, null, [{
-      key: 'instance',
-      value: new ClassActivator(),
-      enumerable: true
-    }]);
-    return ClassActivator;
-  })();
-  exports.ClassActivator = ClassActivator;
-  var FactoryActivator = (function() {
-    function FactoryActivator() {
-      _classCallCheck(this, FactoryActivator);
-    }
-    FactoryActivator.prototype.invoke = function invoke(fn, args) {
-      return fn.apply(undefined, args);
-    };
-    _createClass(FactoryActivator, null, [{
-      key: 'instance',
-      value: new FactoryActivator(),
-      enumerable: true
-    }]);
-    return FactoryActivator;
-  })();
-  exports.FactoryActivator = FactoryActivator;
-  var badKeyError = 'key/value cannot be null or undefined. Are you trying to inject/register something that doesn\'t exist with DI?';
-  _aureliaMetadata.Metadata.registration = 'aurelia:registration';
-  _aureliaMetadata.Metadata.instanceActivator = 'aurelia:instance-activator';
-  function test() {}
-  if (!test.name) {
-    Object.defineProperty(Function.prototype, 'name', {get: function get() {
-        var name = this.toString().match(/^\s*function\s*(\S*)\s*\(/)[1];
-        Object.defineProperty(this, 'name', {value: name});
-        return name;
-      }});
-  }
-  var emptyParameters = Object.freeze([]);
-  exports.emptyParameters = emptyParameters;
-  var Container = (function() {
-    function Container(constructionInfo) {
-      _classCallCheck(this, Container);
-      this.constructionInfo = constructionInfo || new Map();
-      this.entries = new Map();
-      this.root = this;
-    }
-    Container.prototype.makeGlobal = function makeGlobal() {
-      Container.instance = this;
-      return this;
-    };
-    Container.prototype.registerInstance = function registerInstance(key, instance) {
-      this.registerHandler(key, function(x) {
-        return instance;
-      });
-    };
-    Container.prototype.registerTransient = function registerTransient(key, fn) {
-      fn = fn || key;
-      this.registerHandler(key, function(x) {
-        return x.invoke(fn);
-      });
-    };
-    Container.prototype.registerSingleton = function registerSingleton(key, fn) {
-      var singleton = null;
-      fn = fn || key;
-      this.registerHandler(key, function(x) {
-        return singleton || (singleton = x.invoke(fn));
-      });
-    };
-    Container.prototype.autoRegister = function autoRegister(fn, key) {
-      var registration = undefined;
-      if (fn === null || fn === undefined) {
-        throw new Error(badKeyError);
-      }
-      if (typeof fn === 'function') {
-        registration = _aureliaMetadata.Metadata.get(_aureliaMetadata.Metadata.registration, fn);
-        if (registration !== undefined) {
-          registration.register(this, key || fn, fn);
-        } else {
-          this.registerSingleton(key || fn, fn);
-        }
-      } else {
-        this.registerInstance(fn, fn);
-      }
-    };
-    Container.prototype.autoRegisterAll = function autoRegisterAll(fns) {
-      var i = fns.length;
-      while (i--) {
-        this.autoRegister(fns[i]);
-      }
-    };
-    Container.prototype.registerHandler = function registerHandler(key, handler) {
-      this._getOrCreateEntry(key).push(handler);
-    };
-    Container.prototype.unregister = function unregister(key) {
-      this.entries['delete'](key);
-    };
-    Container.prototype.get = function get(key) {
-      var entry = undefined;
-      if (key === null || key === undefined) {
-        throw new Error(badKeyError);
-      }
-      if (key === Container) {
-        return this;
-      }
-      if (key instanceof Resolver) {
-        return key.get(this);
-      }
-      entry = this.entries.get(key);
-      if (entry !== undefined) {
-        return entry[0](this);
-      }
-      if (this.parent) {
-        return this.parent.get(key);
-      }
-      this.autoRegister(key);
-      entry = this.entries.get(key);
-      return entry[0](this);
-    };
-    Container.prototype.getAll = function getAll(key) {
-      var _this2 = this;
-      var entry = undefined;
-      if (key === null || key === undefined) {
-        throw new Error(badKeyError);
-      }
-      entry = this.entries.get(key);
-      if (entry !== undefined) {
-        return entry.map(function(x) {
-          return x(_this2);
-        });
-      }
-      if (this.parent) {
-        return this.parent.getAll(key);
-      }
-      return [];
-    };
-    Container.prototype.hasHandler = function hasHandler(key) {
-      var checkParent = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
-      if (key === null || key === undefined) {
-        throw new Error(badKeyError);
-      }
-      return this.entries.has(key) || checkParent && this.parent && this.parent.hasHandler(key, checkParent);
-    };
-    Container.prototype.createChild = function createChild() {
-      var childContainer = new Container(this.constructionInfo);
-      childContainer.parent = this;
-      childContainer.root = this.root;
-      return childContainer;
-    };
-    Container.prototype.invoke = function invoke(fn, deps) {
-      var info = undefined;
-      var i = undefined;
-      var ii = undefined;
-      var keys = undefined;
-      var args = undefined;
-      try {
-        info = this._getOrCreateConstructionInfo(fn);
-        keys = info.keys;
-        args = new Array(keys.length);
-        for (i = 0, ii = keys.length; i < ii; ++i) {
-          args[i] = this.get(keys[i]);
-        }
-        if (deps !== undefined) {
-          args = args.concat(deps);
-        }
-        return info.activator.invoke(fn, args);
-      } catch (e) {
-        var activatingText = info && info.activator instanceof ClassActivator ? 'instantiating' : 'invoking';
-        var message = 'Error ' + activatingText + ' ' + fn.name + '.';
-        if (i < ii) {
-          message += ' The argument at index ' + i + ' (key:' + keys[i] + ') could not be satisfied.';
-        }
-        message += ' Check the inner error for details.';
-        throw new _aureliaLogging.AggregateError(message, e, true);
-      }
-    };
-    Container.prototype._getOrCreateEntry = function _getOrCreateEntry(key) {
-      var entry = undefined;
-      if (key === null || key === undefined) {
-        throw new Error('key cannot be null or undefined.  (Are you trying to inject something that doesn\'t exist with DI?)');
-      }
-      entry = this.entries.get(key);
-      if (entry === undefined) {
-        entry = [];
-        this.entries.set(key, entry);
-      }
-      return entry;
-    };
-    Container.prototype._getOrCreateConstructionInfo = function _getOrCreateConstructionInfo(fn) {
-      var info = this.constructionInfo.get(fn);
-      if (info === undefined) {
-        info = this._createConstructionInfo(fn);
-        this.constructionInfo.set(fn, info);
-      }
-      return info;
-    };
-    Container.prototype._createConstructionInfo = function _createConstructionInfo(fn) {
-      var info = {activator: _aureliaMetadata.Metadata.getOwn(_aureliaMetadata.Metadata.instanceActivator, fn) || ClassActivator.instance};
-      if (fn.inject !== undefined) {
-        if (typeof fn.inject === 'function') {
-          info.keys = fn.inject();
-        } else {
-          info.keys = fn.inject;
-        }
-        return info;
-      }
-      info.keys = _aureliaMetadata.Metadata.getOwn(_aureliaMetadata.Metadata.paramTypes, fn) || emptyParameters;
-      return info;
-    };
-    return Container;
-  })();
-  exports.Container = Container;
-  function autoinject(potentialTarget) {
-    var deco = function deco(target) {
-      target.inject = _aureliaMetadata.Metadata.getOwn(_aureliaMetadata.Metadata.paramTypes, target) || emptyParameters;
-    };
-    return potentialTarget ? deco(potentialTarget) : deco;
-  }
-  function inject() {
-    for (var _len = arguments.length,
-        rest = Array(_len),
-        _key = 0; _key < _len; _key++) {
-      rest[_key] = arguments[_key];
-    }
-    return function(target) {
-      target.inject = rest;
-    };
-  }
-  function registration(value) {
-    return function(target) {
-      _aureliaMetadata.Metadata.define(_aureliaMetadata.Metadata.registration, value, target);
-    };
-  }
-  function transient(key) {
-    return registration(new TransientRegistration(key));
-  }
-  function singleton(keyOrRegisterInChild) {
-    var registerInChild = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
-    return registration(new SingletonRegistration(keyOrRegisterInChild, registerInChild));
-  }
-  function instanceActivator(value) {
-    return function(target) {
-      _aureliaMetadata.Metadata.define(_aureliaMetadata.Metadata.instanceActivator, value, target);
-    };
-  }
-  function factory() {
-    return instanceActivator(FactoryActivator.instance);
-  }
-  _aureliaMetadata.Decorators.configure.simpleDecorator('autoinject', autoinject);
-  _aureliaMetadata.Decorators.configure.parameterizedDecorator('inject', inject);
-  _aureliaMetadata.Decorators.configure.parameterizedDecorator('registration', registration);
-  _aureliaMetadata.Decorators.configure.parameterizedDecorator('transient', transient);
-  _aureliaMetadata.Decorators.configure.parameterizedDecorator('singleton', singleton);
-  _aureliaMetadata.Decorators.configure.parameterizedDecorator('instanceActivator', instanceActivator);
-  _aureliaMetadata.Decorators.configure.parameterizedDecorator('factory', factory);
-});
-
-_removeDefine();
-})();
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/metadata@0.8.0", ["github:aurelia/metadata@0.8.0/aurelia-metadata"], function(main) {
-  return main;
-});
-
-_removeDefine();
-})();
 System.registerDynamic("npm:core-js@0.9.18/shim", ["npm:core-js@0.9.18/modules/es5", "npm:core-js@0.9.18/modules/es6.symbol", "npm:core-js@0.9.18/modules/es6.object.assign", "npm:core-js@0.9.18/modules/es6.object.is", "npm:core-js@0.9.18/modules/es6.object.set-prototype-of", "npm:core-js@0.9.18/modules/es6.object.to-string", "npm:core-js@0.9.18/modules/es6.object.statics-accept-primitives", "npm:core-js@0.9.18/modules/es6.function.name", "npm:core-js@0.9.18/modules/es6.function.has-instance", "npm:core-js@0.9.18/modules/es6.number.constructor", "npm:core-js@0.9.18/modules/es6.number.statics", "npm:core-js@0.9.18/modules/es6.math", "npm:core-js@0.9.18/modules/es6.string.from-code-point", "npm:core-js@0.9.18/modules/es6.string.raw", "npm:core-js@0.9.18/modules/es6.string.iterator", "npm:core-js@0.9.18/modules/es6.string.code-point-at", "npm:core-js@0.9.18/modules/es6.string.ends-with", "npm:core-js@0.9.18/modules/es6.string.includes", "npm:core-js@0.9.18/modules/es6.string.repeat", "npm:core-js@0.9.18/modules/es6.string.starts-with", "npm:core-js@0.9.18/modules/es6.array.from", "npm:core-js@0.9.18/modules/es6.array.of", "npm:core-js@0.9.18/modules/es6.array.iterator", "npm:core-js@0.9.18/modules/es6.array.species", "npm:core-js@0.9.18/modules/es6.array.copy-within", "npm:core-js@0.9.18/modules/es6.array.fill", "npm:core-js@0.9.18/modules/es6.array.find", "npm:core-js@0.9.18/modules/es6.array.find-index", "npm:core-js@0.9.18/modules/es6.regexp", "npm:core-js@0.9.18/modules/es6.promise", "npm:core-js@0.9.18/modules/es6.map", "npm:core-js@0.9.18/modules/es6.set", "npm:core-js@0.9.18/modules/es6.weak-map", "npm:core-js@0.9.18/modules/es6.weak-set", "npm:core-js@0.9.18/modules/es6.reflect", "npm:core-js@0.9.18/modules/es7.array.includes", "npm:core-js@0.9.18/modules/es7.string.at", "npm:core-js@0.9.18/modules/es7.string.lpad", "npm:core-js@0.9.18/modules/es7.string.rpad", "npm:core-js@0.9.18/modules/es7.regexp.escape", "npm:core-js@0.9.18/modules/es7.object.get-own-property-descriptors", "npm:core-js@0.9.18/modules/es7.object.to-array", "npm:core-js@0.9.18/modules/es7.map.to-json", "npm:core-js@0.9.18/modules/es7.set.to-json", "npm:core-js@0.9.18/modules/js.array.statics", "npm:core-js@0.9.18/modules/web.timers", "npm:core-js@0.9.18/modules/web.immediate", "npm:core-js@0.9.18/modules/web.dom.iterable", "npm:core-js@0.9.18/modules/$"], true, function(require, exports, module) {
   ;
   var global = this,
@@ -2766,221 +1201,6 @@ System.registerDynamic("npm:core-js@0.9.18/modules/$", ["npm:core-js@0.9.18/modu
   return module.exports;
 });
 
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/metadata@0.8.0/aurelia-metadata", ["exports", "npm:core-js@0.9.18"], function(exports, _coreJs) {
-  'use strict';
-  exports.__esModule = true;
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError('Cannot call a class as a function');
-    }
-  }
-  var theGlobal = (function() {
-    if (typeof self !== 'undefined') {
-      return self;
-    }
-    if (typeof global !== 'undefined') {
-      return global;
-    }
-    return new Function('return this')();
-  })();
-  var emptyMetadata = Object.freeze({});
-  var metadataContainerKey = '__metadata__';
-  if (typeof theGlobal.System === 'undefined') {
-    theGlobal.System = {isFake: true};
-  }
-  if (typeof theGlobal.System.forEachModule === 'undefined') {
-    theGlobal.System.forEachModule = function() {};
-  }
-  if (typeof theGlobal.Reflect === 'undefined') {
-    theGlobal.Reflect = {};
-  }
-  if (typeof theGlobal.Reflect.getOwnMetadata === 'undefined') {
-    Reflect.getOwnMetadata = function(metadataKey, target, targetKey) {
-      return ((target[metadataContainerKey] || emptyMetadata)[targetKey] || emptyMetadata)[metadataKey];
-    };
-  }
-  if (typeof theGlobal.Reflect.defineMetadata === 'undefined') {
-    Reflect.defineMetadata = function(metadataKey, metadataValue, target, targetKey) {
-      var metadataContainer = target.hasOwnProperty(metadataContainerKey) ? target[metadataContainerKey] : target[metadataContainerKey] = {};
-      var targetContainer = metadataContainer[targetKey] || (metadataContainer[targetKey] = {});
-      targetContainer[metadataKey] = metadataValue;
-    };
-  }
-  if (typeof theGlobal.Reflect.metadata === 'undefined') {
-    Reflect.metadata = function(metadataKey, metadataValue) {
-      return function(target, targetKey) {
-        Reflect.defineMetadata(metadataKey, metadataValue, target, targetKey);
-      };
-    };
-  }
-  function ensureDecorators(target) {
-    var applicator = undefined;
-    if (typeof target.decorators === 'function') {
-      applicator = target.decorators();
-    } else {
-      applicator = target.decorators;
-    }
-    if (typeof applicator._decorate === 'function') {
-      delete target.decorators;
-      applicator._decorate(target);
-    } else {
-      throw new Error('The return value of your decorator\'s method was not valid.');
-    }
-  }
-  var Metadata = {
-    global: theGlobal,
-    noop: function noop() {},
-    resource: 'aurelia:resource',
-    paramTypes: 'design:paramtypes',
-    properties: 'design:properties',
-    get: function get(metadataKey, target, targetKey) {
-      if (!target) {
-        return undefined;
-      }
-      var result = Metadata.getOwn(metadataKey, target, targetKey);
-      return result === undefined ? Metadata.get(metadataKey, Object.getPrototypeOf(target), targetKey) : result;
-    },
-    getOwn: function getOwn(metadataKey, target, targetKey) {
-      if (!target) {
-        return undefined;
-      }
-      if (target.hasOwnProperty('decorators')) {
-        ensureDecorators(target);
-      }
-      return Reflect.getOwnMetadata(metadataKey, target, targetKey);
-    },
-    define: function define(metadataKey, metadataValue, target, targetKey) {
-      Reflect.defineMetadata(metadataKey, metadataValue, target, targetKey);
-    },
-    getOrCreateOwn: function getOrCreateOwn(metadataKey, Type, target, targetKey) {
-      var result = Metadata.getOwn(metadataKey, target, targetKey);
-      if (result === undefined) {
-        result = new Type();
-        Reflect.defineMetadata(metadataKey, result, target, targetKey);
-      }
-      return result;
-    }
-  };
-  exports.Metadata = Metadata;
-  var originStorage = new Map();
-  var unknownOrigin = Object.freeze({
-    moduleId: undefined,
-    moduleMember: undefined
-  });
-  var Origin = (function() {
-    function Origin(moduleId, moduleMember) {
-      _classCallCheck(this, Origin);
-      this.moduleId = moduleId;
-      this.moduleMember = moduleMember;
-    }
-    Origin.get = function get(fn) {
-      var origin = originStorage.get(fn);
-      if (origin === undefined) {
-        System.forEachModule(function(key, value) {
-          for (var _name in value) {
-            var exp = value[_name];
-            if (exp === fn) {
-              originStorage.set(fn, origin = new Origin(key, _name));
-              return true;
-            }
-          }
-          if (value === fn) {
-            originStorage.set(fn, origin = new Origin(key, 'default'));
-            return true;
-          }
-        });
-      }
-      return origin || unknownOrigin;
-    };
-    Origin.set = function set(fn, origin) {
-      originStorage.set(fn, origin);
-    };
-    return Origin;
-  })();
-  exports.Origin = Origin;
-  var DecoratorApplicator = (function() {
-    function DecoratorApplicator() {
-      _classCallCheck(this, DecoratorApplicator);
-      this._first = null;
-      this._second = null;
-      this._third = null;
-      this._rest = null;
-    }
-    DecoratorApplicator.prototype.decorator = (function(_decorator) {
-      function decorator(_x) {
-        return _decorator.apply(this, arguments);
-      }
-      decorator.toString = function() {
-        return _decorator.toString();
-      };
-      return decorator;
-    })(function(decorator) {
-      if (this._first === null) {
-        this._first = decorator;
-        return this;
-      }
-      if (this._second === null) {
-        this._second = decorator;
-        return this;
-      }
-      if (this._third === null) {
-        this._third = decorator;
-        return this;
-      }
-      if (this._rest === null) {
-        this._rest = [];
-      }
-      this._rest.push(decorator);
-      return this;
-    });
-    DecoratorApplicator.prototype._decorate = function _decorate(target) {
-      if (this._first !== null) {
-        this._first(target);
-      }
-      if (this._second !== null) {
-        this._second(target);
-      }
-      if (this._third !== null) {
-        this._third(target);
-      }
-      var rest = this._rest;
-      if (rest !== null) {
-        for (var i = 0,
-            ii = rest.length; i < ii; ++i) {
-          rest[i](target);
-        }
-      }
-    };
-    return DecoratorApplicator;
-  })();
-  exports.DecoratorApplicator = DecoratorApplicator;
-  var Decorators = {configure: {
-      parameterizedDecorator: function parameterizedDecorator(name, decorator) {
-        Decorators[name] = function() {
-          var applicator = new DecoratorApplicator();
-          return applicator[name].apply(applicator, arguments);
-        };
-        DecoratorApplicator.prototype[name] = function() {
-          var result = decorator.apply(null, arguments);
-          return this.decorator(result);
-        };
-      },
-      simpleDecorator: function simpleDecorator(name, decorator) {
-        Decorators[name] = function() {
-          return new DecoratorApplicator().decorator(decorator);
-        };
-        DecoratorApplicator.prototype[name] = function() {
-          return this.decorator(decorator);
-        };
-      }
-    }};
-  exports.Decorators = Decorators;
-});
-
-_removeDefine();
-})();
 System.registerDynamic("npm:core-js@0.9.18/modules/es5", ["npm:core-js@0.9.18/modules/$", "npm:core-js@0.9.18/modules/$.dom-create", "npm:core-js@0.9.18/modules/$.cof", "npm:core-js@0.9.18/modules/$.def", "npm:core-js@0.9.18/modules/$.invoke", "npm:core-js@0.9.18/modules/$.array-methods", "npm:core-js@0.9.18/modules/$.uid", "npm:core-js@0.9.18/modules/$.assert", "npm:core-js@0.9.18/modules/$.array-includes", "npm:core-js@0.9.18/modules/$.replacer", "npm:core-js@0.9.18/modules/$.throws"], true, function(require, exports, module) {
   ;
   var global = this,
@@ -6446,6 +4666,5787 @@ System.registerDynamic("npm:process@0.10.1/browser", [], true, function(require,
 
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/loader-default@0.10.0", ["github:aurelia/loader-default@0.10.0/aurelia-loader-default"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/loader-default@0.10.0/aurelia-loader-default", ["exports", "github:aurelia/loader@0.9.0", "github:aurelia/metadata@0.8.0"], function(exports, _aureliaLoader, _aureliaMetadata) {
+  'use strict';
+  exports.__esModule = true;
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== 'function' && superClass !== null) {
+      throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass);
+    }
+    subClass.prototype = Object.create(superClass && superClass.prototype, {constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }});
+    if (superClass)
+      Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var TextTemplateLoader = (function() {
+    function TextTemplateLoader() {
+      _classCallCheck(this, TextTemplateLoader);
+      this.hasTemplateElement = 'content' in document.createElement('template');
+    }
+    TextTemplateLoader.prototype.loadTemplate = function loadTemplate(loader, entry) {
+      var _this = this;
+      return loader.loadText(entry.address).then(function(text) {
+        entry.setTemplate(_this._createTemplateFromMarkup(text));
+      });
+    };
+    TextTemplateLoader.prototype._createTemplateFromMarkup = function _createTemplateFromMarkup(markup) {
+      var parser = document.createElement('div');
+      parser.innerHTML = markup;
+      var template = parser.firstElementChild;
+      if (this.hasTemplateElement) {
+        return template;
+      }
+      template.content = document.createDocumentFragment();
+      while (template.firstChild) {
+        template.content.appendChild(template.firstChild);
+      }
+      HTMLTemplateElement.bootstrap(template);
+      return template;
+    };
+    return TextTemplateLoader;
+  })();
+  exports.TextTemplateLoader = TextTemplateLoader;
+  var polyfilled = false;
+  if (!window.System || !window.System['import']) {
+    var sys = window.System = window.System || {};
+    sys.polyfilled = polyfilled = true;
+    sys.isFake = false;
+    sys.map = {};
+    sys['import'] = function(moduleId) {
+      return new Promise(function(resolve, reject) {
+        require([moduleId], resolve, reject);
+      });
+    };
+    sys.normalize = function(url) {
+      return Promise.resolve(url);
+    };
+    sys.normalizeSync = function(url) {
+      return url;
+    };
+    if (window.requirejs && requirejs.s && requirejs.s.contexts && requirejs.s.contexts._ && requirejs.s.contexts._.defined) {
+      (function() {
+        var defined = requirejs.s.contexts._.defined;
+        sys.forEachModule = function(callback) {
+          for (var key in defined) {
+            if (callback(key, defined[key]))
+              return;
+          }
+        };
+      })();
+    } else {
+      sys.forEachModule = function(callback) {};
+    }
+  } else {
+    (function() {
+      var modules = System._loader.modules;
+      System.isFake = false;
+      System.forEachModule = function(callback) {
+        for (var key in modules) {
+          if (callback(key, modules[key].module))
+            return;
+        }
+      };
+      System.set('text', System.newModule({'translate': function translate(load) {
+          return 'module.exports = "' + load.source.replace(/(["\\])/g, '\\$1').replace(/[\f]/g, '\\f').replace(/[\b]/g, '\\b').replace(/[\n]/g, '\\n').replace(/[\t]/g, '\\t').replace(/[\r]/g, '\\r').replace(/[\u2028]/g, '\\u2028').replace(/[\u2029]/g, '\\u2029') + '";';
+        }}));
+    })();
+  }
+  function ensureOriginOnExports(executed, name) {
+    var target = executed;
+    var key = undefined;
+    var exportedValue = undefined;
+    if (target.__useDefault) {
+      target = target['default'];
+    }
+    _aureliaMetadata.Origin.set(target, new _aureliaMetadata.Origin(name, 'default'));
+    for (key in target) {
+      exportedValue = target[key];
+      if (typeof exportedValue === 'function') {
+        _aureliaMetadata.Origin.set(exportedValue, new _aureliaMetadata.Origin(name, key));
+      }
+    }
+    return executed;
+  }
+  var DefaultLoader = (function(_Loader) {
+    _inherits(DefaultLoader, _Loader);
+    function DefaultLoader() {
+      _classCallCheck(this, DefaultLoader);
+      _Loader.call(this);
+      this.textPluginName = 'text';
+      this.moduleRegistry = {};
+      this.useTemplateLoader(new TextTemplateLoader());
+      var that = this;
+      this.addPlugin('template-registry-entry', {'fetch': function fetch(address) {
+          var entry = that.getOrCreateTemplateRegistryEntry(address);
+          return entry.templateIsLoaded ? entry : that.templateLoader.loadTemplate(that, entry).then(function(x) {
+            return entry;
+          });
+        }});
+    }
+    DefaultLoader.prototype.useTemplateLoader = function useTemplateLoader(templateLoader) {
+      this.templateLoader = templateLoader;
+    };
+    DefaultLoader.prototype.loadModule = function loadModule(id) {
+      var _this2 = this;
+      return System.normalize(id).then(function(newId) {
+        var existing = _this2.moduleRegistry[newId];
+        if (existing) {
+          return existing;
+        }
+        return System['import'](newId).then(function(m) {
+          _this2.moduleRegistry[newId] = m;
+          return ensureOriginOnExports(m, newId);
+        });
+      });
+    };
+    DefaultLoader.prototype.loadAllModules = function loadAllModules(ids) {
+      var loads = [];
+      for (var i = 0,
+          ii = ids.length; i < ii; ++i) {
+        loads.push(this.loadModule(ids[i]));
+      }
+      return Promise.all(loads);
+    };
+    DefaultLoader.prototype.loadTemplate = function loadTemplate(url) {
+      return System['import'](this.applyPluginToUrl(url, 'template-registry-entry'));
+    };
+    DefaultLoader.prototype.loadText = function loadText(url) {
+      return System['import'](this.applyPluginToUrl(url, this.textPluginName));
+    };
+    DefaultLoader.prototype.applyPluginToUrl = function applyPluginToUrl(url, pluginName) {
+      return polyfilled ? pluginName + '!' + url : url + '!' + pluginName;
+    };
+    DefaultLoader.prototype.addPlugin = function addPlugin(pluginName, implementation) {
+      if (polyfilled) {
+        define(pluginName, [], {'load': function load(name, req, onload) {
+            var address = req.toUrl(name);
+            var result = implementation.fetch(address);
+            Promise.resolve(result).then(onload);
+          }});
+      } else {
+        System.set(pluginName, System.newModule({
+          'fetch': function fetch(load, _fetch) {
+            var result = implementation.fetch(load.address);
+            return Promise.resolve(result).then(function(x) {
+              load.metadata.result = x;
+              return '';
+            });
+          },
+          'instantiate': function instantiate(load) {
+            return load.metadata.result;
+          }
+        }));
+      }
+    };
+    return DefaultLoader;
+  })(_aureliaLoader.Loader);
+  exports.DefaultLoader = DefaultLoader;
+  window.AureliaLoader = DefaultLoader;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/loader@0.9.0", ["github:aurelia/loader@0.9.0/aurelia-loader"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/metadata@0.8.0", ["github:aurelia/metadata@0.8.0/aurelia-metadata"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/loader@0.9.0/aurelia-loader", ["exports", "github:zloirock/core-js@0.8.4", "github:aurelia/path@0.9.0", "github:aurelia/metadata@0.8.0"], function(exports, _coreJs, _aureliaPath, _aureliaMetadata) {
+  'use strict';
+  exports.__esModule = true;
+  var _createClass = (function() {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ('value' in descriptor)
+          descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+    return function(Constructor, protoProps, staticProps) {
+      if (protoProps)
+        defineProperties(Constructor.prototype, protoProps);
+      if (staticProps)
+        defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  })();
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var TemplateDependency = function TemplateDependency(src, name) {
+    _classCallCheck(this, TemplateDependency);
+    this.src = src;
+    this.name = name;
+  };
+  exports.TemplateDependency = TemplateDependency;
+  var TemplateRegistryEntry = (function() {
+    function TemplateRegistryEntry(address) {
+      _classCallCheck(this, TemplateRegistryEntry);
+      this.address = address;
+      this.template = null;
+      this.dependencies = null;
+      this.resources = null;
+      this.factory = null;
+    }
+    TemplateRegistryEntry.prototype.setTemplate = function setTemplate(template) {
+      var address = this.address;
+      var useResources = undefined;
+      var current = undefined;
+      var src = undefined;
+      this.template = template;
+      useResources = template.content.querySelectorAll('require');
+      this.dependencies = new Array(useResources.length);
+      if (useResources.length === 0) {
+        return;
+      }
+      for (var i = 0,
+          ii = useResources.length; i < ii; ++i) {
+        current = useResources[i];
+        src = current.getAttribute('from');
+        if (!src) {
+          throw new Error('<require> element in ' + address + ' has no "from" attribute.');
+        }
+        this.dependencies[i] = new TemplateDependency(_aureliaPath.relativeToFile(src, address), current.getAttribute('as'));
+        if (current.parentNode) {
+          current.parentNode.removeChild(current);
+        }
+      }
+    };
+    TemplateRegistryEntry.prototype.addDependency = function addDependency(src, name) {
+      if (typeof src === 'string') {
+        this.dependencies.push(new TemplateDependency(_aureliaPath.relativeToFile(src, this.address), name));
+      } else if (typeof src === 'function') {
+        var origin = _aureliaMetadata.Origin.get(src);
+        this.dependencies.push(new TemplateDependency(origin.moduleId, name));
+      }
+    };
+    TemplateRegistryEntry.prototype.setResources = function setResources(resources) {
+      this.resources = resources;
+    };
+    TemplateRegistryEntry.prototype.setFactory = function setFactory(factory) {
+      this.factory = factory;
+    };
+    _createClass(TemplateRegistryEntry, [{
+      key: 'templateIsLoaded',
+      get: function get() {
+        return this.template !== null;
+      }
+    }, {
+      key: 'isReady',
+      get: function get() {
+        return this.factory !== null;
+      }
+    }]);
+    return TemplateRegistryEntry;
+  })();
+  exports.TemplateRegistryEntry = TemplateRegistryEntry;
+  var Loader = (function() {
+    function Loader() {
+      _classCallCheck(this, Loader);
+      this.templateRegistry = {};
+    }
+    Loader.prototype.loadModule = function loadModule(id) {
+      throw new Error('Loaders must implement loadModule(id).');
+    };
+    Loader.prototype.loadAllModules = function loadAllModules(ids) {
+      throw new Error('Loader must implement loadAllModules(ids).');
+    };
+    Loader.prototype.loadTemplate = function loadTemplate(url) {
+      throw new Error('Loader must implement loadTemplate(url).');
+    };
+    Loader.prototype.loadText = function loadText(url) {
+      throw new Error('Loader must implement loadText(url).');
+    };
+    Loader.prototype.applyPluginToUrl = function applyPluginToUrl(url, pluginName) {
+      throw new Error('Loader must implement applyPluginToUrl(url, pluginName).');
+    };
+    Loader.prototype.addPlugin = function addPlugin(pluginName, implementation) {
+      throw new Error('Loader must implement addPlugin(pluginName, implementation).');
+    };
+    Loader.prototype.getOrCreateTemplateRegistryEntry = function getOrCreateTemplateRegistryEntry(id) {
+      var entry = this.templateRegistry[id];
+      if (entry === undefined) {
+        this.templateRegistry[id] = entry = new TemplateRegistryEntry(id);
+      }
+      return entry;
+    };
+    return Loader;
+  })();
+  exports.Loader = Loader;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/metadata@0.8.0/aurelia-metadata", ["exports", "npm:core-js@0.9.18"], function(exports, _coreJs) {
+  'use strict';
+  exports.__esModule = true;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var theGlobal = (function() {
+    if (typeof self !== 'undefined') {
+      return self;
+    }
+    if (typeof global !== 'undefined') {
+      return global;
+    }
+    return new Function('return this')();
+  })();
+  var emptyMetadata = Object.freeze({});
+  var metadataContainerKey = '__metadata__';
+  if (typeof theGlobal.System === 'undefined') {
+    theGlobal.System = {isFake: true};
+  }
+  if (typeof theGlobal.System.forEachModule === 'undefined') {
+    theGlobal.System.forEachModule = function() {};
+  }
+  if (typeof theGlobal.Reflect === 'undefined') {
+    theGlobal.Reflect = {};
+  }
+  if (typeof theGlobal.Reflect.getOwnMetadata === 'undefined') {
+    Reflect.getOwnMetadata = function(metadataKey, target, targetKey) {
+      return ((target[metadataContainerKey] || emptyMetadata)[targetKey] || emptyMetadata)[metadataKey];
+    };
+  }
+  if (typeof theGlobal.Reflect.defineMetadata === 'undefined') {
+    Reflect.defineMetadata = function(metadataKey, metadataValue, target, targetKey) {
+      var metadataContainer = target.hasOwnProperty(metadataContainerKey) ? target[metadataContainerKey] : target[metadataContainerKey] = {};
+      var targetContainer = metadataContainer[targetKey] || (metadataContainer[targetKey] = {});
+      targetContainer[metadataKey] = metadataValue;
+    };
+  }
+  if (typeof theGlobal.Reflect.metadata === 'undefined') {
+    Reflect.metadata = function(metadataKey, metadataValue) {
+      return function(target, targetKey) {
+        Reflect.defineMetadata(metadataKey, metadataValue, target, targetKey);
+      };
+    };
+  }
+  function ensureDecorators(target) {
+    var applicator = undefined;
+    if (typeof target.decorators === 'function') {
+      applicator = target.decorators();
+    } else {
+      applicator = target.decorators;
+    }
+    if (typeof applicator._decorate === 'function') {
+      delete target.decorators;
+      applicator._decorate(target);
+    } else {
+      throw new Error('The return value of your decorator\'s method was not valid.');
+    }
+  }
+  var Metadata = {
+    global: theGlobal,
+    noop: function noop() {},
+    resource: 'aurelia:resource',
+    paramTypes: 'design:paramtypes',
+    properties: 'design:properties',
+    get: function get(metadataKey, target, targetKey) {
+      if (!target) {
+        return undefined;
+      }
+      var result = Metadata.getOwn(metadataKey, target, targetKey);
+      return result === undefined ? Metadata.get(metadataKey, Object.getPrototypeOf(target), targetKey) : result;
+    },
+    getOwn: function getOwn(metadataKey, target, targetKey) {
+      if (!target) {
+        return undefined;
+      }
+      if (target.hasOwnProperty('decorators')) {
+        ensureDecorators(target);
+      }
+      return Reflect.getOwnMetadata(metadataKey, target, targetKey);
+    },
+    define: function define(metadataKey, metadataValue, target, targetKey) {
+      Reflect.defineMetadata(metadataKey, metadataValue, target, targetKey);
+    },
+    getOrCreateOwn: function getOrCreateOwn(metadataKey, Type, target, targetKey) {
+      var result = Metadata.getOwn(metadataKey, target, targetKey);
+      if (result === undefined) {
+        result = new Type();
+        Reflect.defineMetadata(metadataKey, result, target, targetKey);
+      }
+      return result;
+    }
+  };
+  exports.Metadata = Metadata;
+  var originStorage = new Map();
+  var unknownOrigin = Object.freeze({
+    moduleId: undefined,
+    moduleMember: undefined
+  });
+  var Origin = (function() {
+    function Origin(moduleId, moduleMember) {
+      _classCallCheck(this, Origin);
+      this.moduleId = moduleId;
+      this.moduleMember = moduleMember;
+    }
+    Origin.get = function get(fn) {
+      var origin = originStorage.get(fn);
+      if (origin === undefined) {
+        System.forEachModule(function(key, value) {
+          for (var _name in value) {
+            var exp = value[_name];
+            if (exp === fn) {
+              originStorage.set(fn, origin = new Origin(key, _name));
+              return true;
+            }
+          }
+          if (value === fn) {
+            originStorage.set(fn, origin = new Origin(key, 'default'));
+            return true;
+          }
+        });
+      }
+      return origin || unknownOrigin;
+    };
+    Origin.set = function set(fn, origin) {
+      originStorage.set(fn, origin);
+    };
+    return Origin;
+  })();
+  exports.Origin = Origin;
+  var DecoratorApplicator = (function() {
+    function DecoratorApplicator() {
+      _classCallCheck(this, DecoratorApplicator);
+      this._first = null;
+      this._second = null;
+      this._third = null;
+      this._rest = null;
+    }
+    DecoratorApplicator.prototype.decorator = (function(_decorator) {
+      function decorator(_x) {
+        return _decorator.apply(this, arguments);
+      }
+      decorator.toString = function() {
+        return _decorator.toString();
+      };
+      return decorator;
+    })(function(decorator) {
+      if (this._first === null) {
+        this._first = decorator;
+        return this;
+      }
+      if (this._second === null) {
+        this._second = decorator;
+        return this;
+      }
+      if (this._third === null) {
+        this._third = decorator;
+        return this;
+      }
+      if (this._rest === null) {
+        this._rest = [];
+      }
+      this._rest.push(decorator);
+      return this;
+    });
+    DecoratorApplicator.prototype._decorate = function _decorate(target) {
+      if (this._first !== null) {
+        this._first(target);
+      }
+      if (this._second !== null) {
+        this._second(target);
+      }
+      if (this._third !== null) {
+        this._third(target);
+      }
+      var rest = this._rest;
+      if (rest !== null) {
+        for (var i = 0,
+            ii = rest.length; i < ii; ++i) {
+          rest[i](target);
+        }
+      }
+    };
+    return DecoratorApplicator;
+  })();
+  exports.DecoratorApplicator = DecoratorApplicator;
+  var Decorators = {configure: {
+      parameterizedDecorator: function parameterizedDecorator(name, decorator) {
+        Decorators[name] = function() {
+          var applicator = new DecoratorApplicator();
+          return applicator[name].apply(applicator, arguments);
+        };
+        DecoratorApplicator.prototype[name] = function() {
+          var result = decorator.apply(null, arguments);
+          return this.decorator(result);
+        };
+      },
+      simpleDecorator: function simpleDecorator(name, decorator) {
+        Decorators[name] = function() {
+          return new DecoratorApplicator().decorator(decorator);
+        };
+        DecoratorApplicator.prototype[name] = function() {
+          return this.decorator(decorator);
+        };
+      }
+    }};
+  exports.Decorators = Decorators;
+});
+
+_removeDefine();
+})();
+System.registerDynamic("github:zloirock/core-js@0.8.4", ["github:zloirock/core-js@0.8.4/index"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  module.exports = require("github:zloirock/core-js@0.8.4/index");
+  global.define = __define;
+  return module.exports;
+});
+
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/path@0.9.0", ["github:aurelia/path@0.9.0/aurelia-path"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+System.registerDynamic("github:zloirock/core-js@0.8.4/index", ["github:zloirock/core-js@0.8.4/shim", "github:zloirock/core-js@0.8.4/modules/core.dict", "github:zloirock/core-js@0.8.4/modules/core.iter-helpers", "github:zloirock/core-js@0.8.4/modules/core.$for", "github:zloirock/core-js@0.8.4/modules/core.delay", "github:zloirock/core-js@0.8.4/modules/core.binding", "github:zloirock/core-js@0.8.4/modules/core.object", "github:zloirock/core-js@0.8.4/modules/core.array.turn", "github:zloirock/core-js@0.8.4/modules/core.number.iterator", "github:zloirock/core-js@0.8.4/modules/core.number.math", "github:zloirock/core-js@0.8.4/modules/core.string.escape-html", "github:zloirock/core-js@0.8.4/modules/core.date", "github:zloirock/core-js@0.8.4/modules/core.global", "github:zloirock/core-js@0.8.4/modules/core.log", "github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  require("github:zloirock/core-js@0.8.4/shim");
+  require("github:zloirock/core-js@0.8.4/modules/core.dict");
+  require("github:zloirock/core-js@0.8.4/modules/core.iter-helpers");
+  require("github:zloirock/core-js@0.8.4/modules/core.$for");
+  require("github:zloirock/core-js@0.8.4/modules/core.delay");
+  require("github:zloirock/core-js@0.8.4/modules/core.binding");
+  require("github:zloirock/core-js@0.8.4/modules/core.object");
+  require("github:zloirock/core-js@0.8.4/modules/core.array.turn");
+  require("github:zloirock/core-js@0.8.4/modules/core.number.iterator");
+  require("github:zloirock/core-js@0.8.4/modules/core.number.math");
+  require("github:zloirock/core-js@0.8.4/modules/core.string.escape-html");
+  require("github:zloirock/core-js@0.8.4/modules/core.date");
+  require("github:zloirock/core-js@0.8.4/modules/core.global");
+  require("github:zloirock/core-js@0.8.4/modules/core.log");
+  module.exports = require("github:zloirock/core-js@0.8.4/modules/$").core;
+  global.define = __define;
+  return module.exports;
+});
+
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/path@0.9.0/aurelia-path", ["exports"], function(exports) {
+  'use strict';
+  exports.__esModule = true;
+  exports.relativeToFile = relativeToFile;
+  exports.join = join;
+  exports.buildQueryString = buildQueryString;
+  exports.parseQueryString = parseQueryString;
+  function trimDots(ary) {
+    for (var i = 0; i < ary.length; ++i) {
+      var part = ary[i];
+      if (part === '.') {
+        ary.splice(i, 1);
+        i -= 1;
+      } else if (part === '..') {
+        if (i === 0 || i === 1 && ary[2] === '..' || ary[i - 1] === '..') {
+          continue;
+        } else if (i > 0) {
+          ary.splice(i - 1, 2);
+          i -= 2;
+        }
+      }
+    }
+  }
+  function relativeToFile(name, file) {
+    var fileParts = file && file.split('/');
+    var nameParts = name.trim().split('/');
+    if (nameParts[0].charAt(0) === '.' && fileParts) {
+      var normalizedBaseParts = fileParts.slice(0, fileParts.length - 1);
+      nameParts.unshift.apply(nameParts, normalizedBaseParts);
+    }
+    trimDots(nameParts);
+    return nameParts.join('/');
+  }
+  function join(path1, path2) {
+    if (!path1) {
+      return path2;
+    }
+    if (!path2) {
+      return path1;
+    }
+    var schemeMatch = path1.match(/^([^/]*?:)\//);
+    var scheme = schemeMatch && schemeMatch.length > 0 ? schemeMatch[1] : '';
+    path1 = path1.substr(scheme.length);
+    var urlPrefix = undefined;
+    if (path1.indexOf('///') === 0 && scheme === 'file:') {
+      urlPrefix = '///';
+    } else if (path1.indexOf('//') === 0) {
+      urlPrefix = '//';
+    } else if (path1.indexOf('/') === 0) {
+      urlPrefix = '/';
+    } else {
+      urlPrefix = '';
+    }
+    var trailingSlash = path2.slice(-1) === '/' ? '/' : '';
+    var url1 = path1.split('/');
+    var url2 = path2.split('/');
+    var url3 = [];
+    for (var i = 0,
+        ii = url1.length; i < ii; ++i) {
+      if (url1[i] === '..') {
+        url3.pop();
+      } else if (url1[i] === '.' || url1[i] === '') {
+        continue;
+      } else {
+        url3.push(url1[i]);
+      }
+    }
+    for (var i = 0,
+        ii = url2.length; i < ii; ++i) {
+      if (url2[i] === '..') {
+        url3.pop();
+      } else if (url2[i] === '.' || url2[i] === '') {
+        continue;
+      } else {
+        url3.push(url2[i]);
+      }
+    }
+    return scheme + urlPrefix + url3.join('/') + trailingSlash;
+  }
+  function buildQueryString(params) {
+    var pairs = [];
+    var keys = Object.keys(params || {}).sort();
+    var encode = encodeURIComponent;
+    var encodeKey = function encodeKey(k) {
+      return encode(k).replace('%24', '$');
+    };
+    for (var i = 0,
+        len = keys.length; i < len; i++) {
+      var key = keys[i];
+      var value = params[key];
+      if (value === null || value === undefined) {
+        continue;
+      }
+      if (Array.isArray(value)) {
+        var arrayKey = encodeKey(key) + '[]';
+        for (var j = 0,
+            l = value.length; j < l; j++) {
+          pairs.push(arrayKey + '=' + encode(value[j]));
+        }
+      } else {
+        pairs.push(encodeKey(key) + '=' + encode(value));
+      }
+    }
+    if (pairs.length === 0) {
+      return '';
+    }
+    return pairs.join('&');
+  }
+  function parseQueryString(queryString) {
+    var queryParams = {};
+    if (!queryString || typeof queryString !== 'string') {
+      return queryParams;
+    }
+    var query = queryString;
+    if (query.charAt(0) === '?') {
+      query = query.substr(1);
+    }
+    var pairs = query.split('&');
+    for (var i = 0; i < pairs.length; i++) {
+      var pair = pairs[i].split('=');
+      var key = decodeURIComponent(pair[0]);
+      var keyLength = key.length;
+      var isArray = false;
+      var value = undefined;
+      if (!key) {
+        continue;
+      } else if (pair.length === 1) {
+        value = true;
+      } else {
+        if (keyLength > 2 && key.slice(keyLength - 2) === '[]') {
+          isArray = true;
+          key = key.slice(0, keyLength - 2);
+          if (!queryParams[key]) {
+            queryParams[key] = [];
+          }
+        }
+        value = pair[1] ? decodeURIComponent(pair[1]) : '';
+      }
+      if (isArray) {
+        queryParams[key].push(value);
+      } else {
+        queryParams[key] = value;
+      }
+    }
+    return queryParams;
+  }
+});
+
+_removeDefine();
+})();
+System.registerDynamic("github:zloirock/core-js@0.8.4/shim", ["github:zloirock/core-js@0.8.4/modules/es5", "github:zloirock/core-js@0.8.4/modules/es6.symbol", "github:zloirock/core-js@0.8.4/modules/es6.object.assign", "github:zloirock/core-js@0.8.4/modules/es6.object.is", "github:zloirock/core-js@0.8.4/modules/es6.object.set-prototype-of", "github:zloirock/core-js@0.8.4/modules/es6.object.to-string", "github:zloirock/core-js@0.8.4/modules/es6.object.statics-accept-primitives", "github:zloirock/core-js@0.8.4/modules/es6.function.name", "github:zloirock/core-js@0.8.4/modules/es6.number.constructor", "github:zloirock/core-js@0.8.4/modules/es6.number.statics", "github:zloirock/core-js@0.8.4/modules/es6.math", "github:zloirock/core-js@0.8.4/modules/es6.string.from-code-point", "github:zloirock/core-js@0.8.4/modules/es6.string.raw", "github:zloirock/core-js@0.8.4/modules/es6.string.iterator", "github:zloirock/core-js@0.8.4/modules/es6.string.code-point-at", "github:zloirock/core-js@0.8.4/modules/es6.string.ends-with", "github:zloirock/core-js@0.8.4/modules/es6.string.includes", "github:zloirock/core-js@0.8.4/modules/es6.string.repeat", "github:zloirock/core-js@0.8.4/modules/es6.string.starts-with", "github:zloirock/core-js@0.8.4/modules/es6.array.from", "github:zloirock/core-js@0.8.4/modules/es6.array.of", "github:zloirock/core-js@0.8.4/modules/es6.array.iterator", "github:zloirock/core-js@0.8.4/modules/es6.array.species", "github:zloirock/core-js@0.8.4/modules/es6.array.copy-within", "github:zloirock/core-js@0.8.4/modules/es6.array.fill", "github:zloirock/core-js@0.8.4/modules/es6.array.find", "github:zloirock/core-js@0.8.4/modules/es6.array.find-index", "github:zloirock/core-js@0.8.4/modules/es6.regexp", "github:zloirock/core-js@0.8.4/modules/es6.promise", "github:zloirock/core-js@0.8.4/modules/es6.map", "github:zloirock/core-js@0.8.4/modules/es6.set", "github:zloirock/core-js@0.8.4/modules/es6.weak-map", "github:zloirock/core-js@0.8.4/modules/es6.weak-set", "github:zloirock/core-js@0.8.4/modules/es6.reflect", "github:zloirock/core-js@0.8.4/modules/es7.array.includes", "github:zloirock/core-js@0.8.4/modules/es7.string.at", "github:zloirock/core-js@0.8.4/modules/es7.regexp.escape", "github:zloirock/core-js@0.8.4/modules/es7.object.get-own-property-descriptors", "github:zloirock/core-js@0.8.4/modules/es7.object.to-array", "github:zloirock/core-js@0.8.4/modules/es7.set.to-json", "github:zloirock/core-js@0.8.4/modules/js.array.statics", "github:zloirock/core-js@0.8.4/modules/web.timers", "github:zloirock/core-js@0.8.4/modules/web.immediate", "github:zloirock/core-js@0.8.4/modules/web.dom.iterable", "github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  require("github:zloirock/core-js@0.8.4/modules/es5");
+  require("github:zloirock/core-js@0.8.4/modules/es6.symbol");
+  require("github:zloirock/core-js@0.8.4/modules/es6.object.assign");
+  require("github:zloirock/core-js@0.8.4/modules/es6.object.is");
+  require("github:zloirock/core-js@0.8.4/modules/es6.object.set-prototype-of");
+  require("github:zloirock/core-js@0.8.4/modules/es6.object.to-string");
+  require("github:zloirock/core-js@0.8.4/modules/es6.object.statics-accept-primitives");
+  require("github:zloirock/core-js@0.8.4/modules/es6.function.name");
+  require("github:zloirock/core-js@0.8.4/modules/es6.number.constructor");
+  require("github:zloirock/core-js@0.8.4/modules/es6.number.statics");
+  require("github:zloirock/core-js@0.8.4/modules/es6.math");
+  require("github:zloirock/core-js@0.8.4/modules/es6.string.from-code-point");
+  require("github:zloirock/core-js@0.8.4/modules/es6.string.raw");
+  require("github:zloirock/core-js@0.8.4/modules/es6.string.iterator");
+  require("github:zloirock/core-js@0.8.4/modules/es6.string.code-point-at");
+  require("github:zloirock/core-js@0.8.4/modules/es6.string.ends-with");
+  require("github:zloirock/core-js@0.8.4/modules/es6.string.includes");
+  require("github:zloirock/core-js@0.8.4/modules/es6.string.repeat");
+  require("github:zloirock/core-js@0.8.4/modules/es6.string.starts-with");
+  require("github:zloirock/core-js@0.8.4/modules/es6.array.from");
+  require("github:zloirock/core-js@0.8.4/modules/es6.array.of");
+  require("github:zloirock/core-js@0.8.4/modules/es6.array.iterator");
+  require("github:zloirock/core-js@0.8.4/modules/es6.array.species");
+  require("github:zloirock/core-js@0.8.4/modules/es6.array.copy-within");
+  require("github:zloirock/core-js@0.8.4/modules/es6.array.fill");
+  require("github:zloirock/core-js@0.8.4/modules/es6.array.find");
+  require("github:zloirock/core-js@0.8.4/modules/es6.array.find-index");
+  require("github:zloirock/core-js@0.8.4/modules/es6.regexp");
+  require("github:zloirock/core-js@0.8.4/modules/es6.promise");
+  require("github:zloirock/core-js@0.8.4/modules/es6.map");
+  require("github:zloirock/core-js@0.8.4/modules/es6.set");
+  require("github:zloirock/core-js@0.8.4/modules/es6.weak-map");
+  require("github:zloirock/core-js@0.8.4/modules/es6.weak-set");
+  require("github:zloirock/core-js@0.8.4/modules/es6.reflect");
+  require("github:zloirock/core-js@0.8.4/modules/es7.array.includes");
+  require("github:zloirock/core-js@0.8.4/modules/es7.string.at");
+  require("github:zloirock/core-js@0.8.4/modules/es7.regexp.escape");
+  require("github:zloirock/core-js@0.8.4/modules/es7.object.get-own-property-descriptors");
+  require("github:zloirock/core-js@0.8.4/modules/es7.object.to-array");
+  require("github:zloirock/core-js@0.8.4/modules/es7.set.to-json");
+  require("github:zloirock/core-js@0.8.4/modules/js.array.statics");
+  require("github:zloirock/core-js@0.8.4/modules/web.timers");
+  require("github:zloirock/core-js@0.8.4/modules/web.immediate");
+  require("github:zloirock/core-js@0.8.4/modules/web.dom.iterable");
+  module.exports = require("github:zloirock/core-js@0.8.4/modules/$").core;
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.dict", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.assign", "github:zloirock/core-js@0.8.4/modules/$.keyof", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      assign = require("github:zloirock/core-js@0.8.4/modules/$.assign"),
+      keyOf = require("github:zloirock/core-js@0.8.4/modules/$.keyof"),
+      ITER = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('iter'),
+      assert = require("github:zloirock/core-js@0.8.4/modules/$.assert"),
+      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
+      step = $iter.step,
+      getKeys = $.getKeys,
+      toObject = $.toObject,
+      has = $.has;
+  function Dict(iterable) {
+    var dict = $.create(null);
+    if (iterable != undefined) {
+      if ($iter.is(iterable)) {
+        $iter.forOf(iterable, true, function(key, value) {
+          dict[key] = value;
+        });
+      } else
+        assign(dict, iterable);
+    }
+    return dict;
+  }
+  Dict.prototype = null;
+  function DictIterator(iterated, kind) {
+    $.set(this, ITER, {
+      o: toObject(iterated),
+      a: getKeys(iterated),
+      i: 0,
+      k: kind
+    });
+  }
+  $iter.create(DictIterator, 'Dict', function() {
+    var iter = this[ITER],
+        O = iter.o,
+        keys = iter.a,
+        kind = iter.k,
+        key;
+    do {
+      if (iter.i >= keys.length) {
+        iter.o = undefined;
+        return step(1);
+      }
+    } while (!has(O, key = keys[iter.i++]));
+    if (kind == 'key')
+      return step(0, key);
+    if (kind == 'value')
+      return step(0, O[key]);
+    return step(0, [key, O[key]]);
+  });
+  function createDictIter(kind) {
+    return function(it) {
+      return new DictIterator(it, kind);
+    };
+  }
+  function generic(A, B) {
+    return typeof A == 'function' ? A : B;
+  }
+  function createDictMethod(TYPE) {
+    var IS_MAP = TYPE == 1,
+        IS_EVERY = TYPE == 4;
+    return function(object, callbackfn, that) {
+      var f = ctx(callbackfn, that, 3),
+          O = toObject(object),
+          result = IS_MAP || TYPE == 7 || TYPE == 2 ? new (generic(this, Dict)) : undefined,
+          key,
+          val,
+          res;
+      for (key in O)
+        if (has(O, key)) {
+          val = O[key];
+          res = f(val, key, object);
+          if (TYPE) {
+            if (IS_MAP)
+              result[key] = res;
+            else if (res)
+              switch (TYPE) {
+                case 2:
+                  result[key] = val;
+                  break;
+                case 3:
+                  return true;
+                case 5:
+                  return val;
+                case 6:
+                  return key;
+                case 7:
+                  result[res[0]] = res[1];
+              }
+            else if (IS_EVERY)
+              return false;
+          }
+        }
+      return TYPE == 3 || IS_EVERY ? IS_EVERY : result;
+    };
+  }
+  function createDictReduce(IS_TURN) {
+    return function(object, mapfn, init) {
+      assert.fn(mapfn);
+      var O = toObject(object),
+          keys = getKeys(O),
+          length = keys.length,
+          i = 0,
+          memo,
+          key,
+          result;
+      if (IS_TURN) {
+        memo = init == undefined ? new (generic(this, Dict)) : Object(init);
+      } else if (arguments.length < 3) {
+        assert(length, 'Reduce of empty object with no initial value');
+        memo = O[keys[i++]];
+      } else
+        memo = Object(init);
+      while (length > i)
+        if (has(O, key = keys[i++])) {
+          result = mapfn(memo, O[key], key, object);
+          if (IS_TURN) {
+            if (result === false)
+              break;
+          } else
+            memo = result;
+        }
+      return memo;
+    };
+  }
+  var findKey = createDictMethod(6);
+  $def($def.G + $def.F, {Dict: $.mix(Dict, {
+      keys: createDictIter('key'),
+      values: createDictIter('value'),
+      entries: createDictIter('key+value'),
+      forEach: createDictMethod(0),
+      map: createDictMethod(1),
+      filter: createDictMethod(2),
+      some: createDictMethod(3),
+      every: createDictMethod(4),
+      find: createDictMethod(5),
+      findKey: findKey,
+      mapPairs: createDictMethod(7),
+      reduce: createDictReduce(false),
+      turn: createDictReduce(true),
+      keyOf: keyOf,
+      includes: function(object, el) {
+        return (el == el ? keyOf(object, el) : findKey(object, function(it) {
+          return it != it;
+        })) !== undefined;
+      },
+      has: has,
+      get: function(object, key) {
+        if (has(object, key))
+          return object[key];
+      },
+      set: $.def,
+      isDict: function(it) {
+        return $.isObject(it) && $.getProto(it) === Dict.prototype;
+      }
+    })});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.iter-helpers", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var core = require("github:zloirock/core-js@0.8.4/modules/$").core,
+      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter");
+  core.isIterable = $iter.is;
+  core.getIterator = $iter.get;
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.$for", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
+      safe = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe,
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
+      ENTRIES = safe('entries'),
+      FN = safe('fn'),
+      ITER = safe('iter'),
+      forOf = $iter.forOf,
+      stepCall = $iter.stepCall,
+      getIterator = $iter.get,
+      setIterator = $iter.set,
+      createIterator = $iter.create;
+  function $for(iterable, entries) {
+    if (!(this instanceof $for))
+      return new $for(iterable, entries);
+    this[ITER] = getIterator(iterable);
+    this[ENTRIES] = !!entries;
+  }
+  createIterator($for, 'Wrapper', function() {
+    return this[ITER].next();
+  });
+  var $forProto = $for.prototype;
+  setIterator($forProto, function() {
+    return this[ITER];
+  });
+  function createChainIterator(next) {
+    function Iterator(iter, fn, that) {
+      this[ITER] = getIterator(iter);
+      this[ENTRIES] = iter[ENTRIES];
+      this[FN] = ctx(fn, that, iter[ENTRIES] ? 2 : 1);
+    }
+    createIterator(Iterator, 'Chain', next, $forProto);
+    setIterator(Iterator.prototype, $.that);
+    return Iterator;
+  }
+  var MapIter = createChainIterator(function() {
+    var step = this[ITER].next();
+    return step.done ? step : $iter.step(0, stepCall(this[ITER], this[FN], step.value, this[ENTRIES]));
+  });
+  var FilterIter = createChainIterator(function() {
+    for (; ; ) {
+      var step = this[ITER].next();
+      if (step.done || stepCall(this[ITER], this[FN], step.value, this[ENTRIES]))
+        return step;
+    }
+  });
+  $.mix($forProto, {
+    of: function(fn, that) {
+      forOf(this, this[ENTRIES], fn, that);
+    },
+    array: function(fn, that) {
+      var result = [];
+      forOf(fn != undefined ? this.map(fn, that) : this, false, result.push, result);
+      return result;
+    },
+    filter: function(fn, that) {
+      return new FilterIter(this, fn, that);
+    },
+    map: function(fn, that) {
+      return new MapIter(this, fn, that);
+    }
+  });
+  $for.isIterable = $iter.is;
+  $for.getIterator = getIterator;
+  $def($def.G + $def.F, {$for: $for});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.delay", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.partial"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      partial = require("github:zloirock/core-js@0.8.4/modules/$.partial");
+  $def($def.G + $def.F, {delay: function(time) {
+      return new ($.core.Promise || $.g.Promise)(function(resolve) {
+        setTimeout(partial.call(resolve, true), time);
+      });
+    }});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.binding", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.invoke", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.partial"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      invoke = require("github:zloirock/core-js@0.8.4/modules/$.invoke"),
+      hide = $.hide,
+      assertFunction = require("github:zloirock/core-js@0.8.4/modules/$.assert").fn,
+      _ = $.DESC ? require("github:zloirock/core-js@0.8.4/modules/$.uid")('tie') : 'toLocaleString',
+      toLocaleString = {}.toLocaleString;
+  $.core._ = $.path._ = $.path._ || {};
+  $def($def.P + $def.F, 'Function', {
+    part: require("github:zloirock/core-js@0.8.4/modules/$.partial"),
+    only: function(numberArguments, that) {
+      var fn = assertFunction(this),
+          n = $.toLength(numberArguments),
+          isThat = arguments.length > 1;
+      return function() {
+        var length = Math.min(n, arguments.length),
+            args = Array(length),
+            i = 0;
+        while (length > i)
+          args[i] = arguments[i++];
+        return invoke(fn, args, isThat ? that : this);
+      };
+    }
+  });
+  function tie(key) {
+    var that = this,
+        bound = {};
+    return hide(that, _, function(key) {
+      if (key === undefined || !(key in that))
+        return toLocaleString.call(that);
+      return $.has(bound, key) ? bound[key] : bound[key] = ctx(that[key], that, -1);
+    })[_](key);
+  }
+  hide($.path._, 'toString', function() {
+    return _;
+  });
+  hide(Object.prototype, _, tie);
+  $.DESC || hide(Array.prototype, _, tie);
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.object", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.own-keys", "github:zloirock/core-js@0.8.4/modules/$.cof"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      ownKeys = require("github:zloirock/core-js@0.8.4/modules/$.own-keys");
+  function define(target, mixin) {
+    var keys = ownKeys($.toObject(mixin)),
+        length = keys.length,
+        i = 0,
+        key;
+    while (length > i)
+      $.setDesc(target, key = keys[i++], $.getDesc(mixin, key));
+    return target;
+  }
+  $def($def.S + $def.F, 'Object', {
+    isObject: $.isObject,
+    classof: require("github:zloirock/core-js@0.8.4/modules/$.cof").classof,
+    define: define,
+    make: function(proto, mixin) {
+      return define($.create(proto), mixin);
+    }
+  });
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.array.turn", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.unscope"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      assertFunction = require("github:zloirock/core-js@0.8.4/modules/$.assert").fn;
+  $def($def.P + $def.F, 'Array', {turn: function(fn, target) {
+      assertFunction(fn);
+      var memo = target == undefined ? [] : Object(target),
+          O = $.ES5Object(this),
+          length = $.toLength(O.length),
+          index = 0;
+      while (length > index)
+        if (fn(memo, O[index], index++, this) === false)
+          break;
+      return memo;
+    }});
+  require("github:zloirock/core-js@0.8.4/modules/$.unscope")('turn');
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.number.iterator", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      ITER = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('iter'),
+      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
+      step = $iter.step,
+      NUMBER = 'Number';
+  function NumberIterator(iterated) {
+    $.set(this, ITER, {
+      l: $.toLength(iterated),
+      i: 0
+    });
+  }
+  $iter.create(NumberIterator, NUMBER, function() {
+    var iter = this[ITER],
+        i = iter.i++;
+    return i < iter.l ? step(0, i) : step(1);
+  });
+  $iter.define(Number, NUMBER, function() {
+    return new NumberIterator(this);
+  });
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.number.math", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.invoke"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      invoke = require("github:zloirock/core-js@0.8.4/modules/$.invoke"),
+      methods = {};
+  methods.random = function(lim) {
+    var a = +this,
+        b = lim == undefined ? 0 : +lim,
+        m = Math.min(a, b);
+    return Math.random() * (Math.max(a, b) - m) + m;
+  };
+  if ($.FW)
+    $.each.call(('round,floor,ceil,abs,sin,asin,cos,acos,tan,atan,exp,sqrt,max,min,pow,atan2,' + 'acosh,asinh,atanh,cbrt,clz32,cosh,expm1,hypot,imul,log1p,log10,log2,sign,sinh,tanh,trunc').split(','), function(key) {
+      var fn = Math[key];
+      if (fn)
+        methods[key] = function() {
+          var args = [+this],
+              i = 0;
+          while (arguments.length > i)
+            args.push(arguments[i++]);
+          return invoke(fn, args);
+        };
+    });
+  $def($def.P + $def.F, 'Number', methods);
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.string.escape-html", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.replacer"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      replacer = require("github:zloirock/core-js@0.8.4/modules/$.replacer");
+  var escapeHTMLDict = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&apos;'
+  },
+      unescapeHTMLDict = {},
+      key;
+  for (key in escapeHTMLDict)
+    unescapeHTMLDict[escapeHTMLDict[key]] = key;
+  $def($def.P + $def.F, 'String', {
+    escapeHTML: replacer(/[&<>"']/g, escapeHTMLDict),
+    unescapeHTML: replacer(/&(?:amp|lt|gt|quot|apos);/g, unescapeHTMLDict)
+  });
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.date", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      core = $.core,
+      formatRegExp = /\b\w\w?\b/g,
+      flexioRegExp = /:(.*)\|(.*)$/,
+      locales = {},
+      current = 'en',
+      SECONDS = 'Seconds',
+      MINUTES = 'Minutes',
+      HOURS = 'Hours',
+      DATE = 'Date',
+      MONTH = 'Month',
+      YEAR = 'FullYear';
+  function lz(num) {
+    return num > 9 ? num : '0' + num;
+  }
+  function createFormat(prefix) {
+    return function(template, locale) {
+      var that = this,
+          dict = locales[$.has(locales, locale) ? locale : current];
+      function get(unit) {
+        return that[prefix + unit]();
+      }
+      return String(template).replace(formatRegExp, function(part) {
+        switch (part) {
+          case 's':
+            return get(SECONDS);
+          case 'ss':
+            return lz(get(SECONDS));
+          case 'm':
+            return get(MINUTES);
+          case 'mm':
+            return lz(get(MINUTES));
+          case 'h':
+            return get(HOURS);
+          case 'hh':
+            return lz(get(HOURS));
+          case 'D':
+            return get(DATE);
+          case 'DD':
+            return lz(get(DATE));
+          case 'W':
+            return dict[0][get('Day')];
+          case 'N':
+            return get(MONTH) + 1;
+          case 'NN':
+            return lz(get(MONTH) + 1);
+          case 'M':
+            return dict[2][get(MONTH)];
+          case 'MM':
+            return dict[1][get(MONTH)];
+          case 'Y':
+            return get(YEAR);
+          case 'YY':
+            return lz(get(YEAR) % 100);
+        }
+        return part;
+      });
+    };
+  }
+  function addLocale(lang, locale) {
+    function split(index) {
+      var result = [];
+      $.each.call(locale.months.split(','), function(it) {
+        result.push(it.replace(flexioRegExp, '$' + index));
+      });
+      return result;
+    }
+    locales[lang] = [locale.weekdays.split(','), split(1), split(2)];
+    return core;
+  }
+  $def($def.P + $def.F, DATE, {
+    format: createFormat('get'),
+    formatUTC: createFormat('getUTC')
+  });
+  addLocale(current, {
+    weekdays: 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
+    months: 'January,February,March,April,May,June,July,August,September,October,November,December'
+  });
+  addLocale('ru', {
+    weekdays: 'Воскресенье,Понедельник,Вторник,Среда,Четверг,Пятница,Суббота',
+    months: 'Январ:я|ь,Феврал:я|ь,Март:а|,Апрел:я|ь,Ма:я|й,Июн:я|ь,' + 'Июл:я|ь,Август:а|,Сентябр:я|ь,Октябр:я|ь,Ноябр:я|ь,Декабр:я|ь'
+  });
+  core.locale = function(locale) {
+    return $.has(locales, locale) ? current = locale : current;
+  };
+  core.addLocale = addLocale;
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.global", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  $def($def.G + $def.F, {global: require("github:zloirock/core-js@0.8.4/modules/$").g});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.log", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.assign"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      log = {},
+      enabled = true;
+  $.each.call(('assert,clear,count,debug,dir,dirxml,error,exception,' + 'group,groupCollapsed,groupEnd,info,isIndependentlyComposed,log,' + 'markTimeline,profile,profileEnd,table,time,timeEnd,timeline,' + 'timelineEnd,timeStamp,trace,warn').split(','), function(key) {
+    log[key] = function() {
+      if (enabled && $.g.console && $.isFunction(console[key])) {
+        return Function.apply.call(console[key], console, arguments);
+      }
+    };
+  });
+  $def($def.G + $def.F, {log: require("github:zloirock/core-js@0.8.4/modules/$.assign")(log.log, log, {
+      enable: function() {
+        enabled = true;
+      },
+      disable: function() {
+        enabled = false;
+      }
+    })});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$", ["github:zloirock/core-js@0.8.4/modules/$.fw"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var global = typeof self != 'undefined' ? self : Function('return this')(),
+      core = {},
+      defineProperty = Object.defineProperty,
+      hasOwnProperty = {}.hasOwnProperty,
+      ceil = Math.ceil,
+      floor = Math.floor,
+      max = Math.max,
+      min = Math.min;
+  var DESC = !!function() {
+    try {
+      return defineProperty({}, 'a', {get: function() {
+          return 2;
+        }}).a == 2;
+    } catch (e) {}
+  }();
+  var hide = createDefiner(1);
+  function toInteger(it) {
+    return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
+  }
+  function desc(bitmap, value) {
+    return {
+      enumerable: !(bitmap & 1),
+      configurable: !(bitmap & 2),
+      writable: !(bitmap & 4),
+      value: value
+    };
+  }
+  function simpleSet(object, key, value) {
+    object[key] = value;
+    return object;
+  }
+  function createDefiner(bitmap) {
+    return DESC ? function(object, key, value) {
+      return $.setDesc(object, key, desc(bitmap, value));
+    } : simpleSet;
+  }
+  function isObject(it) {
+    return it !== null && (typeof it == 'object' || typeof it == 'function');
+  }
+  function isFunction(it) {
+    return typeof it == 'function';
+  }
+  function assertDefined(it) {
+    if (it == undefined)
+      throw TypeError("Can't call method on  " + it);
+    return it;
+  }
+  var $ = module.exports = require("github:zloirock/core-js@0.8.4/modules/$.fw")({
+    g: global,
+    core: core,
+    html: global.document && document.documentElement,
+    isObject: isObject,
+    isFunction: isFunction,
+    it: function(it) {
+      return it;
+    },
+    that: function() {
+      return this;
+    },
+    toInteger: toInteger,
+    toLength: function(it) {
+      return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0;
+    },
+    toIndex: function(index, length) {
+      index = toInteger(index);
+      return index < 0 ? max(index + length, 0) : min(index, length);
+    },
+    has: function(it, key) {
+      return hasOwnProperty.call(it, key);
+    },
+    create: Object.create,
+    getProto: Object.getPrototypeOf,
+    DESC: DESC,
+    desc: desc,
+    getDesc: Object.getOwnPropertyDescriptor,
+    setDesc: defineProperty,
+    getKeys: Object.keys,
+    getNames: Object.getOwnPropertyNames,
+    getSymbols: Object.getOwnPropertySymbols,
+    assertDefined: assertDefined,
+    ES5Object: Object,
+    toObject: function(it) {
+      return $.ES5Object(assertDefined(it));
+    },
+    hide: hide,
+    def: createDefiner(0),
+    set: global.Symbol ? simpleSet : hide,
+    mix: function(target, src) {
+      for (var key in src)
+        hide(target, key, src[key]);
+      return target;
+    },
+    each: [].forEach
+  });
+  if (typeof __e != 'undefined')
+    __e = core;
+  if (typeof __g != 'undefined')
+    __g = global;
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es5", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.invoke", "github:zloirock/core-js@0.8.4/modules/$.array-methods", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.array-includes", "github:zloirock/core-js@0.8.4/modules/$.replacer"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      invoke = require("github:zloirock/core-js@0.8.4/modules/$.invoke"),
+      arrayMethod = require("github:zloirock/core-js@0.8.4/modules/$.array-methods"),
+      IE_PROTO = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('__proto__'),
+      assert = require("github:zloirock/core-js@0.8.4/modules/$.assert"),
+      assertObject = assert.obj,
+      ObjectProto = Object.prototype,
+      A = [],
+      slice = A.slice,
+      indexOf = A.indexOf,
+      classof = cof.classof,
+      defineProperties = Object.defineProperties,
+      has = $.has,
+      defineProperty = $.setDesc,
+      getOwnDescriptor = $.getDesc,
+      isFunction = $.isFunction,
+      toObject = $.toObject,
+      toLength = $.toLength,
+      IE8_DOM_DEFINE = false;
+  if (!$.DESC) {
+    try {
+      IE8_DOM_DEFINE = defineProperty(document.createElement('div'), 'x', {get: function() {
+          return 8;
+        }}).x == 8;
+    } catch (e) {}
+    $.setDesc = function(O, P, Attributes) {
+      if (IE8_DOM_DEFINE)
+        try {
+          return defineProperty(O, P, Attributes);
+        } catch (e) {}
+      if ('get' in Attributes || 'set' in Attributes)
+        throw TypeError('Accessors not supported!');
+      if ('value' in Attributes)
+        assertObject(O)[P] = Attributes.value;
+      return O;
+    };
+    $.getDesc = function(O, P) {
+      if (IE8_DOM_DEFINE)
+        try {
+          return getOwnDescriptor(O, P);
+        } catch (e) {}
+      if (has(O, P))
+        return $.desc(!ObjectProto.propertyIsEnumerable.call(O, P), O[P]);
+    };
+    defineProperties = function(O, Properties) {
+      assertObject(O);
+      var keys = $.getKeys(Properties),
+          length = keys.length,
+          i = 0,
+          P;
+      while (length > i)
+        $.setDesc(O, P = keys[i++], Properties[P]);
+      return O;
+    };
+  }
+  $def($def.S + $def.F * !$.DESC, 'Object', {
+    getOwnPropertyDescriptor: $.getDesc,
+    defineProperty: $.setDesc,
+    defineProperties: defineProperties
+  });
+  var keys1 = ('constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,' + 'toLocaleString,toString,valueOf').split(','),
+      keys2 = keys1.concat('length', 'prototype'),
+      keysLen1 = keys1.length;
+  var createDict = function() {
+    var iframe = document.createElement('iframe'),
+        i = keysLen1,
+        gt = '>',
+        iframeDocument;
+    iframe.style.display = 'none';
+    $.html.appendChild(iframe);
+    iframe.src = 'javascript:';
+    iframeDocument = iframe.contentWindow.document;
+    iframeDocument.open();
+    iframeDocument.write('<script>document.F=Object</script' + gt);
+    iframeDocument.close();
+    createDict = iframeDocument.F;
+    while (i--)
+      delete createDict.prototype[keys1[i]];
+    return createDict();
+  };
+  function createGetKeys(names, length) {
+    return function(object) {
+      var O = toObject(object),
+          i = 0,
+          result = [],
+          key;
+      for (key in O)
+        if (key != IE_PROTO)
+          has(O, key) && result.push(key);
+      while (length > i)
+        if (has(O, key = names[i++])) {
+          ~indexOf.call(result, key) || result.push(key);
+        }
+      return result;
+    };
+  }
+  function isPrimitive(it) {
+    return !$.isObject(it);
+  }
+  function Empty() {}
+  $def($def.S, 'Object', {
+    getPrototypeOf: $.getProto = $.getProto || function(O) {
+      O = Object(assert.def(O));
+      if (has(O, IE_PROTO))
+        return O[IE_PROTO];
+      if (isFunction(O.constructor) && O instanceof O.constructor) {
+        return O.constructor.prototype;
+      }
+      return O instanceof Object ? ObjectProto : null;
+    },
+    getOwnPropertyNames: $.getNames = $.getNames || createGetKeys(keys2, keys2.length, true),
+    create: $.create = $.create || function(O, Properties) {
+      var result;
+      if (O !== null) {
+        Empty.prototype = assertObject(O);
+        result = new Empty();
+        Empty.prototype = null;
+        result[IE_PROTO] = O;
+      } else
+        result = createDict();
+      return Properties === undefined ? result : defineProperties(result, Properties);
+    },
+    keys: $.getKeys = $.getKeys || createGetKeys(keys1, keysLen1, false),
+    seal: $.it,
+    freeze: $.it,
+    preventExtensions: $.it,
+    isSealed: isPrimitive,
+    isFrozen: isPrimitive,
+    isExtensible: $.isObject
+  });
+  $def($def.P, 'Function', {bind: function(that) {
+      var fn = assert.fn(this),
+          partArgs = slice.call(arguments, 1);
+      function bound() {
+        var args = partArgs.concat(slice.call(arguments));
+        return invoke(fn, args, this instanceof bound ? $.create(fn.prototype) : that);
+      }
+      if (fn.prototype)
+        bound.prototype = fn.prototype;
+      return bound;
+    }});
+  function arrayMethodFix(fn) {
+    return function() {
+      return fn.apply($.ES5Object(this), arguments);
+    };
+  }
+  if (!(0 in Object('z') && 'z'[0] == 'z')) {
+    $.ES5Object = function(it) {
+      return cof(it) == 'String' ? it.split('') : Object(it);
+    };
+  }
+  $def($def.P + $def.F * ($.ES5Object != Object), 'Array', {
+    slice: arrayMethodFix(slice),
+    join: arrayMethodFix(A.join)
+  });
+  $def($def.S, 'Array', {isArray: function(arg) {
+      return cof(arg) == 'Array';
+    }});
+  function createArrayReduce(isRight) {
+    return function(callbackfn, memo) {
+      assert.fn(callbackfn);
+      var O = toObject(this),
+          length = toLength(O.length),
+          index = isRight ? length - 1 : 0,
+          i = isRight ? -1 : 1;
+      if (arguments.length < 2)
+        for (; ; ) {
+          if (index in O) {
+            memo = O[index];
+            index += i;
+            break;
+          }
+          index += i;
+          assert(isRight ? index >= 0 : length > index, 'Reduce of empty array with no initial value');
+        }
+      for (; isRight ? index >= 0 : length > index; index += i)
+        if (index in O) {
+          memo = callbackfn(memo, O[index], index, this);
+        }
+      return memo;
+    };
+  }
+  $def($def.P, 'Array', {
+    forEach: $.each = $.each || arrayMethod(0),
+    map: arrayMethod(1),
+    filter: arrayMethod(2),
+    some: arrayMethod(3),
+    every: arrayMethod(4),
+    reduce: createArrayReduce(false),
+    reduceRight: createArrayReduce(true),
+    indexOf: indexOf = indexOf || require("github:zloirock/core-js@0.8.4/modules/$.array-includes")(false),
+    lastIndexOf: function(el, fromIndex) {
+      var O = toObject(this),
+          length = toLength(O.length),
+          index = length - 1;
+      if (arguments.length > 1)
+        index = Math.min(index, $.toInteger(fromIndex));
+      if (index < 0)
+        index = toLength(length + index);
+      for (; index >= 0; index--)
+        if (index in O)
+          if (O[index] === el)
+            return index;
+      return -1;
+    }
+  });
+  $def($def.P, 'String', {trim: require("github:zloirock/core-js@0.8.4/modules/$.replacer")(/^\s*([\s\S]*\S)?\s*$/, '$1')});
+  $def($def.S, 'Date', {now: function() {
+      return +new Date;
+    }});
+  function lz(num) {
+    return num > 9 ? num : '0' + num;
+  }
+  $def($def.P, 'Date', {toISOString: function() {
+      if (!isFinite(this))
+        throw RangeError('Invalid time value');
+      var d = this,
+          y = d.getUTCFullYear(),
+          m = d.getUTCMilliseconds(),
+          s = y < 0 ? '-' : y > 9999 ? '+' : '';
+      return s + ('00000' + Math.abs(y)).slice(s ? -6 : -4) + '-' + lz(d.getUTCMonth() + 1) + '-' + lz(d.getUTCDate()) + 'T' + lz(d.getUTCHours()) + ':' + lz(d.getUTCMinutes()) + ':' + lz(d.getUTCSeconds()) + '.' + (m > 99 ? m : '0' + lz(m)) + 'Z';
+    }});
+  if (classof(function() {
+    return arguments;
+  }()) == 'Object')
+    cof.classof = function(it) {
+      var tag = classof(it);
+      return tag == 'Object' && isFunction(it.callee) ? 'Arguments' : tag;
+    };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.symbol", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.keyof", "github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      setTag = require("github:zloirock/core-js@0.8.4/modules/$.cof").set,
+      uid = require("github:zloirock/core-js@0.8.4/modules/$.uid"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      keyOf = require("github:zloirock/core-js@0.8.4/modules/$.keyof"),
+      has = $.has,
+      hide = $.hide,
+      getNames = $.getNames,
+      toObject = $.toObject,
+      Symbol = $.g.Symbol,
+      Base = Symbol,
+      setter = false,
+      TAG = uid.safe('tag'),
+      SymbolRegistry = {},
+      AllSymbols = {};
+  function wrap(tag) {
+    var sym = AllSymbols[tag] = $.set($.create(Symbol.prototype), TAG, tag);
+    $.DESC && setter && $.setDesc(Object.prototype, tag, {
+      configurable: true,
+      set: function(value) {
+        hide(this, tag, value);
+      }
+    });
+    return sym;
+  }
+  if (!$.isFunction(Symbol)) {
+    Symbol = function Symbol(description) {
+      if (this instanceof Symbol)
+        throw TypeError('Symbol is not a constructor');
+      return wrap(uid(description));
+    };
+    hide(Symbol.prototype, 'toString', function() {
+      return this[TAG];
+    });
+  }
+  $def($def.G + $def.W, {Symbol: Symbol});
+  var symbolStatics = {
+    'for': function(key) {
+      return has(SymbolRegistry, key += '') ? SymbolRegistry[key] : SymbolRegistry[key] = Symbol(key);
+    },
+    keyFor: function keyFor(key) {
+      return keyOf(SymbolRegistry, key);
+    },
+    pure: uid.safe,
+    set: $.set,
+    useSetter: function() {
+      setter = true;
+    },
+    useSimple: function() {
+      setter = false;
+    }
+  };
+  $.each.call(('hasInstance,isConcatSpreadable,iterator,match,replace,search,' + 'species,split,toPrimitive,toStringTag,unscopables').split(','), function(it) {
+    var sym = require("github:zloirock/core-js@0.8.4/modules/$.wks")(it);
+    symbolStatics[it] = Symbol === Base ? sym : wrap(sym);
+  });
+  setter = true;
+  $def($def.S, 'Symbol', symbolStatics);
+  $def($def.S + $def.F * (Symbol != Base), 'Object', {
+    getOwnPropertyNames: function getOwnPropertyNames(it) {
+      var names = getNames(toObject(it)),
+          result = [],
+          key,
+          i = 0;
+      while (names.length > i)
+        has(AllSymbols, key = names[i++]) || result.push(key);
+      return result;
+    },
+    getOwnPropertySymbols: function getOwnPropertySymbols(it) {
+      var names = getNames(toObject(it)),
+          result = [],
+          key,
+          i = 0;
+      while (names.length > i)
+        has(AllSymbols, key = names[i++]) && result.push(AllSymbols[key]);
+      return result;
+    }
+  });
+  setTag(Symbol, 'Symbol');
+  setTag(Math, 'Math', true);
+  setTag($.g.JSON, 'JSON', true);
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.object.assign", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.assign"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  $def($def.S, 'Object', {assign: require("github:zloirock/core-js@0.8.4/modules/$.assign")});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.object.is", ["github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  $def($def.S, 'Object', {is: function is(x, y) {
+      return x === y ? x !== 0 || 1 / x === 1 / y : x != x && y != y;
+    }});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.object.set-prototype-of", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.set-proto"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  $def($def.S, 'Object', {setPrototypeOf: require("github:zloirock/core-js@0.8.4/modules/$.set-proto").set});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.object.to-string", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
+      tmp = {};
+  tmp[require("github:zloirock/core-js@0.8.4/modules/$.wks")('toStringTag')] = 'z';
+  if ($.FW && cof(tmp) != 'z')
+    $.hide(Object.prototype, 'toString', function toString() {
+      return '[object ' + cof.classof(this) + ']';
+    });
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.object.statics-accept-primitives", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      isObject = $.isObject,
+      toObject = $.toObject;
+  function wrapObjectMethod(METHOD, MODE) {
+    var fn = ($.core.Object || {})[METHOD] || Object[METHOD],
+        f = 0,
+        o = {};
+    o[METHOD] = MODE == 1 ? function(it) {
+      return isObject(it) ? fn(it) : it;
+    } : MODE == 2 ? function(it) {
+      return isObject(it) ? fn(it) : true;
+    } : MODE == 3 ? function(it) {
+      return isObject(it) ? fn(it) : false;
+    } : MODE == 4 ? function getOwnPropertyDescriptor(it, key) {
+      return fn(toObject(it), key);
+    } : MODE == 5 ? function getPrototypeOf(it) {
+      return fn(Object($.assertDefined(it)));
+    } : function(it) {
+      return fn(toObject(it));
+    };
+    try {
+      fn('z');
+    } catch (e) {
+      f = 1;
+    }
+    $def($def.S + $def.F * f, 'Object', o);
+  }
+  wrapObjectMethod('freeze', 1);
+  wrapObjectMethod('seal', 1);
+  wrapObjectMethod('preventExtensions', 1);
+  wrapObjectMethod('isFrozen', 2);
+  wrapObjectMethod('isSealed', 2);
+  wrapObjectMethod('isExtensible', 3);
+  wrapObjectMethod('getOwnPropertyDescriptor', 4);
+  wrapObjectMethod('getPrototypeOf', 5);
+  wrapObjectMethod('keys');
+  wrapObjectMethod('getOwnPropertyNames');
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.function.name", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      NAME = 'name',
+      setDesc = $.setDesc,
+      FunctionProto = Function.prototype;
+  NAME in FunctionProto || $.FW && $.DESC && setDesc(FunctionProto, NAME, {
+    configurable: true,
+    get: function() {
+      var match = String(this).match(/^\s*function ([^ (]*)/),
+          name = match ? match[1] : '';
+      $.has(this, NAME) || setDesc(this, NAME, $.desc(5, name));
+      return name;
+    },
+    set: function(value) {
+      $.has(this, NAME) || setDesc(this, NAME, $.desc(0, value));
+    }
+  });
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.number.constructor", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      isObject = $.isObject,
+      isFunction = $.isFunction,
+      NUMBER = 'Number',
+      Number = $.g[NUMBER],
+      Base = Number,
+      proto = Number.prototype;
+  function toPrimitive(it) {
+    var fn,
+        val;
+    if (isFunction(fn = it.valueOf) && !isObject(val = fn.call(it)))
+      return val;
+    if (isFunction(fn = it.toString) && !isObject(val = fn.call(it)))
+      return val;
+    throw TypeError("Can't convert object to number");
+  }
+  function toNumber(it) {
+    if (isObject(it))
+      it = toPrimitive(it);
+    if (typeof it == 'string' && it.length > 2 && it.charCodeAt(0) == 48) {
+      var binary = false;
+      switch (it.charCodeAt(1)) {
+        case 66:
+        case 98:
+          binary = true;
+        case 79:
+        case 111:
+          return parseInt(it.slice(2), binary ? 2 : 8);
+      }
+    }
+    return +it;
+  }
+  if ($.FW && !(Number('0o1') && Number('0b1'))) {
+    Number = function Number(it) {
+      return this instanceof Number ? new Base(toNumber(it)) : toNumber(it);
+    };
+    $.each.call($.DESC ? $.getNames(Base) : ('MAX_VALUE,MIN_VALUE,NaN,NEGATIVE_INFINITY,POSITIVE_INFINITY,' + 'EPSILON,isFinite,isInteger,isNaN,isSafeInteger,MAX_SAFE_INTEGER,' + 'MIN_SAFE_INTEGER,parseFloat,parseInt,isInteger').split(','), function(key) {
+      if ($.has(Base, key) && !$.has(Number, key)) {
+        $.setDesc(Number, key, $.getDesc(Base, key));
+      }
+    });
+    Number.prototype = proto;
+    proto.constructor = Number;
+    $.hide($.g, NUMBER, Number);
+  }
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.number.statics", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      abs = Math.abs,
+      floor = Math.floor,
+      _isFinite = $.g.isFinite,
+      MAX_SAFE_INTEGER = 0x1fffffffffffff;
+  function isInteger(it) {
+    return !$.isObject(it) && _isFinite(it) && floor(it) === it;
+  }
+  $def($def.S, 'Number', {
+    EPSILON: Math.pow(2, -52),
+    isFinite: function isFinite(it) {
+      return typeof it == 'number' && _isFinite(it);
+    },
+    isInteger: isInteger,
+    isNaN: function isNaN(number) {
+      return number != number;
+    },
+    isSafeInteger: function isSafeInteger(number) {
+      return isInteger(number) && abs(number) <= MAX_SAFE_INTEGER;
+    },
+    MAX_SAFE_INTEGER: MAX_SAFE_INTEGER,
+    MIN_SAFE_INTEGER: -MAX_SAFE_INTEGER,
+    parseFloat: parseFloat,
+    parseInt: parseInt
+  });
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.math", ["github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var Infinity = 1 / 0,
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      E = Math.E,
+      pow = Math.pow,
+      abs = Math.abs,
+      exp = Math.exp,
+      log = Math.log,
+      sqrt = Math.sqrt,
+      ceil = Math.ceil,
+      floor = Math.floor,
+      EPSILON = pow(2, -52),
+      EPSILON32 = pow(2, -23),
+      MAX32 = pow(2, 127) * (2 - EPSILON32),
+      MIN32 = pow(2, -126);
+  function roundTiesToEven(n) {
+    return n + 1 / EPSILON - 1 / EPSILON;
+  }
+  function sign(x) {
+    return (x = +x) == 0 || x != x ? x : x < 0 ? -1 : 1;
+  }
+  function asinh(x) {
+    return !isFinite(x = +x) || x == 0 ? x : x < 0 ? -asinh(-x) : log(x + sqrt(x * x + 1));
+  }
+  function expm1(x) {
+    return (x = +x) == 0 ? x : x > -1e-6 && x < 1e-6 ? x + x * x / 2 : exp(x) - 1;
+  }
+  $def($def.S, 'Math', {
+    acosh: function acosh(x) {
+      return (x = +x) < 1 ? NaN : isFinite(x) ? log(x / E + sqrt(x + 1) * sqrt(x - 1) / E) + 1 : x;
+    },
+    asinh: asinh,
+    atanh: function atanh(x) {
+      return (x = +x) == 0 ? x : log((1 + x) / (1 - x)) / 2;
+    },
+    cbrt: function cbrt(x) {
+      return sign(x = +x) * pow(abs(x), 1 / 3);
+    },
+    clz32: function clz32(x) {
+      return (x >>>= 0) ? 31 - floor(log(x + 0.5) * Math.LOG2E) : 32;
+    },
+    cosh: function cosh(x) {
+      return (exp(x = +x) + exp(-x)) / 2;
+    },
+    expm1: expm1,
+    fround: function fround(x) {
+      var $abs = abs(x),
+          $sign = sign(x),
+          a,
+          result;
+      if ($abs < MIN32)
+        return $sign * roundTiesToEven($abs / MIN32 / EPSILON32) * MIN32 * EPSILON32;
+      a = (1 + EPSILON32 / EPSILON) * $abs;
+      result = a - (a - $abs);
+      if (result > MAX32 || result != result)
+        return $sign * Infinity;
+      return $sign * result;
+    },
+    hypot: function hypot(value1, value2) {
+      var sum = 0,
+          len1 = arguments.length,
+          len2 = len1,
+          args = Array(len1),
+          larg = -Infinity,
+          arg;
+      while (len1--) {
+        arg = args[len1] = +arguments[len1];
+        if (arg == Infinity || arg == -Infinity)
+          return Infinity;
+        if (arg > larg)
+          larg = arg;
+      }
+      larg = arg || 1;
+      while (len2--)
+        sum += pow(args[len2] / larg, 2);
+      return larg * sqrt(sum);
+    },
+    imul: function imul(x, y) {
+      var UInt16 = 0xffff,
+          xn = +x,
+          yn = +y,
+          xl = UInt16 & xn,
+          yl = UInt16 & yn;
+      return 0 | xl * yl + ((UInt16 & xn >>> 16) * yl + xl * (UInt16 & yn >>> 16) << 16 >>> 0);
+    },
+    log1p: function log1p(x) {
+      return (x = +x) > -1e-8 && x < 1e-8 ? x - x * x / 2 : log(1 + x);
+    },
+    log10: function log10(x) {
+      return log(x) / Math.LN10;
+    },
+    log2: function log2(x) {
+      return log(x) / Math.LN2;
+    },
+    sign: sign,
+    sinh: function sinh(x) {
+      return abs(x = +x) < 1 ? (expm1(x) - expm1(-x)) / 2 : (exp(x - 1) - exp(-x - 1)) * (E / 2);
+    },
+    tanh: function tanh(x) {
+      var a = expm1(x = +x),
+          b = expm1(-x);
+      return a == Infinity ? 1 : b == Infinity ? -1 : (a - b) / (exp(x) + exp(-x));
+    },
+    trunc: function trunc(it) {
+      return (it > 0 ? floor : ceil)(it);
+    }
+  });
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.from-code-point", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      toIndex = require("github:zloirock/core-js@0.8.4/modules/$").toIndex,
+      fromCharCode = String.fromCharCode;
+  $def($def.S, 'String', {fromCodePoint: function fromCodePoint(x) {
+      var res = [],
+          len = arguments.length,
+          i = 0,
+          code;
+      while (len > i) {
+        code = +arguments[i++];
+        if (toIndex(code, 0x10ffff) !== code)
+          throw RangeError(code + ' is not a valid code point');
+        res.push(code < 0x10000 ? fromCharCode(code) : fromCharCode(((code -= 0x10000) >> 10) + 0xd800, code % 0x400 + 0xdc00));
+      }
+      return res.join('');
+    }});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.raw", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  $def($def.S, 'String', {raw: function raw(callSite) {
+      var tpl = $.toObject(callSite.raw),
+          len = $.toLength(tpl.length),
+          sln = arguments.length,
+          res = [],
+          i = 0;
+      while (len > i) {
+        res.push(String(tpl[i++]));
+        if (i < sln)
+          res.push(String(arguments[i]));
+      }
+      return res.join('');
+    }});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.iterator", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.string-at", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var set = require("github:zloirock/core-js@0.8.4/modules/$").set,
+      at = require("github:zloirock/core-js@0.8.4/modules/$.string-at")(true),
+      ITER = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('iter'),
+      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
+      step = $iter.step;
+  $iter.std(String, 'String', function(iterated) {
+    set(this, ITER, {
+      o: String(iterated),
+      i: 0
+    });
+  }, function() {
+    var iter = this[ITER],
+        O = iter.o,
+        index = iter.i,
+        point;
+    if (index >= O.length)
+      return step(1);
+    point = at.call(O, index);
+    iter.i += point.length;
+    return step(0, point);
+  });
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.code-point-at", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.string-at"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  $def($def.P, 'String', {codePointAt: require("github:zloirock/core-js@0.8.4/modules/$.string-at")(false)});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.ends-with", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      toLength = $.toLength;
+  $def($def.P, 'String', {endsWith: function endsWith(searchString) {
+      if (cof(searchString) == 'RegExp')
+        throw TypeError();
+      var that = String($.assertDefined(this)),
+          endPosition = arguments[1],
+          len = toLength(that.length),
+          end = endPosition === undefined ? len : Math.min(toLength(endPosition), len);
+      searchString += '';
+      return that.slice(end - searchString.length, end) === searchString;
+    }});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.includes", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  $def($def.P, 'String', {includes: function includes(searchString) {
+      if (cof(searchString) == 'RegExp')
+        throw TypeError();
+      return !!~String($.assertDefined(this)).indexOf(searchString, arguments[1]);
+    }});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.repeat", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  $def($def.P, 'String', {repeat: function repeat(count) {
+      var str = String($.assertDefined(this)),
+          res = '',
+          n = $.toInteger(count);
+      if (n < 0 || n == Infinity)
+        throw RangeError("Count can't be negative");
+      for (; n > 0; (n >>>= 1) && (str += str))
+        if (n & 1)
+          res += str;
+      return res;
+    }});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.starts-with", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  $def($def.P, 'String', {startsWith: function startsWith(searchString) {
+      if (cof(searchString) == 'RegExp')
+        throw TypeError();
+      var that = String($.assertDefined(this)),
+          index = $.toLength(Math.min(arguments[1], that.length));
+      searchString += '';
+      return that.slice(index, index + searchString.length) === searchString;
+    }});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.from", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.iter", "github:zloirock/core-js@0.8.4/modules/$.iter-detect"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
+      stepCall = $iter.stepCall;
+  $def($def.S + $def.F * !require("github:zloirock/core-js@0.8.4/modules/$.iter-detect")(function(iter) {
+    Array.from(iter);
+  }), 'Array', {from: function from(arrayLike) {
+      var O = Object($.assertDefined(arrayLike)),
+          mapfn = arguments[1],
+          mapping = mapfn !== undefined,
+          f = mapping ? ctx(mapfn, arguments[2], 2) : undefined,
+          index = 0,
+          length,
+          result,
+          step,
+          iterator;
+      if ($iter.is(O)) {
+        iterator = $iter.get(O);
+        result = new (typeof this == 'function' ? this : Array);
+        for (; !(step = iterator.next()).done; index++) {
+          result[index] = mapping ? stepCall(iterator, f, [step.value, index], true) : step.value;
+        }
+      } else {
+        result = new (typeof this == 'function' ? this : Array)(length = $.toLength(O.length));
+        for (; length > index; index++) {
+          result[index] = mapping ? f(O[index], index) : O[index];
+        }
+      }
+      result.length = index;
+      return result;
+    }});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.of", ["github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  $def($def.S, 'Array', {of: function of() {
+      var index = 0,
+          length = arguments.length,
+          result = new (typeof this == 'function' ? this : Array)(length);
+      while (length > index)
+        result[index] = arguments[index++];
+      result.length = length;
+      return result;
+    }});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.iterator", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.unscope", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      setUnscope = require("github:zloirock/core-js@0.8.4/modules/$.unscope"),
+      ITER = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('iter'),
+      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
+      step = $iter.step,
+      Iterators = $iter.Iterators;
+  $iter.std(Array, 'Array', function(iterated, kind) {
+    $.set(this, ITER, {
+      o: $.toObject(iterated),
+      i: 0,
+      k: kind
+    });
+  }, function() {
+    var iter = this[ITER],
+        O = iter.o,
+        kind = iter.k,
+        index = iter.i++;
+    if (!O || index >= O.length) {
+      iter.o = undefined;
+      return step(1);
+    }
+    if (kind == 'key')
+      return step(0, index);
+    if (kind == 'value')
+      return step(0, O[index]);
+    return step(0, [index, O[index]]);
+  }, 'value');
+  Iterators.Arguments = Iterators.Array;
+  setUnscope('keys');
+  setUnscope('values');
+  setUnscope('entries');
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.species", ["github:zloirock/core-js@0.8.4/modules/$.species"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  require("github:zloirock/core-js@0.8.4/modules/$.species")(Array);
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.copy-within", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.unscope"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      toIndex = $.toIndex;
+  $def($def.P, 'Array', {copyWithin: function copyWithin(target, start) {
+      var O = Object($.assertDefined(this)),
+          len = $.toLength(O.length),
+          to = toIndex(target, len),
+          from = toIndex(start, len),
+          end = arguments[2],
+          fin = end === undefined ? len : toIndex(end, len),
+          count = Math.min(fin - from, len - to),
+          inc = 1;
+      if (from < to && to < from + count) {
+        inc = -1;
+        from = from + count - 1;
+        to = to + count - 1;
+      }
+      while (count-- > 0) {
+        if (from in O)
+          O[to] = O[from];
+        else
+          delete O[to];
+        to += inc;
+        from += inc;
+      }
+      return O;
+    }});
+  require("github:zloirock/core-js@0.8.4/modules/$.unscope")('copyWithin');
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.fill", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.unscope"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      toIndex = $.toIndex;
+  $def($def.P, 'Array', {fill: function fill(value) {
+      var O = Object($.assertDefined(this)),
+          length = $.toLength(O.length),
+          index = toIndex(arguments[1], length),
+          end = arguments[2],
+          endPos = end === undefined ? length : toIndex(end, length);
+      while (endPos > index)
+        O[index++] = value;
+      return O;
+    }});
+  require("github:zloirock/core-js@0.8.4/modules/$.unscope")('fill');
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.find", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.array-methods", "github:zloirock/core-js@0.8.4/modules/$.unscope"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  $def($def.P, 'Array', {find: require("github:zloirock/core-js@0.8.4/modules/$.array-methods")(5)});
+  require("github:zloirock/core-js@0.8.4/modules/$.unscope")('find');
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.find-index", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.array-methods", "github:zloirock/core-js@0.8.4/modules/$.unscope"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  $def($def.P, 'Array', {findIndex: require("github:zloirock/core-js@0.8.4/modules/$.array-methods")(6)});
+  require("github:zloirock/core-js@0.8.4/modules/$.unscope")('findIndex');
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.regexp", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.replacer", "github:zloirock/core-js@0.8.4/modules/$.species"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
+      RegExp = $.g.RegExp,
+      Base = RegExp,
+      proto = RegExp.prototype;
+  if ($.FW && $.DESC) {
+    if (!function() {
+      try {
+        return RegExp(/a/g, 'i') == '/a/i';
+      } catch (e) {}
+    }()) {
+      RegExp = function RegExp(pattern, flags) {
+        return new Base(cof(pattern) == 'RegExp' && flags !== undefined ? pattern.source : pattern, flags);
+      };
+      $.each.call($.getNames(Base), function(key) {
+        key in RegExp || $.setDesc(RegExp, key, {
+          configurable: true,
+          get: function() {
+            return Base[key];
+          },
+          set: function(it) {
+            Base[key] = it;
+          }
+        });
+      });
+      proto.constructor = RegExp;
+      RegExp.prototype = proto;
+      $.hide($.g, 'RegExp', RegExp);
+    }
+    if (/./g.flags != 'g')
+      $.setDesc(proto, 'flags', {
+        configurable: true,
+        get: require("github:zloirock/core-js@0.8.4/modules/$.replacer")(/^.*\/(\w*)$/, '$1')
+      });
+  }
+  require("github:zloirock/core-js@0.8.4/modules/$.species")(RegExp);
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.promise", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.iter", "github:zloirock/core-js@0.8.4/modules/$.wks", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.task", "github:zloirock/core-js@0.8.4/modules/$.species", "github:zloirock/core-js@0.8.4/modules/$.iter-detect"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
+      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      assert = require("github:zloirock/core-js@0.8.4/modules/$.assert"),
+      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
+      SPECIES = require("github:zloirock/core-js@0.8.4/modules/$.wks")('species'),
+      RECORD = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('record'),
+      forOf = $iter.forOf,
+      PROMISE = 'Promise',
+      global = $.g,
+      process = global.process,
+      asap = process && process.nextTick || require("github:zloirock/core-js@0.8.4/modules/$.task").set,
+      P = global[PROMISE],
+      Base = P,
+      isFunction = $.isFunction,
+      isObject = $.isObject,
+      assertFunction = assert.fn,
+      assertObject = assert.obj,
+      test;
+  function getConstructor(C) {
+    var S = assertObject(C)[SPECIES];
+    return S != undefined ? S : C;
+  }
+  function isThenable(it) {
+    var then;
+    if (isObject(it))
+      then = it.then;
+    return isFunction(then) ? then : false;
+  }
+  function isUnhandled(promise) {
+    var record = promise[RECORD],
+        chain = record.c,
+        i = 0,
+        react;
+    if (record.h)
+      return false;
+    while (chain.length > i) {
+      react = chain[i++];
+      if (react.fail || !isUnhandled(react.P))
+        return false;
+    }
+    return true;
+  }
+  function notify(record, isReject) {
+    var chain = record.c;
+    if (isReject || chain.length)
+      asap(function() {
+        var promise = record.p,
+            value = record.v,
+            ok = record.s == 1,
+            i = 0;
+        if (isReject && isUnhandled(promise)) {
+          setTimeout(function() {
+            if (isUnhandled(promise)) {
+              if (cof(process) == 'process') {
+                process.emit('unhandledRejection', value, promise);
+              } else if (global.console && isFunction(console.error)) {
+                console.error('Unhandled promise rejection', value);
+              }
+            }
+          }, 1e3);
+        } else
+          while (chain.length > i)
+            !function(react) {
+              var cb = ok ? react.ok : react.fail,
+                  ret,
+                  then;
+              try {
+                if (cb) {
+                  if (!ok)
+                    record.h = true;
+                  ret = cb === true ? value : cb(value);
+                  if (ret === react.P) {
+                    react.rej(TypeError(PROMISE + '-chain cycle'));
+                  } else if (then = isThenable(ret)) {
+                    then.call(ret, react.res, react.rej);
+                  } else
+                    react.res(ret);
+                } else
+                  react.rej(value);
+              } catch (err) {
+                react.rej(err);
+              }
+            }(chain[i++]);
+        chain.length = 0;
+      });
+  }
+  function $reject(value) {
+    var record = this;
+    if (record.d)
+      return;
+    record.d = true;
+    record = record.r || record;
+    record.v = value;
+    record.s = 2;
+    notify(record, true);
+  }
+  function $resolve(value) {
+    var record = this,
+        then,
+        wrapper;
+    if (record.d)
+      return;
+    record.d = true;
+    record = record.r || record;
+    try {
+      if (then = isThenable(value)) {
+        wrapper = {
+          r: record,
+          d: false
+        };
+        then.call(value, ctx($resolve, wrapper, 1), ctx($reject, wrapper, 1));
+      } else {
+        record.v = value;
+        record.s = 1;
+        notify(record);
+      }
+    } catch (err) {
+      $reject.call(wrapper || {
+        r: record,
+        d: false
+      }, err);
+    }
+  }
+  if (!(isFunction(P) && isFunction(P.resolve) && P.resolve(test = new P(function() {})) == test)) {
+    P = function Promise(executor) {
+      assertFunction(executor);
+      var record = {
+        p: assert.inst(this, P, PROMISE),
+        c: [],
+        s: 0,
+        d: false,
+        v: undefined,
+        h: false
+      };
+      $.hide(this, RECORD, record);
+      try {
+        executor(ctx($resolve, record, 1), ctx($reject, record, 1));
+      } catch (err) {
+        $reject.call(record, err);
+      }
+    };
+    $.mix(P.prototype, {
+      then: function then(onFulfilled, onRejected) {
+        var S = assertObject(assertObject(this).constructor)[SPECIES];
+        var react = {
+          ok: isFunction(onFulfilled) ? onFulfilled : true,
+          fail: isFunction(onRejected) ? onRejected : false
+        };
+        var promise = react.P = new (S != undefined ? S : P)(function(res, rej) {
+          react.res = assertFunction(res);
+          react.rej = assertFunction(rej);
+        });
+        var record = this[RECORD];
+        record.c.push(react);
+        record.s && notify(record);
+        return promise;
+      },
+      'catch': function(onRejected) {
+        return this.then(undefined, onRejected);
+      }
+    });
+  }
+  $def($def.G + $def.W + $def.F * (P != Base), {Promise: P});
+  cof.set(P, PROMISE);
+  require("github:zloirock/core-js@0.8.4/modules/$.species")(P);
+  $def($def.S, PROMISE, {
+    reject: function reject(r) {
+      return new (getConstructor(this))(function(res, rej) {
+        rej(r);
+      });
+    },
+    resolve: function resolve(x) {
+      return isObject(x) && RECORD in x && $.getProto(x) === this.prototype ? x : new (getConstructor(this))(function(res) {
+        res(x);
+      });
+    }
+  });
+  $def($def.S + $def.F * !require("github:zloirock/core-js@0.8.4/modules/$.iter-detect")(function(iter) {
+    P.all(iter)['catch'](function() {});
+  }), PROMISE, {
+    all: function all(iterable) {
+      var C = getConstructor(this),
+          values = [];
+      return new C(function(res, rej) {
+        forOf(iterable, false, values.push, values);
+        var remaining = values.length,
+            results = Array(remaining);
+        if (remaining)
+          $.each.call(values, function(promise, index) {
+            C.resolve(promise).then(function(value) {
+              results[index] = value;
+              --remaining || res(results);
+            }, rej);
+          });
+        else
+          res(results);
+      });
+    },
+    race: function race(iterable) {
+      var C = getConstructor(this);
+      return new C(function(res, rej) {
+        forOf(iterable, false, function(promise) {
+          C.resolve(promise).then(res, rej);
+        });
+      });
+    }
+  });
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.map", ["github:zloirock/core-js@0.8.4/modules/$.collection-strong", "github:zloirock/core-js@0.8.4/modules/$.collection"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var strong = require("github:zloirock/core-js@0.8.4/modules/$.collection-strong");
+  require("github:zloirock/core-js@0.8.4/modules/$.collection")('Map', {
+    get: function get(key) {
+      var entry = strong.getEntry(this, key);
+      return entry && entry.v;
+    },
+    set: function set(key, value) {
+      return strong.def(this, key === 0 ? 0 : key, value);
+    }
+  }, strong, true);
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.set", ["github:zloirock/core-js@0.8.4/modules/$.collection-strong", "github:zloirock/core-js@0.8.4/modules/$.collection"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var strong = require("github:zloirock/core-js@0.8.4/modules/$.collection-strong");
+  require("github:zloirock/core-js@0.8.4/modules/$.collection")('Set', {add: function add(value) {
+      return strong.def(this, value = value === 0 ? 0 : value, value);
+    }}, strong);
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.weak-map", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.collection-weak", "github:zloirock/core-js@0.8.4/modules/$.collection"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      weak = require("github:zloirock/core-js@0.8.4/modules/$.collection-weak"),
+      leakStore = weak.leakStore,
+      ID = weak.ID,
+      WEAK = weak.WEAK,
+      has = $.has,
+      isObject = $.isObject,
+      isFrozen = Object.isFrozen || $.core.Object.isFrozen,
+      tmp = {};
+  var WeakMap = require("github:zloirock/core-js@0.8.4/modules/$.collection")('WeakMap', {
+    get: function get(key) {
+      if (isObject(key)) {
+        if (isFrozen(key))
+          return leakStore(this).get(key);
+        if (has(key, WEAK))
+          return key[WEAK][this[ID]];
+      }
+    },
+    set: function set(key, value) {
+      return weak.def(this, key, value);
+    }
+  }, weak, true, true);
+  if ($.FW && new WeakMap().set((Object.freeze || Object)(tmp), 7).get(tmp) != 7) {
+    $.each.call(['delete', 'has', 'get', 'set'], function(key) {
+      var method = WeakMap.prototype[key];
+      WeakMap.prototype[key] = function(a, b) {
+        if (isObject(a) && isFrozen(a)) {
+          var result = leakStore(this)[key](a, b);
+          return key == 'set' ? this : result;
+        }
+        return method.call(this, a, b);
+      };
+    });
+  }
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.weak-set", ["github:zloirock/core-js@0.8.4/modules/$.collection-weak", "github:zloirock/core-js@0.8.4/modules/$.collection"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var weak = require("github:zloirock/core-js@0.8.4/modules/$.collection-weak");
+  require("github:zloirock/core-js@0.8.4/modules/$.collection")('WeakSet', {add: function add(value) {
+      return weak.def(this, value, true);
+    }}, weak, false, true);
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.reflect", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.set-proto", "github:zloirock/core-js@0.8.4/modules/$.iter", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.own-keys"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      setProto = require("github:zloirock/core-js@0.8.4/modules/$.set-proto"),
+      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
+      ITER = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('iter'),
+      step = $iter.step,
+      assert = require("github:zloirock/core-js@0.8.4/modules/$.assert"),
+      isObject = $.isObject,
+      getDesc = $.getDesc,
+      setDesc = $.setDesc,
+      getProto = $.getProto,
+      apply = Function.apply,
+      assertObject = assert.obj,
+      _isExtensible = Object.isExtensible || $.it;
+  function Enumerate(iterated) {
+    var keys = [],
+        key;
+    for (key in iterated)
+      keys.push(key);
+    $.set(this, ITER, {
+      o: iterated,
+      a: keys,
+      i: 0
+    });
+  }
+  $iter.create(Enumerate, 'Object', function() {
+    var iter = this[ITER],
+        keys = iter.a,
+        key;
+    do {
+      if (iter.i >= keys.length)
+        return step(1);
+    } while (!((key = keys[iter.i++]) in iter.o));
+    return step(0, key);
+  });
+  function wrap(fn) {
+    return function(it) {
+      assertObject(it);
+      try {
+        fn.apply(undefined, arguments);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    };
+  }
+  function get(target, propertyKey) {
+    var receiver = arguments.length < 3 ? target : arguments[2],
+        desc = getDesc(assertObject(target), propertyKey),
+        proto;
+    if (desc)
+      return $.has(desc, 'value') ? desc.value : desc.get === undefined ? undefined : desc.get.call(receiver);
+    return isObject(proto = getProto(target)) ? get(proto, propertyKey, receiver) : undefined;
+  }
+  function set(target, propertyKey, V) {
+    var receiver = arguments.length < 4 ? target : arguments[3],
+        ownDesc = getDesc(assertObject(target), propertyKey),
+        existingDescriptor,
+        proto;
+    if (!ownDesc) {
+      if (isObject(proto = getProto(target))) {
+        return set(proto, propertyKey, V, receiver);
+      }
+      ownDesc = $.desc(0);
+    }
+    if ($.has(ownDesc, 'value')) {
+      if (ownDesc.writable === false || !isObject(receiver))
+        return false;
+      existingDescriptor = getDesc(receiver, propertyKey) || $.desc(0);
+      existingDescriptor.value = V;
+      setDesc(receiver, propertyKey, existingDescriptor);
+      return true;
+    }
+    return ownDesc.set === undefined ? false : (ownDesc.set.call(receiver, V), true);
+  }
+  var reflect = {
+    apply: require("github:zloirock/core-js@0.8.4/modules/$.ctx")(Function.call, apply, 3),
+    construct: function construct(target, argumentsList) {
+      var proto = assert.fn(arguments.length < 3 ? target : arguments[2]).prototype,
+          instance = $.create(isObject(proto) ? proto : Object.prototype),
+          result = apply.call(target, instance, argumentsList);
+      return isObject(result) ? result : instance;
+    },
+    defineProperty: wrap(setDesc),
+    deleteProperty: function deleteProperty(target, propertyKey) {
+      var desc = getDesc(assertObject(target), propertyKey);
+      return desc && !desc.configurable ? false : delete target[propertyKey];
+    },
+    enumerate: function enumerate(target) {
+      return new Enumerate(assertObject(target));
+    },
+    get: get,
+    getOwnPropertyDescriptor: function getOwnPropertyDescriptor(target, propertyKey) {
+      return getDesc(assertObject(target), propertyKey);
+    },
+    getPrototypeOf: function getPrototypeOf(target) {
+      return getProto(assertObject(target));
+    },
+    has: function has(target, propertyKey) {
+      return propertyKey in target;
+    },
+    isExtensible: function isExtensible(target) {
+      return !!_isExtensible(assertObject(target));
+    },
+    ownKeys: require("github:zloirock/core-js@0.8.4/modules/$.own-keys"),
+    preventExtensions: wrap(Object.preventExtensions || $.it),
+    set: set
+  };
+  if (setProto)
+    reflect.setPrototypeOf = function setPrototypeOf(target, proto) {
+      setProto.check(target, proto);
+      try {
+        setProto.set(target, proto);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    };
+  $def($def.G, {Reflect: {}});
+  $def($def.S, 'Reflect', reflect);
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es7.array.includes", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.array-includes", "github:zloirock/core-js@0.8.4/modules/$.unscope"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  $def($def.P, 'Array', {includes: require("github:zloirock/core-js@0.8.4/modules/$.array-includes")(true)});
+  require("github:zloirock/core-js@0.8.4/modules/$.unscope")('includes');
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es7.string.at", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.string-at"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  $def($def.P, 'String', {at: require("github:zloirock/core-js@0.8.4/modules/$.string-at")(true)});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es7.regexp.escape", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.replacer"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  $def($def.S, 'RegExp', {escape: require("github:zloirock/core-js@0.8.4/modules/$.replacer")(/([\\\-[\]{}()*+?.,^$|])/g, '\\$1', true)});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es7.object.get-own-property-descriptors", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.own-keys"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      ownKeys = require("github:zloirock/core-js@0.8.4/modules/$.own-keys");
+  $def($def.S, 'Object', {getOwnPropertyDescriptors: function getOwnPropertyDescriptors(object) {
+      var O = $.toObject(object),
+          result = {};
+      $.each.call(ownKeys(O), function(key) {
+        $.setDesc(result, key, $.desc(0, $.getDesc(O, key)));
+      });
+      return result;
+    }});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es7.object.to-array", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
+  function createObjectToArray(isEntries) {
+    return function(object) {
+      var O = $.toObject(object),
+          keys = $.getKeys(O),
+          length = keys.length,
+          i = 0,
+          result = Array(length),
+          key;
+      if (isEntries)
+        while (length > i)
+          result[i] = [key = keys[i++], O[key]];
+      else
+        while (length > i)
+          result[i] = O[keys[i++]];
+      return result;
+    };
+  }
+  $def($def.S, 'Object', {
+    values: createObjectToArray(false),
+    entries: createObjectToArray(true)
+  });
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es7.set.to-json", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      forOf = require("github:zloirock/core-js@0.8.4/modules/$.iter").forOf;
+  $def($def.P, 'Set', {toJSON: function() {
+      var arr = [];
+      forOf(this, false, arr.push, arr);
+      return arr;
+    }});
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/js.array.statics", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.ctx"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      $Array = $.core.Array || Array,
+      statics = {};
+  function setStatics(keys, length) {
+    $.each.call(keys.split(','), function(key) {
+      if (length == undefined && key in $Array)
+        statics[key] = $Array[key];
+      else if (key in [])
+        statics[key] = require("github:zloirock/core-js@0.8.4/modules/$.ctx")(Function.call, [][key], length);
+    });
+  }
+  setStatics('pop,reverse,shift,keys,values,entries', 1);
+  setStatics('indexOf,every,some,forEach,map,filter,find,findIndex,includes', 3);
+  setStatics('join,slice,concat,push,splice,unshift,sort,lastIndexOf,' + 'reduce,reduceRight,copyWithin,fill,turn');
+  $def($def.S, 'Array', statics);
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/web.timers", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.invoke", "github:zloirock/core-js@0.8.4/modules/$.partial"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      invoke = require("github:zloirock/core-js@0.8.4/modules/$.invoke"),
+      partial = require("github:zloirock/core-js@0.8.4/modules/$.partial"),
+      navigator = $.g.navigator,
+      MSIE = !!navigator && /MSIE .\./.test(navigator.userAgent);
+  function wrap(set) {
+    return MSIE ? function(fn, time) {
+      return set(invoke(partial, [].slice.call(arguments, 2), $.isFunction(fn) ? fn : Function(fn)), time);
+    } : set;
+  }
+  $def($def.G + $def.B + $def.F * MSIE, {
+    setTimeout: wrap($.g.setTimeout),
+    setInterval: wrap($.g.setInterval)
+  });
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/web.immediate", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.task"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      $task = require("github:zloirock/core-js@0.8.4/modules/$.task");
+  $def($def.G + $def.B, {
+    setImmediate: $task.set,
+    clearImmediate: $task.clear
+  });
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/web.dom.iterable", ["github:zloirock/core-js@0.8.4/modules/es6.array.iterator", "github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.iter", "github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  require("github:zloirock/core-js@0.8.4/modules/es6.array.iterator");
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      Iterators = require("github:zloirock/core-js@0.8.4/modules/$.iter").Iterators,
+      ITERATOR = require("github:zloirock/core-js@0.8.4/modules/$.wks")('iterator'),
+      ArrayValues = Iterators.Array,
+      NodeList = $.g.NodeList;
+  if ($.FW && NodeList && !(ITERATOR in NodeList.prototype)) {
+    $.hide(NodeList.prototype, ITERATOR, ArrayValues);
+  }
+  Iterators.NodeList = ArrayValues;
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.ctx", ["github:zloirock/core-js@0.8.4/modules/$.assert"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var assertFunction = require("github:zloirock/core-js@0.8.4/modules/$.assert").fn;
+  module.exports = function(fn, that, length) {
+    assertFunction(fn);
+    if (~length && that === undefined)
+      return fn;
+    switch (length) {
+      case 1:
+        return function(a) {
+          return fn.call(that, a);
+        };
+      case 2:
+        return function(a, b) {
+          return fn.call(that, a, b);
+        };
+      case 3:
+        return function(a, b, c) {
+          return fn.call(that, a, b, c);
+        };
+    }
+    return function() {
+      return fn.apply(that, arguments);
+    };
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.def", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      global = $.g,
+      core = $.core,
+      isFunction = $.isFunction;
+  function ctx(fn, that) {
+    return function() {
+      return fn.apply(that, arguments);
+    };
+  }
+  global.core = core;
+  $def.F = 1;
+  $def.G = 2;
+  $def.S = 4;
+  $def.P = 8;
+  $def.B = 16;
+  $def.W = 32;
+  function $def(type, name, source) {
+    var key,
+        own,
+        out,
+        exp,
+        isGlobal = type & $def.G,
+        target = isGlobal ? global : type & $def.S ? global[name] : (global[name] || {}).prototype,
+        exports = isGlobal ? core : core[name] || (core[name] = {});
+    if (isGlobal)
+      source = name;
+    for (key in source) {
+      own = !(type & $def.F) && target && key in target;
+      out = (own ? target : source)[key];
+      if (type & $def.B && own)
+        exp = ctx(out, global);
+      else
+        exp = type & $def.P && isFunction(out) ? ctx(Function.call, out) : out;
+      if (target && !own) {
+        if (isGlobal)
+          target[key] = out;
+        else
+          delete target[key] && $.hide(target, key, out);
+      }
+      if (exports[key] != out)
+        $.hide(exports, key, exp);
+    }
+  }
+  module.exports = $def;
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.assign", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$");
+  module.exports = Object.assign || function assign(target, source) {
+    var T = Object($.assertDefined(target)),
+        l = arguments.length,
+        i = 1;
+    while (l > i) {
+      var S = $.ES5Object(arguments[i++]),
+          keys = $.getKeys(S),
+          length = keys.length,
+          j = 0,
+          key;
+      while (length > j)
+        T[key = keys[j++]] = S[key];
+    }
+    return T;
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.keyof", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$");
+  module.exports = function(object, el) {
+    var O = $.toObject(object),
+        keys = $.getKeys(O),
+        length = keys.length,
+        index = 0,
+        key;
+    while (length > index)
+      if (O[key = keys[index++]] === el)
+        return key;
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.uid", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var sid = 0;
+  function uid(key) {
+    return 'Symbol(' + key + ')_' + (++sid + Math.random()).toString(36);
+  }
+  uid.safe = require("github:zloirock/core-js@0.8.4/modules/$").g.Symbol || uid;
+  module.exports = uid;
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.assert", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$");
+  function assert(condition, msg1, msg2) {
+    if (!condition)
+      throw TypeError(msg2 ? msg1 + msg2 : msg1);
+  }
+  assert.def = $.assertDefined;
+  assert.fn = function(it) {
+    if (!$.isFunction(it))
+      throw TypeError(it + ' is not a function!');
+    return it;
+  };
+  assert.obj = function(it) {
+    if (!$.isObject(it))
+      throw TypeError(it + ' is not an object!');
+    return it;
+  };
+  assert.inst = function(it, Constructor, name) {
+    if (!(it instanceof Constructor))
+      throw TypeError(name + ": use the 'new' operator!");
+    return it;
+  };
+  module.exports = assert;
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.iter", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
+      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      assertObject = require("github:zloirock/core-js@0.8.4/modules/$.assert").obj,
+      SYMBOL_ITERATOR = require("github:zloirock/core-js@0.8.4/modules/$.wks")('iterator'),
+      FF_ITERATOR = '@@iterator',
+      Iterators = {},
+      IteratorPrototype = {};
+  var BUGGY = 'keys' in [] && !('next' in [].keys());
+  setIterator(IteratorPrototype, $.that);
+  function setIterator(O, value) {
+    $.hide(O, SYMBOL_ITERATOR, value);
+    if (FF_ITERATOR in [])
+      $.hide(O, FF_ITERATOR, value);
+  }
+  function defineIterator(Constructor, NAME, value, DEFAULT) {
+    var proto = Constructor.prototype,
+        iter = proto[SYMBOL_ITERATOR] || proto[FF_ITERATOR] || DEFAULT && proto[DEFAULT] || value;
+    if ($.FW)
+      setIterator(proto, iter);
+    if (iter !== value) {
+      var iterProto = $.getProto(iter.call(new Constructor));
+      cof.set(iterProto, NAME + ' Iterator', true);
+      if ($.FW)
+        $.has(proto, FF_ITERATOR) && setIterator(iterProto, $.that);
+    }
+    Iterators[NAME] = iter;
+    Iterators[NAME + ' Iterator'] = $.that;
+    return iter;
+  }
+  function getIterator(it) {
+    var Symbol = $.g.Symbol,
+        ext = it[Symbol && Symbol.iterator || FF_ITERATOR],
+        getIter = ext || it[SYMBOL_ITERATOR] || Iterators[cof.classof(it)];
+    return assertObject(getIter.call(it));
+  }
+  function closeIterator(iterator) {
+    var ret = iterator['return'];
+    if (ret !== undefined)
+      assertObject(ret.call(iterator));
+  }
+  function stepCall(iterator, fn, value, entries) {
+    try {
+      return entries ? fn(assertObject(value)[0], value[1]) : fn(value);
+    } catch (e) {
+      closeIterator(iterator);
+      throw e;
+    }
+  }
+  var $iter = module.exports = {
+    BUGGY: BUGGY,
+    Iterators: Iterators,
+    prototype: IteratorPrototype,
+    step: function(done, value) {
+      return {
+        value: value,
+        done: !!done
+      };
+    },
+    stepCall: stepCall,
+    close: closeIterator,
+    is: function(it) {
+      var O = Object(it),
+          Symbol = $.g.Symbol,
+          SYM = Symbol && Symbol.iterator || FF_ITERATOR;
+      return SYM in O || SYMBOL_ITERATOR in O || $.has(Iterators, cof.classof(O));
+    },
+    get: getIterator,
+    set: setIterator,
+    create: function(Constructor, NAME, next, proto) {
+      Constructor.prototype = $.create(proto || $iter.prototype, {next: $.desc(1, next)});
+      cof.set(Constructor, NAME + ' Iterator');
+    },
+    define: defineIterator,
+    std: function(Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCE) {
+      function createIter(kind) {
+        return function() {
+          return new Constructor(this, kind);
+        };
+      }
+      $iter.create(Constructor, NAME, next);
+      var entries = createIter('key+value'),
+          values = createIter('value'),
+          proto = Base.prototype,
+          methods,
+          key;
+      if (DEFAULT == 'value')
+        values = defineIterator(Base, NAME, values, 'values');
+      else
+        entries = defineIterator(Base, NAME, entries, 'entries');
+      if (DEFAULT) {
+        methods = {
+          entries: entries,
+          keys: IS_SET ? values : createIter('key'),
+          values: values
+        };
+        $def($def.P + $def.F * BUGGY, NAME, methods);
+        if (FORCE)
+          for (key in methods) {
+            if (!(key in proto))
+              $.hide(proto, key, methods[key]);
+          }
+      }
+    },
+    forOf: function(iterable, entries, fn, that) {
+      var iterator = getIterator(iterable),
+          f = ctx(fn, that, entries ? 2 : 1),
+          step;
+      while (!(step = iterator.next()).done) {
+        if (stepCall(iterator, f, step.value, entries) === false) {
+          return closeIterator(iterator);
+        }
+      }
+    }
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.partial", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.invoke", "github:zloirock/core-js@0.8.4/modules/$.assert"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      invoke = require("github:zloirock/core-js@0.8.4/modules/$.invoke"),
+      assertFunction = require("github:zloirock/core-js@0.8.4/modules/$.assert").fn;
+  module.exports = function() {
+    var fn = assertFunction(this),
+        length = arguments.length,
+        pargs = Array(length),
+        i = 0,
+        _ = $.path._,
+        holder = false;
+    while (length > i)
+      if ((pargs[i] = arguments[i++]) === _)
+        holder = true;
+    return function() {
+      var that = this,
+          _length = arguments.length,
+          j = 0,
+          k = 0,
+          args;
+      if (!holder && !_length)
+        return invoke(fn, pargs, that);
+      args = pargs.slice();
+      if (holder)
+        for (; length > j; j++)
+          if (args[j] === _)
+            args[j] = arguments[k++];
+      while (_length > k)
+        args.push(arguments[k++]);
+      return invoke(fn, args, that);
+    };
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.invoke", [], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  module.exports = function(fn, args, that) {
+    var un = that === undefined;
+    switch (args.length) {
+      case 0:
+        return un ? fn() : fn.call(that);
+      case 1:
+        return un ? fn(args[0]) : fn.call(that, args[0]);
+      case 2:
+        return un ? fn(args[0], args[1]) : fn.call(that, args[0], args[1]);
+      case 3:
+        return un ? fn(args[0], args[1], args[2]) : fn.call(that, args[0], args[1], args[2]);
+      case 4:
+        return un ? fn(args[0], args[1], args[2], args[3]) : fn.call(that, args[0], args[1], args[2], args[3]);
+      case 5:
+        return un ? fn(args[0], args[1], args[2], args[3], args[4]) : fn.call(that, args[0], args[1], args[2], args[3], args[4]);
+    }
+    return fn.apply(that, args);
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.own-keys", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.assert"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      assertObject = require("github:zloirock/core-js@0.8.4/modules/$.assert").obj;
+  module.exports = function ownKeys(it) {
+    assertObject(it);
+    return $.getSymbols ? $.getNames(it).concat($.getSymbols(it)) : $.getNames(it);
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.cof", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      TAG = require("github:zloirock/core-js@0.8.4/modules/$.wks")('toStringTag'),
+      toString = {}.toString;
+  function cof(it) {
+    return toString.call(it).slice(8, -1);
+  }
+  cof.classof = function(it) {
+    var O,
+        T;
+    return it == undefined ? it === undefined ? 'Undefined' : 'Null' : typeof(T = (O = Object(it))[TAG]) == 'string' ? T : cof(O);
+  };
+  cof.set = function(it, tag, stat) {
+    if (it && !$.has(it = stat ? it : it.prototype, TAG))
+      $.hide(it, TAG, tag);
+  };
+  module.exports = cof;
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.unscope", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      UNSCOPABLES = require("github:zloirock/core-js@0.8.4/modules/$.wks")('unscopables');
+  if ($.FW && !(UNSCOPABLES in []))
+    $.hide(Array.prototype, UNSCOPABLES, {});
+  module.exports = function(key) {
+    if ($.FW)
+      [][UNSCOPABLES][key] = true;
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.replacer", [], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  module.exports = function(regExp, replace, isStatic) {
+    var replacer = replace === Object(replace) ? function(part) {
+      return replace[part];
+    } : replace;
+    return function(it) {
+      return String(isStatic ? it : this).replace(regExp, replacer);
+    };
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.fw", [], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  module.exports = function($) {
+    $.FW = true;
+    $.path = $.g;
+    return $;
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.array-methods", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx");
+  module.exports = function(TYPE) {
+    var IS_MAP = TYPE == 1,
+        IS_FILTER = TYPE == 2,
+        IS_SOME = TYPE == 3,
+        IS_EVERY = TYPE == 4,
+        IS_FIND_INDEX = TYPE == 6,
+        NO_HOLES = TYPE == 5 || IS_FIND_INDEX;
+    return function(callbackfn) {
+      var O = Object($.assertDefined(this)),
+          self = $.ES5Object(O),
+          f = ctx(callbackfn, arguments[1], 3),
+          length = $.toLength(self.length),
+          index = 0,
+          result = IS_MAP ? Array(length) : IS_FILTER ? [] : undefined,
+          val,
+          res;
+      for (; length > index; index++)
+        if (NO_HOLES || index in self) {
+          val = self[index];
+          res = f(val, index, O);
+          if (TYPE) {
+            if (IS_MAP)
+              result[index] = res;
+            else if (res)
+              switch (TYPE) {
+                case 3:
+                  return true;
+                case 5:
+                  return val;
+                case 6:
+                  return index;
+                case 2:
+                  result.push(val);
+              }
+            else if (IS_EVERY)
+              return false;
+          }
+        }
+      return IS_FIND_INDEX ? -1 : IS_SOME || IS_EVERY ? IS_EVERY : result;
+    };
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.array-includes", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$");
+  module.exports = function(IS_INCLUDES) {
+    return function(el) {
+      var O = $.toObject(this),
+          length = $.toLength(O.length),
+          index = $.toIndex(arguments[1], length),
+          value;
+      if (IS_INCLUDES && el != el)
+        while (length > index) {
+          value = O[index++];
+          if (value != value)
+            return true;
+        }
+      else
+        for (; length > index; index++)
+          if (IS_INCLUDES || index in O) {
+            if (O[index] === el)
+              return IS_INCLUDES || index;
+          }
+      return !IS_INCLUDES && -1;
+    };
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.wks", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.uid"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var global = require("github:zloirock/core-js@0.8.4/modules/$").g,
+      store = {};
+  module.exports = function(name) {
+    return store[name] || (store[name] = global.Symbol && global.Symbol[name] || require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('Symbol.' + name));
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.set-proto", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.ctx"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      assert = require("github:zloirock/core-js@0.8.4/modules/$.assert");
+  function check(O, proto) {
+    assert.obj(O);
+    assert(proto === null || $.isObject(proto), proto, ": can't set as prototype!");
+  }
+  module.exports = {
+    set: Object.setPrototypeOf || ('__proto__' in {} ? function(buggy, set) {
+      try {
+        set = require("github:zloirock/core-js@0.8.4/modules/$.ctx")(Function.call, $.getDesc(Object.prototype, '__proto__').set, 2);
+        set({}, []);
+      } catch (e) {
+        buggy = true;
+      }
+      return function setPrototypeOf(O, proto) {
+        check(O, proto);
+        if (buggy)
+          O.__proto__ = proto;
+        else
+          set(O, proto);
+        return O;
+      };
+    }() : undefined),
+    check: check
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.string-at", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$");
+  module.exports = function(TO_STRING) {
+    return function(pos) {
+      var s = String($.assertDefined(this)),
+          i = $.toInteger(pos),
+          l = s.length,
+          a,
+          b;
+      if (i < 0 || i >= l)
+        return TO_STRING ? '' : undefined;
+      a = s.charCodeAt(i);
+      return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff ? TO_STRING ? s.charAt(i) : a : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
+    };
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.iter-detect", ["github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var SYMBOL_ITERATOR = require("github:zloirock/core-js@0.8.4/modules/$.wks")('iterator'),
+      SAFE_CLOSING = false;
+  try {
+    var riter = [7][SYMBOL_ITERATOR]();
+    riter['return'] = function() {
+      SAFE_CLOSING = true;
+    };
+    Array.from(riter, function() {
+      throw 2;
+    });
+  } catch (e) {}
+  module.exports = function(exec) {
+    if (!SAFE_CLOSING)
+      return false;
+    var safe = false;
+    try {
+      var arr = [7],
+          iter = arr[SYMBOL_ITERATOR]();
+      iter.next = function() {
+        safe = true;
+      };
+      arr[SYMBOL_ITERATOR] = function() {
+        return iter;
+      };
+      exec(arr);
+    } catch (e) {}
+    return safe;
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.species", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$");
+  module.exports = function(C) {
+    if ($.DESC && $.FW)
+      $.setDesc(C, require("github:zloirock/core-js@0.8.4/modules/$.wks")('species'), {
+        configurable: true,
+        get: $.that
+      });
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.task", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.invoke"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
+      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
+      invoke = require("github:zloirock/core-js@0.8.4/modules/$.invoke"),
+      global = $.g,
+      isFunction = $.isFunction,
+      html = $.html,
+      document = global.document,
+      process = global.process,
+      setTask = global.setImmediate,
+      clearTask = global.clearImmediate,
+      postMessage = global.postMessage,
+      addEventListener = global.addEventListener,
+      MessageChannel = global.MessageChannel,
+      counter = 0,
+      queue = {},
+      ONREADYSTATECHANGE = 'onreadystatechange',
+      defer,
+      channel,
+      port;
+  function run() {
+    var id = +this;
+    if ($.has(queue, id)) {
+      var fn = queue[id];
+      delete queue[id];
+      fn();
+    }
+  }
+  function listner(event) {
+    run.call(event.data);
+  }
+  if (!isFunction(setTask) || !isFunction(clearTask)) {
+    setTask = function(fn) {
+      var args = [],
+          i = 1;
+      while (arguments.length > i)
+        args.push(arguments[i++]);
+      queue[++counter] = function() {
+        invoke(isFunction(fn) ? fn : Function(fn), args);
+      };
+      defer(counter);
+      return counter;
+    };
+    clearTask = function(id) {
+      delete queue[id];
+    };
+    if (cof(process) == 'process') {
+      defer = function(id) {
+        process.nextTick(ctx(run, id, 1));
+      };
+    } else if (addEventListener && isFunction(postMessage) && !global.importScripts) {
+      defer = function(id) {
+        postMessage(id, '*');
+      };
+      addEventListener('message', listner, false);
+    } else if (isFunction(MessageChannel)) {
+      channel = new MessageChannel;
+      port = channel.port2;
+      channel.port1.onmessage = listner;
+      defer = ctx(port.postMessage, port, 1);
+    } else if (document && ONREADYSTATECHANGE in document.createElement('script')) {
+      defer = function(id) {
+        html.appendChild(document.createElement('script'))[ONREADYSTATECHANGE] = function() {
+          html.removeChild(this);
+          run.call(id);
+        };
+      };
+    } else {
+      defer = function(id) {
+        setTimeout(ctx(run, id, 1), 0);
+      };
+    }
+  }
+  module.exports = {
+    set: setTask,
+    clear: clearTask
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.collection-strong", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
+      safe = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe,
+      assert = require("github:zloirock/core-js@0.8.4/modules/$.assert"),
+      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
+      has = $.has,
+      set = $.set,
+      isObject = $.isObject,
+      hide = $.hide,
+      step = $iter.step,
+      isFrozen = Object.isFrozen || $.core.Object.isFrozen,
+      ID = safe('id'),
+      O1 = safe('O1'),
+      LAST = safe('last'),
+      FIRST = safe('first'),
+      ITER = safe('iter'),
+      SIZE = $.DESC ? safe('size') : 'size',
+      id = 0;
+  function fastKey(it, create) {
+    if (!isObject(it))
+      return (typeof it == 'string' ? 'S' : 'P') + it;
+    if (isFrozen(it))
+      return 'F';
+    if (!has(it, ID)) {
+      if (!create)
+        return 'E';
+      hide(it, ID, ++id);
+    }
+    return 'O' + it[ID];
+  }
+  function getEntry(that, key) {
+    var index = fastKey(key),
+        entry;
+    if (index != 'F')
+      return that[O1][index];
+    for (entry = that[FIRST]; entry; entry = entry.n) {
+      if (entry.k == key)
+        return entry;
+    }
+  }
+  module.exports = {
+    getConstructor: function(NAME, IS_MAP, ADDER) {
+      function C(iterable) {
+        var that = assert.inst(this, C, NAME);
+        set(that, O1, $.create(null));
+        set(that, SIZE, 0);
+        set(that, LAST, undefined);
+        set(that, FIRST, undefined);
+        if (iterable != undefined)
+          $iter.forOf(iterable, IS_MAP, that[ADDER], that);
+      }
+      $.mix(C.prototype, {
+        clear: function clear() {
+          for (var that = this,
+              data = that[O1],
+              entry = that[FIRST]; entry; entry = entry.n) {
+            entry.r = true;
+            if (entry.p)
+              entry.p = entry.p.n = undefined;
+            delete data[entry.i];
+          }
+          that[FIRST] = that[LAST] = undefined;
+          that[SIZE] = 0;
+        },
+        'delete': function(key) {
+          var that = this,
+              entry = getEntry(that, key);
+          if (entry) {
+            var next = entry.n,
+                prev = entry.p;
+            delete that[O1][entry.i];
+            entry.r = true;
+            if (prev)
+              prev.n = next;
+            if (next)
+              next.p = prev;
+            if (that[FIRST] == entry)
+              that[FIRST] = next;
+            if (that[LAST] == entry)
+              that[LAST] = prev;
+            that[SIZE]--;
+          }
+          return !!entry;
+        },
+        forEach: function forEach(callbackfn) {
+          var f = ctx(callbackfn, arguments[1], 3),
+              entry;
+          while (entry = entry ? entry.n : this[FIRST]) {
+            f(entry.v, entry.k, this);
+            while (entry && entry.r)
+              entry = entry.p;
+          }
+        },
+        has: function has(key) {
+          return !!getEntry(this, key);
+        }
+      });
+      if ($.DESC)
+        $.setDesc(C.prototype, 'size', {get: function() {
+            return assert.def(this[SIZE]);
+          }});
+      return C;
+    },
+    def: function(that, key, value) {
+      var entry = getEntry(that, key),
+          prev,
+          index;
+      if (entry) {
+        entry.v = value;
+      } else {
+        that[LAST] = entry = {
+          i: index = fastKey(key, true),
+          k: key,
+          v: value,
+          p: prev = that[LAST],
+          n: undefined,
+          r: false
+        };
+        if (!that[FIRST])
+          that[FIRST] = entry;
+        if (prev)
+          prev.n = entry;
+        that[SIZE]++;
+        if (index != 'F')
+          that[O1][index] = entry;
+      }
+      return that;
+    },
+    getEntry: getEntry,
+    getIterConstructor: function() {
+      return function(iterated, kind) {
+        set(this, ITER, {
+          o: iterated,
+          k: kind
+        });
+      };
+    },
+    next: function() {
+      var iter = this[ITER],
+          kind = iter.k,
+          entry = iter.l;
+      while (entry && entry.r)
+        entry = entry.p;
+      if (!iter.o || !(iter.l = entry = entry ? entry.n : iter.o[FIRST])) {
+        iter.o = undefined;
+        return step(1);
+      }
+      if (kind == 'key')
+        return step(0, entry.k);
+      if (kind == 'value')
+        return step(0, entry.v);
+      return step(0, [entry.k, entry.v]);
+    }
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.collection", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.iter", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.iter-detect", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.species"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
+      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
+      assertInstance = require("github:zloirock/core-js@0.8.4/modules/$.assert").inst;
+  module.exports = function(NAME, methods, common, IS_MAP, isWeak) {
+    var Base = $.g[NAME],
+        C = Base,
+        ADDER = IS_MAP ? 'set' : 'add',
+        proto = C && C.prototype,
+        O = {};
+    function fixMethod(KEY, CHAIN) {
+      var method = proto[KEY];
+      if ($.FW)
+        proto[KEY] = function(a, b) {
+          var result = method.call(this, a === 0 ? 0 : a, b);
+          return CHAIN ? this : result;
+        };
+    }
+    if (!$.isFunction(C) || !(isWeak || !$iter.BUGGY && proto.forEach && proto.entries)) {
+      C = common.getConstructor(NAME, IS_MAP, ADDER);
+      $.mix(C.prototype, methods);
+    } else {
+      var inst = new C,
+          chain = inst[ADDER](isWeak ? {} : -0, 1),
+          buggyZero;
+      if (!require("github:zloirock/core-js@0.8.4/modules/$.iter-detect")(function(iter) {
+        new C(iter);
+      })) {
+        C = function(iterable) {
+          assertInstance(this, C, NAME);
+          var that = new Base;
+          if (iterable != undefined)
+            $iter.forOf(iterable, IS_MAP, that[ADDER], that);
+          return that;
+        };
+        C.prototype = proto;
+        if ($.FW)
+          proto.constructor = C;
+      }
+      isWeak || inst.forEach(function(val, key) {
+        buggyZero = 1 / key === -Infinity;
+      });
+      if (buggyZero) {
+        fixMethod('delete');
+        fixMethod('has');
+        IS_MAP && fixMethod('get');
+      }
+      if (buggyZero || chain !== inst)
+        fixMethod(ADDER, true);
+    }
+    require("github:zloirock/core-js@0.8.4/modules/$.cof").set(C, NAME);
+    require("github:zloirock/core-js@0.8.4/modules/$.species")(C);
+    O[NAME] = C;
+    $def($def.G + $def.W + $def.F * (C != Base), O);
+    if (!isWeak)
+      $iter.std(C, NAME, common.getIterConstructor(), common.next, IS_MAP ? 'key+value' : 'value', !IS_MAP, true);
+    return C;
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.collection-weak", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.iter", "github:zloirock/core-js@0.8.4/modules/$.array-methods"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
+      safe = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe,
+      assert = require("github:zloirock/core-js@0.8.4/modules/$.assert"),
+      forOf = require("github:zloirock/core-js@0.8.4/modules/$.iter").forOf,
+      _has = $.has,
+      isObject = $.isObject,
+      hide = $.hide,
+      isFrozen = Object.isFrozen || $.core.Object.isFrozen,
+      id = 0,
+      ID = safe('id'),
+      WEAK = safe('weak'),
+      LEAK = safe('leak'),
+      method = require("github:zloirock/core-js@0.8.4/modules/$.array-methods"),
+      find = method(5),
+      findIndex = method(6);
+  function findFrozen(store, key) {
+    return find.call(store.array, function(it) {
+      return it[0] === key;
+    });
+  }
+  function leakStore(that) {
+    return that[LEAK] || hide(that, LEAK, {
+      array: [],
+      get: function(key) {
+        var entry = findFrozen(this, key);
+        if (entry)
+          return entry[1];
+      },
+      has: function(key) {
+        return !!findFrozen(this, key);
+      },
+      set: function(key, value) {
+        var entry = findFrozen(this, key);
+        if (entry)
+          entry[1] = value;
+        else
+          this.array.push([key, value]);
+      },
+      'delete': function(key) {
+        var index = findIndex.call(this.array, function(it) {
+          return it[0] === key;
+        });
+        if (~index)
+          this.array.splice(index, 1);
+        return !!~index;
+      }
+    })[LEAK];
+  }
+  module.exports = {
+    getConstructor: function(NAME, IS_MAP, ADDER) {
+      function C(iterable) {
+        $.set(assert.inst(this, C, NAME), ID, id++);
+        if (iterable != undefined)
+          forOf(iterable, IS_MAP, this[ADDER], this);
+      }
+      $.mix(C.prototype, {
+        'delete': function(key) {
+          if (!isObject(key))
+            return false;
+          if (isFrozen(key))
+            return leakStore(this)['delete'](key);
+          return _has(key, WEAK) && _has(key[WEAK], this[ID]) && delete key[WEAK][this[ID]];
+        },
+        has: function has(key) {
+          if (!isObject(key))
+            return false;
+          if (isFrozen(key))
+            return leakStore(this).has(key);
+          return _has(key, WEAK) && _has(key[WEAK], this[ID]);
+        }
+      });
+      return C;
+    },
+    def: function(that, key, value) {
+      if (isFrozen(assert.obj(key))) {
+        leakStore(that).set(key, value);
+      } else {
+        _has(key, WEAK) || hide(key, WEAK, {});
+        key[WEAK][that[ID]] = value;
+      }
+      return that;
+    },
+    leakStore: leakStore,
+    WEAK: WEAK,
+    ID: ID
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-router@0.16.1", ["github:aurelia/templating-router@0.16.1/aurelia-templating-router"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-router@0.16.1/aurelia-templating-router", ["exports", "github:aurelia/router@0.12.0", "github:aurelia/templating-router@0.16.1/route-loader", "github:aurelia/templating-router@0.16.1/router-view", "github:aurelia/templating-router@0.16.1/route-href"], function(exports, _aureliaRouter, _routeLoader, _routerView, _routeHref) {
+  'use strict';
+  exports.__esModule = true;
+  function configure(config) {
+    config.singleton(_aureliaRouter.RouteLoader, _routeLoader.TemplatingRouteLoader).singleton(_aureliaRouter.Router, _aureliaRouter.AppRouter).globalResources('./router-view', './route-href');
+  }
+  exports.TemplatingRouteLoader = _routeLoader.TemplatingRouteLoader;
+  exports.RouterView = _routerView.RouterView;
+  exports.RouteHref = _routeHref.RouteHref;
+  exports.configure = configure;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/router@0.12.0", ["github:aurelia/router@0.12.0/aurelia-router"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/router@0.12.0/aurelia-router", ["exports", "npm:core-js@0.9.18", "github:aurelia/logging@0.7.0", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/route-recognizer@0.7.0", "github:aurelia/history@0.7.0", "github:aurelia/event-aggregator@0.8.0"], function(exports, _coreJs, _aureliaLogging, _aureliaDependencyInjection, _aureliaRouteRecognizer, _aureliaHistory, _aureliaEventAggregator) {
+  'use strict';
+  exports.__esModule = true;
+  var _createClass = (function() {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ('value' in descriptor)
+          descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+    return function(Constructor, protoProps, staticProps) {
+      if (protoProps)
+        defineProperties(Constructor.prototype, protoProps);
+      if (staticProps)
+        defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  })();
+  exports.createRouteFilterStep = createRouteFilterStep;
+  exports.processPotential = processPotential;
+  exports.normalizeAbsolutePath = normalizeAbsolutePath;
+  exports.createRootedPath = createRootedPath;
+  exports.resolveUrl = resolveUrl;
+  exports.isNavigationCommand = isNavigationCommand;
+  exports.buildNavigationPlan = buildNavigationPlan;
+  exports.loadNewRoute = loadNewRoute;
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== 'function' && superClass !== null) {
+      throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass);
+    }
+    subClass.prototype = Object.create(superClass && superClass.prototype, {constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }});
+    if (superClass)
+      Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var RouteFilterContainer = (function() {
+    RouteFilterContainer.inject = function inject() {
+      return [_aureliaDependencyInjection.Container];
+    };
+    function RouteFilterContainer(container) {
+      _classCallCheck(this, RouteFilterContainer);
+      this.container = container;
+      this.filters = {};
+      this.filterCache = {};
+    }
+    RouteFilterContainer.prototype.addStep = function addStep(name, step) {
+      var index = arguments.length <= 2 || arguments[2] === undefined ? -1 : arguments[2];
+      var filter = this.filters[name];
+      if (!filter) {
+        filter = this.filters[name] = [];
+      }
+      if (index === -1) {
+        index = filter.length;
+      }
+      filter.splice(index, 0, step);
+      this.filterCache = {};
+    };
+    RouteFilterContainer.prototype.getFilterSteps = function getFilterSteps(name) {
+      if (this.filterCache[name]) {
+        return this.filterCache[name];
+      }
+      var steps = [];
+      var filter = this.filters[name];
+      if (!filter) {
+        return steps;
+      }
+      for (var i = 0,
+          l = filter.length; i < l; i++) {
+        if (typeof filter[i] === 'string') {
+          steps.push.apply(steps, this.getFilterSteps(filter[i]));
+        } else {
+          steps.push(this.container.get(filter[i]));
+        }
+      }
+      this.filterCache[name] = steps;
+      return steps;
+    };
+    return RouteFilterContainer;
+  })();
+  exports.RouteFilterContainer = RouteFilterContainer;
+  function createRouteFilterStep(name) {
+    function create(routeFilterContainer) {
+      return new RouteFilterStep(name, routeFilterContainer);
+    }
+    create.inject = function() {
+      return [RouteFilterContainer];
+    };
+    return create;
+  }
+  var RouteFilterStep = (function() {
+    function RouteFilterStep(name, routeFilterContainer) {
+      _classCallCheck(this, RouteFilterStep);
+      this.isMultiStep = true;
+      this.name = name;
+      this.routeFilterContainer = routeFilterContainer;
+    }
+    RouteFilterStep.prototype.getSteps = function getSteps() {
+      return this.routeFilterContainer.getFilterSteps(this.name);
+    };
+    return RouteFilterStep;
+  })();
+  function createResult(ctx, next) {
+    return {
+      status: next.status,
+      context: ctx,
+      output: next.output,
+      completed: next.status === pipelineStatus.completed
+    };
+  }
+  var pipelineStatus = {
+    completed: 'completed',
+    canceled: 'canceled',
+    rejected: 'rejected',
+    running: 'running'
+  };
+  exports.pipelineStatus = pipelineStatus;
+  var Pipeline = (function() {
+    function Pipeline() {
+      _classCallCheck(this, Pipeline);
+      this.steps = [];
+    }
+    Pipeline.prototype.withStep = function withStep(step) {
+      var run = undefined;
+      if (typeof step === 'function') {
+        run = step;
+      } else if (step.isMultiStep) {
+        var steps = step.getSteps();
+        for (var i = 0,
+            l = steps.length; i < l; i++) {
+          this.withStep(steps[i]);
+        }
+        return this;
+      } else {
+        run = step.run.bind(step);
+      }
+      this.steps.push(run);
+      return this;
+    };
+    Pipeline.prototype.run = function run(ctx) {
+      var index = -1;
+      var steps = this.steps;
+      function next() {
+        index++;
+        if (index < steps.length) {
+          var currentStep = steps[index];
+          try {
+            return currentStep(ctx, next);
+          } catch (e) {
+            return next.reject(e);
+          }
+        } else {
+          return next.complete();
+        }
+      }
+      next.complete = function(output) {
+        next.status = pipelineStatus.completed;
+        next.output = output;
+        return Promise.resolve(createResult(ctx, next));
+      };
+      next.cancel = function(reason) {
+        next.status = pipelineStatus.canceled;
+        next.output = reason;
+        return Promise.resolve(createResult(ctx, next));
+      };
+      next.reject = function(error) {
+        next.status = pipelineStatus.rejected;
+        next.output = error;
+        return Promise.resolve(createResult(ctx, next));
+      };
+      next.status = pipelineStatus.running;
+      return next();
+    };
+    return Pipeline;
+  })();
+  exports.Pipeline = Pipeline;
+  var NavigationInstruction = (function() {
+    function NavigationInstruction(fragment, queryString, params, queryParams, config, parentInstruction) {
+      _classCallCheck(this, NavigationInstruction);
+      this.fragment = fragment;
+      this.queryString = queryString;
+      this.params = params || {};
+      this.queryParams = queryParams;
+      this.config = config;
+      this.viewPortInstructions = {};
+      this.parentInstruction = parentInstruction;
+      var ancestorParams = [];
+      var current = this;
+      do {
+        var currentParams = Object.assign({}, current.params);
+        if (current.config.hasChildRouter) {
+          delete currentParams[current.getWildCardName()];
+        }
+        ancestorParams.unshift(currentParams);
+        current = current.parentInstruction;
+      } while (current);
+      var allParams = Object.assign.apply(Object, [{}, queryParams].concat(ancestorParams));
+      this.lifecycleArgs = [allParams, config, this];
+    }
+    NavigationInstruction.prototype.addViewPortInstruction = function addViewPortInstruction(viewPortName, strategy, moduleId, component) {
+      var viewportInstruction = this.viewPortInstructions[viewPortName] = {
+        name: viewPortName,
+        strategy: strategy,
+        moduleId: moduleId,
+        component: component,
+        childRouter: component.childRouter,
+        lifecycleArgs: this.lifecycleArgs.slice()
+      };
+      return viewportInstruction;
+    };
+    NavigationInstruction.prototype.getWildCardName = function getWildCardName() {
+      var wildcardIndex = this.config.route.lastIndexOf('*');
+      return this.config.route.substr(wildcardIndex + 1);
+    };
+    NavigationInstruction.prototype.getWildcardPath = function getWildcardPath() {
+      var wildcardName = this.getWildCardName();
+      var path = this.params[wildcardName] || '';
+      if (this.queryString) {
+        path += '?' + this.queryString;
+      }
+      return path;
+    };
+    NavigationInstruction.prototype.getBaseUrl = function getBaseUrl() {
+      if (!this.params) {
+        return this.fragment;
+      }
+      var wildcardName = this.getWildCardName();
+      var path = this.params[wildcardName] || '';
+      if (!path) {
+        return this.fragment;
+      }
+      return this.fragment.substr(0, this.fragment.lastIndexOf(path));
+    };
+    return NavigationInstruction;
+  })();
+  exports.NavigationInstruction = NavigationInstruction;
+  var NavModel = (function() {
+    function NavModel(router, relativeHref) {
+      _classCallCheck(this, NavModel);
+      this.isActive = false;
+      this.title = null;
+      this.href = null;
+      this.relativeHref = null;
+      this.settings = {};
+      this.config = null;
+      this.router = router;
+      this.relativeHref = relativeHref;
+    }
+    NavModel.prototype.setTitle = function setTitle(title) {
+      this.title = title;
+      if (this.isActive) {
+        this.router.updateTitle();
+      }
+    };
+    return NavModel;
+  })();
+  exports.NavModel = NavModel;
+  function processPotential(obj, resolve, reject) {
+    if (obj && typeof obj.then === 'function') {
+      var dfd = obj.then(resolve);
+      if (typeof dfd['catch'] === 'function') {
+        return dfd['catch'](reject);
+      } else if (typeof dfd.fail === 'function') {
+        return dfd.fail(reject);
+      }
+      return dfd;
+    }
+    try {
+      return resolve(obj);
+    } catch (error) {
+      return reject(error);
+    }
+  }
+  function normalizeAbsolutePath(path, hasPushState) {
+    if (!hasPushState && path[0] !== '#') {
+      path = '#' + path;
+    }
+    return path;
+  }
+  function createRootedPath(fragment, baseUrl, hasPushState) {
+    if (isAbsoluteUrl.test(fragment)) {
+      return fragment;
+    }
+    var path = '';
+    if (baseUrl.length && baseUrl[0] !== '/') {
+      path += '/';
+    }
+    path += baseUrl;
+    if ((!path.length || path[path.length - 1] !== '/') && fragment[0] !== '/') {
+      path += '/';
+    }
+    if (path.length && path[path.length - 1] === '/' && fragment[0] === '/') {
+      path = path.substring(0, path.length - 1);
+    }
+    return normalizeAbsolutePath(path + fragment, hasPushState);
+  }
+  function resolveUrl(fragment, baseUrl, hasPushState) {
+    if (isRootedPath.test(fragment)) {
+      return normalizeAbsolutePath(fragment, hasPushState);
+    }
+    return createRootedPath(fragment, baseUrl, hasPushState);
+  }
+  var isRootedPath = /^#?\//;
+  var isAbsoluteUrl = /^([a-z][a-z0-9+\-.]*:)?\/\//i;
+  function isNavigationCommand(obj) {
+    return obj && typeof obj.navigate === 'function';
+  }
+  var Redirect = (function() {
+    function Redirect(url) {
+      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+      _classCallCheck(this, Redirect);
+      this.url = url;
+      this.options = Object.assign({
+        trigger: true,
+        replace: true
+      }, options);
+      this.shouldContinueProcessing = false;
+    }
+    Redirect.prototype.setRouter = function setRouter(router) {
+      this.router = router;
+    };
+    Redirect.prototype.navigate = function navigate(appRouter) {
+      var navigatingRouter = this.options.useAppRouter ? appRouter : this.router || appRouter;
+      navigatingRouter.navigate(this.url, this.options);
+    };
+    return Redirect;
+  })();
+  exports.Redirect = Redirect;
+  var RouterConfiguration = (function() {
+    function RouterConfiguration() {
+      _classCallCheck(this, RouterConfiguration);
+      this.instructions = [];
+      this.options = {};
+      this.pipelineSteps = [];
+    }
+    RouterConfiguration.prototype.addPipelineStep = function addPipelineStep(name, step) {
+      this.pipelineSteps.push({
+        name: name,
+        step: step
+      });
+      return this;
+    };
+    RouterConfiguration.prototype.map = function map(route) {
+      if (Array.isArray(route)) {
+        route.forEach(this.map.bind(this));
+        return this;
+      }
+      return this.mapRoute(route);
+    };
+    RouterConfiguration.prototype.mapRoute = function mapRoute(config) {
+      this.instructions.push(function(router) {
+        var routeConfigs = [];
+        if (Array.isArray(config.route)) {
+          for (var i = 0,
+              ii = config.route.length; i < ii; ++i) {
+            var current = Object.assign({}, config);
+            current.route = config.route[i];
+            routeConfigs.push(current);
+          }
+        } else {
+          routeConfigs.push(Object.assign({}, config));
+        }
+        var navModel = undefined;
+        for (var i = 0,
+            ii = routeConfigs.length; i < ii; ++i) {
+          var routeConfig = routeConfigs[i];
+          routeConfig.settings = routeConfig.settings || {};
+          if (!navModel) {
+            navModel = router.createNavModel(routeConfig);
+          }
+          router.addRoute(routeConfig, navModel);
+        }
+      });
+      return this;
+    };
+    RouterConfiguration.prototype.mapUnknownRoutes = function mapUnknownRoutes(config) {
+      this.unknownRouteConfig = config;
+      return this;
+    };
+    RouterConfiguration.prototype.exportToRouter = function exportToRouter(router) {
+      var instructions = this.instructions;
+      for (var i = 0,
+          ii = instructions.length; i < ii; ++i) {
+        instructions[i](router);
+      }
+      if (this.title) {
+        router.title = this.title;
+      }
+      if (this.unknownRouteConfig) {
+        router.handleUnknownRoutes(this.unknownRouteConfig);
+      }
+      router.options = this.options;
+      var pipelineSteps = this.pipelineSteps;
+      if (pipelineSteps.length) {
+        if (!router.isRoot) {
+          throw new Error('Pipeline steps can only be added to the root router');
+        }
+        var filterContainer = router.container.get(RouteFilterContainer);
+        for (var i = 0,
+            ii = pipelineSteps.length; i < ii; ++i) {
+          var _pipelineSteps$i = pipelineSteps[i];
+          var _name = _pipelineSteps$i.name;
+          var step = _pipelineSteps$i.step;
+          filterContainer.addStep(_name, step);
+        }
+      }
+    };
+    return RouterConfiguration;
+  })();
+  exports.RouterConfiguration = RouterConfiguration;
+  var activationStrategy = {
+    noChange: 'no-change',
+    invokeLifecycle: 'invoke-lifecycle',
+    replace: 'replace'
+  };
+  exports.activationStrategy = activationStrategy;
+  function buildNavigationPlan(navigationContext, forceLifecycleMinimum) {
+    var prev = navigationContext.prevInstruction;
+    var next = navigationContext.nextInstruction;
+    var plan = {};
+    if ('redirect' in next.config) {
+      var redirectLocation = resolveUrl(next.config.redirect, getInstructionBaseUrl(next));
+      if (next.queryString) {
+        redirectLocation += '?' + next.queryString;
+      }
+      return Promise.reject(new Redirect(redirectLocation));
+    }
+    if (prev) {
+      var newParams = hasDifferentParameterValues(prev, next);
+      var pending = [];
+      var _loop = function(viewPortName) {
+        var prevViewPortInstruction = prev.viewPortInstructions[viewPortName];
+        var nextViewPortConfig = next.config.viewPorts[viewPortName];
+        var viewPortPlan = plan[viewPortName] = {
+          name: viewPortName,
+          config: nextViewPortConfig,
+          prevComponent: prevViewPortInstruction.component,
+          prevModuleId: prevViewPortInstruction.moduleId
+        };
+        if (prevViewPortInstruction.moduleId !== nextViewPortConfig.moduleId) {
+          viewPortPlan.strategy = activationStrategy.replace;
+        } else if ('determineActivationStrategy' in prevViewPortInstruction.component.bindingContext) {
+          var _prevViewPortInstruction$component$bindingContext;
+          viewPortPlan.strategy = (_prevViewPortInstruction$component$bindingContext = prevViewPortInstruction.component.bindingContext).determineActivationStrategy.apply(_prevViewPortInstruction$component$bindingContext, next.lifecycleArgs);
+        } else if (next.config.activationStrategy) {
+          viewPortPlan.strategy = next.config.activationStrategy;
+        } else if (newParams || forceLifecycleMinimum) {
+          viewPortPlan.strategy = activationStrategy.invokeLifecycle;
+        } else {
+          viewPortPlan.strategy = activationStrategy.noChange;
+        }
+        if (viewPortPlan.strategy !== activationStrategy.replace && prevViewPortInstruction.childRouter) {
+          var path = next.getWildcardPath();
+          var task = prevViewPortInstruction.childRouter.createNavigationInstruction(path, next).then(function(childInstruction) {
+            viewPortPlan.childNavigationContext = prevViewPortInstruction.childRouter.createNavigationContext(childInstruction);
+            return buildNavigationPlan(viewPortPlan.childNavigationContext, viewPortPlan.strategy === activationStrategy.invokeLifecycle).then(function(childPlan) {
+              viewPortPlan.childNavigationContext.plan = childPlan;
+            });
+          });
+          pending.push(task);
+        }
+      };
+      for (var viewPortName in prev.viewPortInstructions) {
+        _loop(viewPortName);
+      }
+      return Promise.all(pending).then(function() {
+        return plan;
+      });
+    }
+    for (var viewPortName in next.config.viewPorts) {
+      plan[viewPortName] = {
+        name: viewPortName,
+        strategy: activationStrategy.replace,
+        config: next.config.viewPorts[viewPortName]
+      };
+    }
+    return Promise.resolve(plan);
+  }
+  var BuildNavigationPlanStep = (function() {
+    function BuildNavigationPlanStep() {
+      _classCallCheck(this, BuildNavigationPlanStep);
+    }
+    BuildNavigationPlanStep.prototype.run = function run(navigationContext, next) {
+      return buildNavigationPlan(navigationContext).then(function(plan) {
+        navigationContext.plan = plan;
+        return next();
+      })['catch'](next.cancel);
+    };
+    return BuildNavigationPlanStep;
+  })();
+  exports.BuildNavigationPlanStep = BuildNavigationPlanStep;
+  function hasDifferentParameterValues(prev, next) {
+    var prevParams = prev.params;
+    var nextParams = next.params;
+    var nextWildCardName = next.config.hasChildRouter ? next.getWildCardName() : null;
+    for (var key in nextParams) {
+      if (key === nextWildCardName) {
+        continue;
+      }
+      if (prevParams[key] !== nextParams[key]) {
+        return true;
+      }
+    }
+    for (var key in prevParams) {
+      if (key === nextWildCardName) {
+        continue;
+      }
+      if (prevParams[key] !== nextParams[key]) {
+        return true;
+      }
+    }
+    return false;
+  }
+  function getInstructionBaseUrl(instruction) {
+    var instructionBaseUrlParts = [];
+    instruction = instruction.parentInstruction;
+    while (instruction) {
+      instructionBaseUrlParts.unshift(instruction.getBaseUrl());
+      instruction = instruction.parentInstruction;
+    }
+    instructionBaseUrlParts.unshift('/');
+    return instructionBaseUrlParts.join('');
+  }
+  var affirmations = ['yes', 'ok', 'true'];
+  exports.affirmations = affirmations;
+  var CanDeactivatePreviousStep = (function() {
+    function CanDeactivatePreviousStep() {
+      _classCallCheck(this, CanDeactivatePreviousStep);
+    }
+    CanDeactivatePreviousStep.prototype.run = function run(navigationContext, next) {
+      return processDeactivatable(navigationContext.plan, 'canDeactivate', next);
+    };
+    return CanDeactivatePreviousStep;
+  })();
+  exports.CanDeactivatePreviousStep = CanDeactivatePreviousStep;
+  var CanActivateNextStep = (function() {
+    function CanActivateNextStep() {
+      _classCallCheck(this, CanActivateNextStep);
+    }
+    CanActivateNextStep.prototype.run = function run(navigationContext, next) {
+      return processActivatable(navigationContext, 'canActivate', next);
+    };
+    return CanActivateNextStep;
+  })();
+  exports.CanActivateNextStep = CanActivateNextStep;
+  var DeactivatePreviousStep = (function() {
+    function DeactivatePreviousStep() {
+      _classCallCheck(this, DeactivatePreviousStep);
+    }
+    DeactivatePreviousStep.prototype.run = function run(navigationContext, next) {
+      return processDeactivatable(navigationContext.plan, 'deactivate', next, true);
+    };
+    return DeactivatePreviousStep;
+  })();
+  exports.DeactivatePreviousStep = DeactivatePreviousStep;
+  var ActivateNextStep = (function() {
+    function ActivateNextStep() {
+      _classCallCheck(this, ActivateNextStep);
+    }
+    ActivateNextStep.prototype.run = function run(navigationContext, next) {
+      return processActivatable(navigationContext, 'activate', next, true);
+    };
+    return ActivateNextStep;
+  })();
+  exports.ActivateNextStep = ActivateNextStep;
+  function processDeactivatable(plan, callbackName, next, ignoreResult) {
+    var infos = findDeactivatable(plan, callbackName);
+    var i = infos.length;
+    function inspect(val) {
+      if (ignoreResult || shouldContinue(val)) {
+        return iterate();
+      }
+      return next.cancel(val);
+    }
+    function iterate() {
+      if (i--) {
+        try {
+          var controller = infos[i];
+          var result = controller[callbackName]();
+          return processPotential(result, inspect, next.cancel);
+        } catch (error) {
+          return next.cancel(error);
+        }
+      }
+      return next();
+    }
+    return iterate();
+  }
+  function findDeactivatable(plan, callbackName) {
+    var list = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
+    for (var viewPortName in plan) {
+      var viewPortPlan = plan[viewPortName];
+      var prevComponent = viewPortPlan.prevComponent;
+      if ((viewPortPlan.strategy === activationStrategy.invokeLifecycle || viewPortPlan.strategy === activationStrategy.replace) && prevComponent) {
+        var controller = prevComponent.bindingContext;
+        if (callbackName in controller) {
+          list.push(controller);
+        }
+      }
+      if (viewPortPlan.childNavigationContext) {
+        findDeactivatable(viewPortPlan.childNavigationContext.plan, callbackName, list);
+      } else if (prevComponent) {
+        addPreviousDeactivatable(prevComponent, callbackName, list);
+      }
+    }
+    return list;
+  }
+  function addPreviousDeactivatable(component, callbackName, list) {
+    var childRouter = component.childRouter;
+    if (childRouter && childRouter.currentInstruction) {
+      var viewPortInstructions = childRouter.currentInstruction.viewPortInstructions;
+      for (var viewPortName in viewPortInstructions) {
+        var viewPortInstruction = viewPortInstructions[viewPortName];
+        var prevComponent = viewPortInstruction.component;
+        var prevController = prevComponent.bindingContext;
+        if (callbackName in prevController) {
+          list.push(prevController);
+        }
+        addPreviousDeactivatable(prevComponent, callbackName, list);
+      }
+    }
+  }
+  function processActivatable(navigationContext, callbackName, next, ignoreResult) {
+    var infos = findActivatable(navigationContext, callbackName);
+    var length = infos.length;
+    var i = -1;
+    function inspect(val, router) {
+      if (ignoreResult || shouldContinue(val, router)) {
+        return iterate();
+      }
+      return next.cancel(val);
+    }
+    function iterate() {
+      i++;
+      if (i < length) {
+        try {
+          var _ret2 = (function() {
+            var _current$controller;
+            var current = infos[i];
+            var result = (_current$controller = current.controller)[callbackName].apply(_current$controller, current.lifecycleArgs);
+            return {v: processPotential(result, function(val) {
+                return inspect(val, current.router);
+              }, next.cancel)};
+          })();
+          if (typeof _ret2 === 'object')
+            return _ret2.v;
+        } catch (error) {
+          return next.cancel(error);
+        }
+      }
+      return next();
+    }
+    return iterate();
+  }
+  function findActivatable(navigationContext, callbackName, list, router) {
+    if (list === undefined)
+      list = [];
+    var plan = navigationContext.plan;
+    var next = navigationContext.nextInstruction;
+    Object.keys(plan).filter(function(viewPortName) {
+      var viewPortPlan = plan[viewPortName];
+      var viewPortInstruction = next.viewPortInstructions[viewPortName];
+      var controller = viewPortInstruction.component.bindingContext;
+      if ((viewPortPlan.strategy === activationStrategy.invokeLifecycle || viewPortPlan.strategy === activationStrategy.replace) && callbackName in controller) {
+        list.push({
+          controller: controller,
+          lifecycleArgs: viewPortInstruction.lifecycleArgs,
+          router: router
+        });
+      }
+      if (viewPortPlan.childNavigationContext) {
+        findActivatable(viewPortPlan.childNavigationContext, callbackName, list, viewPortInstruction.component.childRouter || router);
+      }
+    });
+    return list;
+  }
+  function shouldContinue(output, router) {
+    if (output instanceof Error) {
+      return false;
+    }
+    if (isNavigationCommand(output)) {
+      if (typeof output.setRouter === 'function') {
+        output.setRouter(router);
+      }
+      return !!output.shouldContinueProcessing;
+    }
+    if (typeof output === 'string') {
+      return affirmations.indexOf(output.toLowerCase()) !== -1;
+    }
+    if (output === undefined) {
+      return true;
+    }
+    return output;
+  }
+  var NavigationContext = (function() {
+    function NavigationContext(router, nextInstruction) {
+      _classCallCheck(this, NavigationContext);
+      this.router = router;
+      this.nextInstruction = nextInstruction;
+      this.currentInstruction = router.currentInstruction;
+      this.prevInstruction = router.currentInstruction;
+    }
+    NavigationContext.prototype.getAllContexts = function getAllContexts() {
+      var acc = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
+      acc.push(this);
+      if (this.plan) {
+        for (var key in this.plan) {
+          this.plan[key].childNavigationContext && this.plan[key].childNavigationContext.getAllContexts(acc);
+        }
+      }
+      return acc;
+    };
+    NavigationContext.prototype.commitChanges = function commitChanges(waitToSwap) {
+      var next = this.nextInstruction;
+      var prev = this.prevInstruction;
+      var viewPortInstructions = next.viewPortInstructions;
+      var router = this.router;
+      var loads = [];
+      var delaySwaps = [];
+      router.currentInstruction = next;
+      if (prev) {
+        prev.config.navModel.isActive = false;
+      }
+      next.config.navModel.isActive = true;
+      router.refreshBaseUrl();
+      router.refreshNavigation();
+      var _loop2 = function(viewPortName) {
+        var viewPortInstruction = viewPortInstructions[viewPortName];
+        var viewPort = router.viewPorts[viewPortName];
+        if (!viewPort) {
+          throw new Error('There was no router-view found in the view for ' + viewPortInstruction.moduleId + '.');
+        }
+        if (viewPortInstruction.strategy === activationStrategy.replace) {
+          if (waitToSwap) {
+            delaySwaps.push({
+              viewPort: viewPort,
+              viewPortInstruction: viewPortInstruction
+            });
+          }
+          loads.push(viewPort.process(viewPortInstruction, waitToSwap).then(function(x) {
+            if ('childNavigationContext' in viewPortInstruction) {
+              return viewPortInstruction.childNavigationContext.commitChanges();
+            }
+          }));
+        } else {
+          if ('childNavigationContext' in viewPortInstruction) {
+            loads.push(viewPortInstruction.childNavigationContext.commitChanges(waitToSwap));
+          }
+        }
+      };
+      for (var viewPortName in viewPortInstructions) {
+        _loop2(viewPortName);
+      }
+      return Promise.all(loads).then(function() {
+        delaySwaps.forEach(function(x) {
+          return x.viewPort.swap(x.viewPortInstruction);
+        });
+      });
+    };
+    NavigationContext.prototype.updateTitle = function updateTitle() {
+      var title = this.buildTitle();
+      if (title) {
+        document.title = title;
+      }
+    };
+    NavigationContext.prototype.buildTitle = function buildTitle() {
+      var separator = arguments.length <= 0 || arguments[0] === undefined ? ' | ' : arguments[0];
+      var next = this.nextInstruction;
+      var title = next.config.navModel.title || '';
+      var viewPortInstructions = next.viewPortInstructions;
+      var childTitles = [];
+      for (var viewPortName in viewPortInstructions) {
+        var viewPortInstruction = viewPortInstructions[viewPortName];
+        if ('childNavigationContext' in viewPortInstruction) {
+          var childTitle = viewPortInstruction.childNavigationContext.buildTitle(separator);
+          if (childTitle) {
+            childTitles.push(childTitle);
+          }
+        }
+      }
+      if (childTitles.length) {
+        title = childTitles.join(separator) + (title ? separator : '') + title;
+      }
+      if (this.router.title) {
+        title += (title ? separator : '') + this.router.title;
+      }
+      return title;
+    };
+    _createClass(NavigationContext, [{
+      key: 'nextInstructions',
+      get: function get() {
+        return this.getAllContexts().map(function(c) {
+          return c.nextInstruction;
+        }).filter(function(c) {
+          return c;
+        });
+      }
+    }, {
+      key: 'currentInstructions',
+      get: function get() {
+        return this.getAllContexts().map(function(c) {
+          return c.currentInstruction;
+        }).filter(function(c) {
+          return c;
+        });
+      }
+    }, {
+      key: 'prevInstructions',
+      get: function get() {
+        return this.getAllContexts().map(function(c) {
+          return c.prevInstruction;
+        }).filter(function(c) {
+          return c;
+        });
+      }
+    }]);
+    return NavigationContext;
+  })();
+  exports.NavigationContext = NavigationContext;
+  var CommitChangesStep = (function() {
+    function CommitChangesStep() {
+      _classCallCheck(this, CommitChangesStep);
+    }
+    CommitChangesStep.prototype.run = function run(navigationContext, next) {
+      return navigationContext.commitChanges(true).then(function() {
+        navigationContext.updateTitle();
+        return next();
+      });
+    };
+    return CommitChangesStep;
+  })();
+  exports.CommitChangesStep = CommitChangesStep;
+  var RouteLoader = (function() {
+    function RouteLoader() {
+      _classCallCheck(this, RouteLoader);
+    }
+    RouteLoader.prototype.loadRoute = function loadRoute(router, config, navigationContext) {
+      throw Error('Route loaders must implement "loadRoute(router, config, navigationContext)".');
+    };
+    return RouteLoader;
+  })();
+  exports.RouteLoader = RouteLoader;
+  var LoadRouteStep = (function() {
+    LoadRouteStep.inject = function inject() {
+      return [RouteLoader];
+    };
+    function LoadRouteStep(routeLoader) {
+      _classCallCheck(this, LoadRouteStep);
+      this.routeLoader = routeLoader;
+    }
+    LoadRouteStep.prototype.run = function run(navigationContext, next) {
+      return loadNewRoute(this.routeLoader, navigationContext).then(next)['catch'](next.cancel);
+    };
+    return LoadRouteStep;
+  })();
+  exports.LoadRouteStep = LoadRouteStep;
+  function loadNewRoute(routeLoader, navigationContext) {
+    var toLoad = determineWhatToLoad(navigationContext);
+    var loadPromises = toLoad.map(function(current) {
+      return loadRoute(routeLoader, current.navigationContext, current.viewPortPlan);
+    });
+    return Promise.all(loadPromises);
+  }
+  function determineWhatToLoad(navigationContext) {
+    var toLoad = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+    var plan = navigationContext.plan;
+    var next = navigationContext.nextInstruction;
+    for (var viewPortName in plan) {
+      var viewPortPlan = plan[viewPortName];
+      if (viewPortPlan.strategy === activationStrategy.replace) {
+        toLoad.push({
+          viewPortPlan: viewPortPlan,
+          navigationContext: navigationContext
+        });
+        if (viewPortPlan.childNavigationContext) {
+          determineWhatToLoad(viewPortPlan.childNavigationContext, toLoad);
+        }
+      } else {
+        var viewPortInstruction = next.addViewPortInstruction(viewPortName, viewPortPlan.strategy, viewPortPlan.prevModuleId, viewPortPlan.prevComponent);
+        if (viewPortPlan.childNavigationContext) {
+          viewPortInstruction.childNavigationContext = viewPortPlan.childNavigationContext;
+          determineWhatToLoad(viewPortPlan.childNavigationContext, toLoad);
+        }
+      }
+    }
+    return toLoad;
+  }
+  function loadRoute(routeLoader, navigationContext, viewPortPlan) {
+    var moduleId = viewPortPlan.config.moduleId;
+    var next = navigationContext.nextInstruction;
+    return loadComponent(routeLoader, navigationContext, viewPortPlan.config).then(function(component) {
+      var viewPortInstruction = next.addViewPortInstruction(viewPortPlan.name, viewPortPlan.strategy, moduleId, component);
+      var childRouter = component.childRouter;
+      if (childRouter) {
+        var path = next.getWildcardPath();
+        return childRouter.createNavigationInstruction(path, next).then(function(childInstruction) {
+          var childNavigationContext = childRouter.createNavigationContext(childInstruction);
+          viewPortPlan.childNavigationContext = childNavigationContext;
+          return buildNavigationPlan(childNavigationContext).then(function(childPlan) {
+            childNavigationContext.plan = childPlan;
+            viewPortInstruction.childNavigationContext = childNavigationContext;
+            return loadNewRoute(routeLoader, childNavigationContext);
+          });
+        });
+      }
+    });
+  }
+  function loadComponent(routeLoader, navigationContext, config) {
+    var router = navigationContext.router;
+    var lifecycleArgs = navigationContext.nextInstruction.lifecycleArgs;
+    return routeLoader.loadRoute(router, config, navigationContext).then(function(component) {
+      component.router = router;
+      component.config = config;
+      if ('configureRouter' in component.bindingContext) {
+        var _ret4 = (function() {
+          var _component$bindingContext;
+          component.childRouter = component.childContainer.getChildRouter();
+          var routerConfig = new RouterConfiguration();
+          var result = Promise.resolve((_component$bindingContext = component.bindingContext).configureRouter.apply(_component$bindingContext, [routerConfig, component.childRouter].concat(lifecycleArgs)));
+          return {v: result.then(function() {
+              component.childRouter.configure(routerConfig);
+              return component;
+            })};
+        })();
+        if (typeof _ret4 === 'object')
+          return _ret4.v;
+      }
+      return component;
+    });
+  }
+  var Router = (function() {
+    function Router(container, history) {
+      _classCallCheck(this, Router);
+      this.viewPorts = {};
+      this.fallbackOrder = 100;
+      this.recognizer = new _aureliaRouteRecognizer.RouteRecognizer();
+      this.childRecognizer = new _aureliaRouteRecognizer.RouteRecognizer();
+      this.routes = [];
+      this.baseUrl = '';
+      this.isConfigured = false;
+      this.isNavigating = false;
+      this.navigation = [];
+      this.container = container;
+      this.history = history;
+      this.reset();
+    }
+    Router.prototype.registerViewPort = function registerViewPort(viewPort, name) {
+      name = name || 'default';
+      this.viewPorts[name] = viewPort;
+    };
+    Router.prototype.ensureConfigured = function ensureConfigured() {
+      return this._configuredPromise;
+    };
+    Router.prototype.configure = function configure(callbackOrConfig) {
+      this.isConfigured = true;
+      if (typeof callbackOrConfig === 'function') {
+        var _config = new RouterConfiguration();
+        callbackOrConfig(_config);
+        _config.exportToRouter(this);
+      } else {
+        callbackOrConfig.exportToRouter(this);
+      }
+      this.isConfigured = true;
+      this._resolveConfiguredPromise();
+      return this;
+    };
+    Router.prototype.navigate = function navigate(fragment, options) {
+      if (!this.isConfigured && this.parent) {
+        return this.parent.navigate(fragment, options);
+      }
+      return this.history.navigate(resolveUrl(fragment, this.baseUrl, this.history._hasPushState), options);
+    };
+    Router.prototype.navigateToRoute = function navigateToRoute(route, params, options) {
+      var path = this.generate(route, params);
+      return this.navigate(path, options);
+    };
+    Router.prototype.navigateBack = function navigateBack() {
+      this.history.navigateBack();
+    };
+    Router.prototype.createChild = function createChild(container) {
+      var childRouter = new Router(container || this.container.createChild(), this.history);
+      childRouter.parent = this;
+      return childRouter;
+    };
+    Router.prototype.generate = function generate(name, params) {
+      var hasRoute = this.recognizer.hasRoute(name);
+      if ((!this.isConfigured || !hasRoute) && this.parent) {
+        return this.parent.generate(name, params);
+      }
+      if (!hasRoute) {
+        throw new Error('A route with name \'' + name + '\' could not be found. Check that `name: \'' + name + '\'` was specified in the route\'s config.');
+      }
+      var path = this.recognizer.generate(name, params);
+      return createRootedPath(path, this.baseUrl, this.history._hasPushState);
+    };
+    Router.prototype.createNavModel = function createNavModel(config) {
+      var navModel = new NavModel(this, 'href' in config ? config.href : config.route);
+      navModel.title = config.title;
+      navModel.order = config.nav;
+      navModel.href = config.href;
+      navModel.settings = config.settings;
+      navModel.config = config;
+      return navModel;
+    };
+    Router.prototype.addRoute = function addRoute(config, navModel) {
+      validateRouteConfig(config);
+      if (!('viewPorts' in config) && !config.navigationStrategy) {
+        config.viewPorts = {'default': {
+            moduleId: config.moduleId,
+            view: config.view
+          }};
+      }
+      if (!navModel) {
+        navModel = this.createNavModel(config);
+      }
+      this.routes.push(config);
+      var path = config.route;
+      if (path.charAt(0) === '/') {
+        path = path.substr(1);
+      }
+      var state = this.recognizer.add({
+        path: path,
+        handler: config
+      });
+      if (path) {
+        var settings = config.settings;
+        delete config.settings;
+        var withChild = JSON.parse(JSON.stringify(config));
+        config.settings = settings;
+        withChild.route = path + '/*childRoute';
+        withChild.hasChildRouter = true;
+        this.childRecognizer.add({
+          path: withChild.route,
+          handler: withChild
+        });
+        withChild.navModel = navModel;
+        withChild.settings = config.settings;
+      }
+      config.navModel = navModel;
+      if ((navModel.order || navModel.order === 0) && this.navigation.indexOf(navModel) === -1) {
+        if (!navModel.href && navModel.href !== '' && (state.types.dynamics || state.types.stars)) {
+          throw new Error('Invalid route config: dynamic routes must specify an href to be included in the navigation model.');
+        }
+        if (typeof navModel.order !== 'number') {
+          navModel.order = ++this.fallbackOrder;
+        }
+        this.navigation.push(navModel);
+        this.navigation = this.navigation.sort(function(a, b) {
+          return a.order - b.order;
+        });
+      }
+    };
+    Router.prototype.hasRoute = function hasRoute(name) {
+      return !!(this.recognizer.hasRoute(name) || this.parent && this.parent.hasRoute(name));
+    };
+    Router.prototype.hasOwnRoute = function hasOwnRoute(name) {
+      return this.recognizer.hasRoute(name);
+    };
+    Router.prototype.handleUnknownRoutes = function handleUnknownRoutes(config) {
+      var callback = function callback(instruction) {
+        return new Promise(function(resolve, reject) {
+          function done(inst) {
+            inst = inst || instruction;
+            inst.config.route = inst.params.path;
+            resolve(inst);
+          }
+          if (!config) {
+            instruction.config.moduleId = instruction.fragment;
+            done(instruction);
+          } else if (typeof config === 'string') {
+            instruction.config.moduleId = config;
+            done(instruction);
+          } else if (typeof config === 'function') {
+            processPotential(config(instruction), done, reject);
+          } else {
+            instruction.config = config;
+            done(instruction);
+          }
+        });
+      };
+      this.catchAllHandler = callback;
+    };
+    Router.prototype.updateTitle = function updateTitle() {
+      if (this.parent) {
+        return this.parent.updateTitle();
+      }
+      this.currentInstruction.navigationContext.updateTitle();
+    };
+    Router.prototype.reset = function reset() {
+      var _this = this;
+      this.fallbackOrder = 100;
+      this.recognizer = new _aureliaRouteRecognizer.RouteRecognizer();
+      this.childRecognizer = new _aureliaRouteRecognizer.RouteRecognizer();
+      this.routes = [];
+      this.isNavigating = false;
+      this.navigation = [];
+      if (this.isConfigured || !this._configuredPromise) {
+        this._configuredPromise = new Promise(function(resolve) {
+          _this._resolveConfiguredPromise = resolve;
+        });
+      }
+      this.isConfigured = false;
+    };
+    Router.prototype.refreshBaseUrl = function refreshBaseUrl() {
+      if (this.parent) {
+        var baseUrl = this.parent.currentInstruction.getBaseUrl();
+        this.baseUrl = this.parent.baseUrl + baseUrl;
+      }
+    };
+    Router.prototype.refreshNavigation = function refreshNavigation() {
+      var nav = this.navigation;
+      for (var i = 0,
+          _length = nav.length; i < _length; i++) {
+        var current = nav[i];
+        if (!current.href) {
+          current.href = createRootedPath(current.relativeHref, this.baseUrl, this.history._hasPushState);
+        }
+      }
+    };
+    Router.prototype.createNavigationInstruction = function createNavigationInstruction() {
+      var url = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
+      var parentInstruction = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
+      var fragment = url;
+      var queryString = '';
+      var queryIndex = url.indexOf('?');
+      if (queryIndex !== -1) {
+        fragment = url.substr(0, queryIndex);
+        queryString = url.substr(queryIndex + 1);
+      }
+      var results = this.recognizer.recognize(url);
+      if (!results || !results.length) {
+        results = this.childRecognizer.recognize(url);
+      }
+      if ((!results || !results.length) && this.catchAllHandler) {
+        results = [{
+          config: {navModel: {}},
+          handler: this.catchAllHandler,
+          params: {path: fragment}
+        }];
+      }
+      if (results && results.length) {
+        var first = results[0];
+        var _instruction = new NavigationInstruction(fragment, queryString, first.params, first.queryParams || results.queryParams, first.config || first.handler, parentInstruction);
+        if (typeof first.handler === 'function') {
+          return evaluateNavigationStrategy(_instruction, first.handler, first);
+        } else if (first.handler && 'navigationStrategy' in first.handler) {
+          return evaluateNavigationStrategy(_instruction, first.handler.navigationStrategy, first.handler);
+        }
+        return Promise.resolve(_instruction);
+      }
+      return Promise.reject(new Error('Route not found: ' + url));
+    };
+    Router.prototype.createNavigationContext = function createNavigationContext(instruction) {
+      instruction.navigationContext = new NavigationContext(this, instruction);
+      return instruction.navigationContext;
+    };
+    _createClass(Router, [{
+      key: 'isRoot',
+      get: function get() {
+        return false;
+      }
+    }]);
+    return Router;
+  })();
+  exports.Router = Router;
+  function validateRouteConfig(config) {
+    if (typeof config !== 'object') {
+      throw new Error('Invalid Route Config');
+    }
+    if (typeof config.route !== 'string') {
+      throw new Error('Invalid Route Config: You must specify a route pattern.');
+    }
+    if (!('redirect' in config || config.moduleId || config.navigationStrategy || config.viewPorts)) {
+      throw new Error('Invalid Route Config: You must specify a moduleId, redirect, navigationStrategy, or viewPorts.');
+    }
+  }
+  function evaluateNavigationStrategy(instruction, evaluator, context) {
+    return Promise.resolve(evaluator.call(context, instruction)).then(function() {
+      if (!('viewPorts' in instruction.config)) {
+        instruction.config.viewPorts = {'default': {moduleId: instruction.config.moduleId}};
+      }
+      return instruction;
+    });
+  }
+  var PipelineProvider = (function() {
+    PipelineProvider.inject = function inject() {
+      return [_aureliaDependencyInjection.Container];
+    };
+    function PipelineProvider(container) {
+      _classCallCheck(this, PipelineProvider);
+      this.container = container;
+      this.steps = [BuildNavigationPlanStep, CanDeactivatePreviousStep, LoadRouteStep, createRouteFilterStep('authorize'), createRouteFilterStep('modelbind'), CanActivateNextStep, DeactivatePreviousStep, ActivateNextStep, createRouteFilterStep('precommit'), CommitChangesStep, createRouteFilterStep('postcomplete')];
+    }
+    PipelineProvider.prototype.createPipeline = function createPipeline(navigationContext) {
+      var _this2 = this;
+      var pipeline = new Pipeline();
+      this.steps.forEach(function(step) {
+        return pipeline.withStep(_this2.container.get(step));
+      });
+      return pipeline;
+    };
+    return PipelineProvider;
+  })();
+  exports.PipelineProvider = PipelineProvider;
+  var logger = _aureliaLogging.getLogger('app-router');
+  var AppRouter = (function(_Router) {
+    _inherits(AppRouter, _Router);
+    AppRouter.inject = function inject() {
+      return [_aureliaDependencyInjection.Container, _aureliaHistory.History, PipelineProvider, _aureliaEventAggregator.EventAggregator];
+    };
+    function AppRouter(container, history, pipelineProvider, events) {
+      _classCallCheck(this, AppRouter);
+      _Router.call(this, container, history);
+      this.pipelineProvider = pipelineProvider;
+      document.addEventListener('click', handleLinkClick.bind(this), true);
+      this.events = events;
+      this.maxInstructionCount = 10;
+    }
+    AppRouter.prototype.loadUrl = function loadUrl(url) {
+      var _this3 = this;
+      return this.createNavigationInstruction(url).then(function(instruction) {
+        return _this3.queueInstruction(instruction);
+      })['catch'](function(error) {
+        logger.error(error);
+        restorePreviousLocation(_this3);
+      });
+    };
+    AppRouter.prototype.queueInstruction = function queueInstruction(instruction) {
+      var _this4 = this;
+      return new Promise(function(resolve) {
+        instruction.resolve = resolve;
+        _this4.queue.unshift(instruction);
+        _this4.dequeueInstruction();
+      });
+    };
+    AppRouter.prototype.dequeueInstruction = function dequeueInstruction() {
+      var _this5 = this;
+      var instructionCount = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+      return Promise.resolve().then(function() {
+        if (_this5.isNavigating && !instructionCount) {
+          return undefined;
+        }
+        var instruction = _this5.queue.shift();
+        _this5.queue = [];
+        if (!instruction) {
+          return undefined;
+        }
+        _this5.isNavigating = true;
+        if (!instructionCount) {
+          _this5.events.publish('router:navigation:processing', {instruction: instruction});
+        } else if (instructionCount === _this5.maxInstructionCount - 1) {
+          logger.error(instructionCount + 1 + ' navigation instructions have been attempted without success. Restoring last known good location.');
+          restorePreviousLocation(_this5);
+          return _this5.dequeueInstruction(instructionCount + 1);
+        } else if (instructionCount > _this5.maxInstructionCount) {
+          throw new Error('Maximum navigation attempts exceeded. Giving up.');
+        }
+        var context = _this5.createNavigationContext(instruction);
+        var pipeline = _this5.pipelineProvider.createPipeline(context);
+        return pipeline.run(context).then(function(result) {
+          return processResult(instruction, result, instructionCount, _this5);
+        })['catch'](function(error) {
+          return {output: error instanceof Error ? error : new Error(error)};
+        }).then(function(result) {
+          return resolveInstruction(instruction, result, !!instructionCount, _this5);
+        });
+      });
+    };
+    AppRouter.prototype.registerViewPort = function registerViewPort(viewPort, name) {
+      var _this6 = this;
+      _Router.prototype.registerViewPort.call(this, viewPort, name);
+      if (!this.isActive) {
+        var viewModel = this._findViewModel(viewPort);
+        if ('configureRouter' in viewModel) {
+          var _ret5 = (function() {
+            var config = new RouterConfiguration();
+            var result = Promise.resolve(viewModel.configureRouter(config, _this6));
+            return {v: result.then(function() {
+                _this6.configure(config);
+                _this6.activate();
+              })};
+          })();
+          if (typeof _ret5 === 'object')
+            return _ret5.v;
+        }
+        this.activate();
+      } else {
+        this.dequeueInstruction();
+      }
+    };
+    AppRouter.prototype._findViewModel = function _findViewModel(viewPort) {
+      if (this.container.viewModel) {
+        return this.container.viewModel;
+      }
+      if (viewPort.container) {
+        var container = viewPort.container;
+        while (container) {
+          if (container.viewModel) {
+            this.container.viewModel = container.viewModel;
+            return container.viewModel;
+          }
+          container = container.parent;
+        }
+      }
+    };
+    AppRouter.prototype.activate = function activate(options) {
+      if (this.isActive) {
+        return;
+      }
+      this.isActive = true;
+      this.options = Object.assign({routeHandler: this.loadUrl.bind(this)}, this.options, options);
+      this.history.activate(this.options);
+      this.dequeueInstruction();
+    };
+    AppRouter.prototype.deactivate = function deactivate() {
+      this.isActive = false;
+      this.history.deactivate();
+    };
+    AppRouter.prototype.reset = function reset() {
+      _Router.prototype.reset.call(this);
+      this.queue = [];
+      this.options = null;
+    };
+    _createClass(AppRouter, [{
+      key: 'isRoot',
+      get: function get() {
+        return true;
+      }
+    }]);
+    return AppRouter;
+  })(Router);
+  exports.AppRouter = AppRouter;
+  function findAnchor(el) {
+    while (el) {
+      if (el.tagName === 'A') {
+        return el;
+      }
+      el = el.parentNode;
+    }
+  }
+  function handleLinkClick(evt) {
+    if (!this.isActive) {
+      return;
+    }
+    var target = findAnchor(evt.target);
+    if (!target) {
+      return;
+    }
+    if (this.history._hasPushState) {
+      if (!evt.altKey && !evt.ctrlKey && !evt.metaKey && !evt.shiftKey && targetIsThisWindow(target)) {
+        var _href = target.getAttribute('href');
+        if (_href !== null && !(_href.charAt(0) === '#' || /^[a-z]+:/i.test(_href))) {
+          evt.preventDefault();
+          this.history.navigate(_href);
+        }
+      }
+    }
+  }
+  function targetIsThisWindow(target) {
+    var targetWindow = target.getAttribute('target');
+    return !targetWindow || targetWindow === window.name || targetWindow === '_self' || targetWindow === 'top' && window === window.top;
+  }
+  function processResult(instruction, result, instructionCount, router) {
+    if (!(result && 'completed' in result && 'output' in result)) {
+      result = result || {};
+      result.output = new Error('Expected router pipeline to return a navigation result, but got [' + JSON.stringify(result) + '] instead.');
+    }
+    var finalResult = null;
+    if (isNavigationCommand(result.output)) {
+      result.output.navigate(router);
+    } else {
+      finalResult = result;
+      if (!result.completed) {
+        if (result.output instanceof Error) {
+          logger.error(result.output);
+        }
+        restorePreviousLocation(router);
+      }
+    }
+    return router.dequeueInstruction(instructionCount + 1).then(function(innerResult) {
+      return finalResult || innerResult || result;
+    });
+  }
+  function resolveInstruction(instruction, result, isInnerInstruction, router) {
+    instruction.resolve(result);
+    if (!isInnerInstruction) {
+      router.isNavigating = false;
+      var eventArgs = {
+        instruction: instruction,
+        result: result
+      };
+      var eventName = undefined;
+      if (result.output instanceof Error) {
+        eventName = 'error';
+      } else if (!result.completed) {
+        eventName = 'canceled';
+      } else {
+        var queryString = instruction.queryString ? '?' + instruction.queryString : '';
+        router.history.previousLocation = instruction.fragment + queryString;
+        eventName = 'success';
+      }
+      router.events.publish('router:navigation:' + eventName, eventArgs);
+      router.events.publish('router:navigation:complete', eventArgs);
+    }
+    return result;
+  }
+  function restorePreviousLocation(router) {
+    var previousLocation = router.history.previousLocation;
+    if (previousLocation) {
+      router.navigate(router.history.previousLocation, {
+        trigger: false,
+        replace: true
+      });
+    } else {
+      logger.error('Router navigation failed, and no previous location could be restored.');
+    }
+  }
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/dependency-injection@0.10.1", ["github:aurelia/dependency-injection@0.10.1/aurelia-dependency-injection"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
 define("github:aurelia/route-recognizer@0.7.0", ["github:aurelia/route-recognizer@0.7.0/aurelia-route-recognizer"], function(main) {
   return main;
 });
@@ -6462,8 +10463,423 @@ _removeDefine();
 })();
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/history@0.7.0", ["github:aurelia/history@0.7.0/aurelia-history"], function(main) {
-  return main;
+define("github:aurelia/dependency-injection@0.10.1/aurelia-dependency-injection", ["exports", "npm:core-js@0.9.18", "github:aurelia/metadata@0.8.0", "github:aurelia/logging@0.7.0"], function(exports, _coreJs, _aureliaMetadata, _aureliaLogging) {
+  'use strict';
+  exports.__esModule = true;
+  var _createClass = (function() {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ('value' in descriptor)
+          descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+    return function(Constructor, protoProps, staticProps) {
+      if (protoProps)
+        defineProperties(Constructor.prototype, protoProps);
+      if (staticProps)
+        defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  })();
+  exports.autoinject = autoinject;
+  exports.inject = inject;
+  exports.registration = registration;
+  exports.transient = transient;
+  exports.singleton = singleton;
+  exports.instanceActivator = instanceActivator;
+  exports.factory = factory;
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== 'function' && superClass !== null) {
+      throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass);
+    }
+    subClass.prototype = Object.create(superClass && superClass.prototype, {constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }});
+    if (superClass)
+      Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var TransientRegistration = (function() {
+    function TransientRegistration(key) {
+      _classCallCheck(this, TransientRegistration);
+      this.key = key;
+    }
+    TransientRegistration.prototype.register = function register(container, key, fn) {
+      container.registerTransient(this.key || key, fn);
+    };
+    return TransientRegistration;
+  })();
+  exports.TransientRegistration = TransientRegistration;
+  var SingletonRegistration = (function() {
+    function SingletonRegistration(keyOrRegisterInChild) {
+      var registerInChild = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+      _classCallCheck(this, SingletonRegistration);
+      if (typeof keyOrRegisterInChild === 'boolean') {
+        this.registerInChild = keyOrRegisterInChild;
+      } else {
+        this.key = keyOrRegisterInChild;
+        this.registerInChild = registerInChild;
+      }
+    }
+    SingletonRegistration.prototype.register = function register(container, key, fn) {
+      var destination = this.registerInChild ? container : container.root;
+      destination.registerSingleton(this.key || key, fn);
+    };
+    return SingletonRegistration;
+  })();
+  exports.SingletonRegistration = SingletonRegistration;
+  var Resolver = (function() {
+    function Resolver() {
+      _classCallCheck(this, Resolver);
+    }
+    Resolver.prototype.get = function get(container) {
+      throw new Error('A custom Resolver must implement get(container) and return the resolved instance(s).');
+    };
+    return Resolver;
+  })();
+  exports.Resolver = Resolver;
+  var Lazy = (function(_Resolver) {
+    _inherits(Lazy, _Resolver);
+    function Lazy(key) {
+      _classCallCheck(this, Lazy);
+      _Resolver.call(this);
+      this.key = key;
+    }
+    Lazy.prototype.get = function get(container) {
+      var _this = this;
+      return function() {
+        return container.get(_this.key);
+      };
+    };
+    Lazy.of = function of(key) {
+      return new Lazy(key);
+    };
+    return Lazy;
+  })(Resolver);
+  exports.Lazy = Lazy;
+  var All = (function(_Resolver2) {
+    _inherits(All, _Resolver2);
+    function All(key) {
+      _classCallCheck(this, All);
+      _Resolver2.call(this);
+      this.key = key;
+    }
+    All.prototype.get = function get(container) {
+      return container.getAll(this.key);
+    };
+    All.of = function of(key) {
+      return new All(key);
+    };
+    return All;
+  })(Resolver);
+  exports.All = All;
+  var Optional = (function(_Resolver3) {
+    _inherits(Optional, _Resolver3);
+    function Optional(key) {
+      var checkParent = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+      _classCallCheck(this, Optional);
+      _Resolver3.call(this);
+      this.key = key;
+      this.checkParent = checkParent;
+    }
+    Optional.prototype.get = function get(container) {
+      if (container.hasHandler(this.key, this.checkParent)) {
+        return container.get(this.key);
+      }
+      return null;
+    };
+    Optional.of = function of(key) {
+      var checkParent = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+      return new Optional(key, checkParent);
+    };
+    return Optional;
+  })(Resolver);
+  exports.Optional = Optional;
+  var Parent = (function(_Resolver4) {
+    _inherits(Parent, _Resolver4);
+    function Parent(key) {
+      _classCallCheck(this, Parent);
+      _Resolver4.call(this);
+      this.key = key;
+    }
+    Parent.prototype.get = function get(container) {
+      return container.parent ? container.parent.get(this.key) : null;
+    };
+    Parent.of = function of(key) {
+      return new Parent(key);
+    };
+    return Parent;
+  })(Resolver);
+  exports.Parent = Parent;
+  var ClassActivator = (function() {
+    function ClassActivator() {
+      _classCallCheck(this, ClassActivator);
+    }
+    ClassActivator.prototype.invoke = function invoke(fn, args) {
+      return Reflect.construct(fn, args);
+    };
+    _createClass(ClassActivator, null, [{
+      key: 'instance',
+      value: new ClassActivator(),
+      enumerable: true
+    }]);
+    return ClassActivator;
+  })();
+  exports.ClassActivator = ClassActivator;
+  var FactoryActivator = (function() {
+    function FactoryActivator() {
+      _classCallCheck(this, FactoryActivator);
+    }
+    FactoryActivator.prototype.invoke = function invoke(fn, args) {
+      return fn.apply(undefined, args);
+    };
+    _createClass(FactoryActivator, null, [{
+      key: 'instance',
+      value: new FactoryActivator(),
+      enumerable: true
+    }]);
+    return FactoryActivator;
+  })();
+  exports.FactoryActivator = FactoryActivator;
+  var badKeyError = 'key/value cannot be null or undefined. Are you trying to inject/register something that doesn\'t exist with DI?';
+  _aureliaMetadata.Metadata.registration = 'aurelia:registration';
+  _aureliaMetadata.Metadata.instanceActivator = 'aurelia:instance-activator';
+  function test() {}
+  if (!test.name) {
+    Object.defineProperty(Function.prototype, 'name', {get: function get() {
+        var name = this.toString().match(/^\s*function\s*(\S*)\s*\(/)[1];
+        Object.defineProperty(this, 'name', {value: name});
+        return name;
+      }});
+  }
+  var emptyParameters = Object.freeze([]);
+  exports.emptyParameters = emptyParameters;
+  var Container = (function() {
+    function Container(constructionInfo) {
+      _classCallCheck(this, Container);
+      this.constructionInfo = constructionInfo || new Map();
+      this.entries = new Map();
+      this.root = this;
+    }
+    Container.prototype.makeGlobal = function makeGlobal() {
+      Container.instance = this;
+      return this;
+    };
+    Container.prototype.registerInstance = function registerInstance(key, instance) {
+      this.registerHandler(key, function(x) {
+        return instance;
+      });
+    };
+    Container.prototype.registerTransient = function registerTransient(key, fn) {
+      fn = fn || key;
+      this.registerHandler(key, function(x) {
+        return x.invoke(fn);
+      });
+    };
+    Container.prototype.registerSingleton = function registerSingleton(key, fn) {
+      var singleton = null;
+      fn = fn || key;
+      this.registerHandler(key, function(x) {
+        return singleton || (singleton = x.invoke(fn));
+      });
+    };
+    Container.prototype.autoRegister = function autoRegister(fn, key) {
+      var registration = undefined;
+      if (fn === null || fn === undefined) {
+        throw new Error(badKeyError);
+      }
+      if (typeof fn === 'function') {
+        registration = _aureliaMetadata.Metadata.get(_aureliaMetadata.Metadata.registration, fn);
+        if (registration !== undefined) {
+          registration.register(this, key || fn, fn);
+        } else {
+          this.registerSingleton(key || fn, fn);
+        }
+      } else {
+        this.registerInstance(fn, fn);
+      }
+    };
+    Container.prototype.autoRegisterAll = function autoRegisterAll(fns) {
+      var i = fns.length;
+      while (i--) {
+        this.autoRegister(fns[i]);
+      }
+    };
+    Container.prototype.registerHandler = function registerHandler(key, handler) {
+      this._getOrCreateEntry(key).push(handler);
+    };
+    Container.prototype.unregister = function unregister(key) {
+      this.entries['delete'](key);
+    };
+    Container.prototype.get = function get(key) {
+      var entry = undefined;
+      if (key === null || key === undefined) {
+        throw new Error(badKeyError);
+      }
+      if (key === Container) {
+        return this;
+      }
+      if (key instanceof Resolver) {
+        return key.get(this);
+      }
+      entry = this.entries.get(key);
+      if (entry !== undefined) {
+        return entry[0](this);
+      }
+      if (this.parent) {
+        return this.parent.get(key);
+      }
+      this.autoRegister(key);
+      entry = this.entries.get(key);
+      return entry[0](this);
+    };
+    Container.prototype.getAll = function getAll(key) {
+      var _this2 = this;
+      var entry = undefined;
+      if (key === null || key === undefined) {
+        throw new Error(badKeyError);
+      }
+      entry = this.entries.get(key);
+      if (entry !== undefined) {
+        return entry.map(function(x) {
+          return x(_this2);
+        });
+      }
+      if (this.parent) {
+        return this.parent.getAll(key);
+      }
+      return [];
+    };
+    Container.prototype.hasHandler = function hasHandler(key) {
+      var checkParent = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+      if (key === null || key === undefined) {
+        throw new Error(badKeyError);
+      }
+      return this.entries.has(key) || checkParent && this.parent && this.parent.hasHandler(key, checkParent);
+    };
+    Container.prototype.createChild = function createChild() {
+      var childContainer = new Container(this.constructionInfo);
+      childContainer.parent = this;
+      childContainer.root = this.root;
+      return childContainer;
+    };
+    Container.prototype.invoke = function invoke(fn, deps) {
+      var info = undefined;
+      var i = undefined;
+      var ii = undefined;
+      var keys = undefined;
+      var args = undefined;
+      try {
+        info = this._getOrCreateConstructionInfo(fn);
+        keys = info.keys;
+        args = new Array(keys.length);
+        for (i = 0, ii = keys.length; i < ii; ++i) {
+          args[i] = this.get(keys[i]);
+        }
+        if (deps !== undefined) {
+          args = args.concat(deps);
+        }
+        return info.activator.invoke(fn, args);
+      } catch (e) {
+        var activatingText = info && info.activator instanceof ClassActivator ? 'instantiating' : 'invoking';
+        var message = 'Error ' + activatingText + ' ' + fn.name + '.';
+        if (i < ii) {
+          message += ' The argument at index ' + i + ' (key:' + keys[i] + ') could not be satisfied.';
+        }
+        message += ' Check the inner error for details.';
+        throw new _aureliaLogging.AggregateError(message, e, true);
+      }
+    };
+    Container.prototype._getOrCreateEntry = function _getOrCreateEntry(key) {
+      var entry = undefined;
+      if (key === null || key === undefined) {
+        throw new Error('key cannot be null or undefined.  (Are you trying to inject something that doesn\'t exist with DI?)');
+      }
+      entry = this.entries.get(key);
+      if (entry === undefined) {
+        entry = [];
+        this.entries.set(key, entry);
+      }
+      return entry;
+    };
+    Container.prototype._getOrCreateConstructionInfo = function _getOrCreateConstructionInfo(fn) {
+      var info = this.constructionInfo.get(fn);
+      if (info === undefined) {
+        info = this._createConstructionInfo(fn);
+        this.constructionInfo.set(fn, info);
+      }
+      return info;
+    };
+    Container.prototype._createConstructionInfo = function _createConstructionInfo(fn) {
+      var info = {activator: _aureliaMetadata.Metadata.getOwn(_aureliaMetadata.Metadata.instanceActivator, fn) || ClassActivator.instance};
+      if (fn.inject !== undefined) {
+        if (typeof fn.inject === 'function') {
+          info.keys = fn.inject();
+        } else {
+          info.keys = fn.inject;
+        }
+        return info;
+      }
+      info.keys = _aureliaMetadata.Metadata.getOwn(_aureliaMetadata.Metadata.paramTypes, fn) || emptyParameters;
+      return info;
+    };
+    return Container;
+  })();
+  exports.Container = Container;
+  function autoinject(potentialTarget) {
+    var deco = function deco(target) {
+      target.inject = _aureliaMetadata.Metadata.getOwn(_aureliaMetadata.Metadata.paramTypes, target) || emptyParameters;
+    };
+    return potentialTarget ? deco(potentialTarget) : deco;
+  }
+  function inject() {
+    for (var _len = arguments.length,
+        rest = Array(_len),
+        _key = 0; _key < _len; _key++) {
+      rest[_key] = arguments[_key];
+    }
+    return function(target) {
+      target.inject = rest;
+    };
+  }
+  function registration(value) {
+    return function(target) {
+      _aureliaMetadata.Metadata.define(_aureliaMetadata.Metadata.registration, value, target);
+    };
+  }
+  function transient(key) {
+    return registration(new TransientRegistration(key));
+  }
+  function singleton(keyOrRegisterInChild) {
+    var registerInChild = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+    return registration(new SingletonRegistration(keyOrRegisterInChild, registerInChild));
+  }
+  function instanceActivator(value) {
+    return function(target) {
+      _aureliaMetadata.Metadata.define(_aureliaMetadata.Metadata.instanceActivator, value, target);
+    };
+  }
+  function factory() {
+    return instanceActivator(FactoryActivator.instance);
+  }
+  _aureliaMetadata.Decorators.configure.simpleDecorator('autoinject', autoinject);
+  _aureliaMetadata.Decorators.configure.parameterizedDecorator('inject', inject);
+  _aureliaMetadata.Decorators.configure.parameterizedDecorator('registration', registration);
+  _aureliaMetadata.Decorators.configure.parameterizedDecorator('transient', transient);
+  _aureliaMetadata.Decorators.configure.parameterizedDecorator('singleton', singleton);
+  _aureliaMetadata.Decorators.configure.parameterizedDecorator('instanceActivator', instanceActivator);
+  _aureliaMetadata.Decorators.configure.parameterizedDecorator('factory', factory);
 });
 
 _removeDefine();
@@ -6895,166 +11311,6 @@ _removeDefine();
 })();
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/path@0.9.0", ["github:aurelia/path@0.9.0/aurelia-path"], function(main) {
-  return main;
-});
-
-_removeDefine();
-})();
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/path@0.9.0/aurelia-path", ["exports"], function(exports) {
-  'use strict';
-  exports.__esModule = true;
-  exports.relativeToFile = relativeToFile;
-  exports.join = join;
-  exports.buildQueryString = buildQueryString;
-  exports.parseQueryString = parseQueryString;
-  function trimDots(ary) {
-    for (var i = 0; i < ary.length; ++i) {
-      var part = ary[i];
-      if (part === '.') {
-        ary.splice(i, 1);
-        i -= 1;
-      } else if (part === '..') {
-        if (i === 0 || i === 1 && ary[2] === '..' || ary[i - 1] === '..') {
-          continue;
-        } else if (i > 0) {
-          ary.splice(i - 1, 2);
-          i -= 2;
-        }
-      }
-    }
-  }
-  function relativeToFile(name, file) {
-    var fileParts = file && file.split('/');
-    var nameParts = name.trim().split('/');
-    if (nameParts[0].charAt(0) === '.' && fileParts) {
-      var normalizedBaseParts = fileParts.slice(0, fileParts.length - 1);
-      nameParts.unshift.apply(nameParts, normalizedBaseParts);
-    }
-    trimDots(nameParts);
-    return nameParts.join('/');
-  }
-  function join(path1, path2) {
-    if (!path1) {
-      return path2;
-    }
-    if (!path2) {
-      return path1;
-    }
-    var schemeMatch = path1.match(/^([^/]*?:)\//);
-    var scheme = schemeMatch && schemeMatch.length > 0 ? schemeMatch[1] : '';
-    path1 = path1.substr(scheme.length);
-    var urlPrefix = undefined;
-    if (path1.indexOf('///') === 0 && scheme === 'file:') {
-      urlPrefix = '///';
-    } else if (path1.indexOf('//') === 0) {
-      urlPrefix = '//';
-    } else if (path1.indexOf('/') === 0) {
-      urlPrefix = '/';
-    } else {
-      urlPrefix = '';
-    }
-    var trailingSlash = path2.slice(-1) === '/' ? '/' : '';
-    var url1 = path1.split('/');
-    var url2 = path2.split('/');
-    var url3 = [];
-    for (var i = 0,
-        ii = url1.length; i < ii; ++i) {
-      if (url1[i] === '..') {
-        url3.pop();
-      } else if (url1[i] === '.' || url1[i] === '') {
-        continue;
-      } else {
-        url3.push(url1[i]);
-      }
-    }
-    for (var i = 0,
-        ii = url2.length; i < ii; ++i) {
-      if (url2[i] === '..') {
-        url3.pop();
-      } else if (url2[i] === '.' || url2[i] === '') {
-        continue;
-      } else {
-        url3.push(url2[i]);
-      }
-    }
-    return scheme + urlPrefix + url3.join('/') + trailingSlash;
-  }
-  function buildQueryString(params) {
-    var pairs = [];
-    var keys = Object.keys(params || {}).sort();
-    var encode = encodeURIComponent;
-    var encodeKey = function encodeKey(k) {
-      return encode(k).replace('%24', '$');
-    };
-    for (var i = 0,
-        len = keys.length; i < len; i++) {
-      var key = keys[i];
-      var value = params[key];
-      if (value === null || value === undefined) {
-        continue;
-      }
-      if (Array.isArray(value)) {
-        var arrayKey = encodeKey(key) + '[]';
-        for (var j = 0,
-            l = value.length; j < l; j++) {
-          pairs.push(arrayKey + '=' + encode(value[j]));
-        }
-      } else {
-        pairs.push(encodeKey(key) + '=' + encode(value));
-      }
-    }
-    if (pairs.length === 0) {
-      return '';
-    }
-    return pairs.join('&');
-  }
-  function parseQueryString(queryString) {
-    var queryParams = {};
-    if (!queryString || typeof queryString !== 'string') {
-      return queryParams;
-    }
-    var query = queryString;
-    if (query.charAt(0) === '?') {
-      query = query.substr(1);
-    }
-    var pairs = query.split('&');
-    for (var i = 0; i < pairs.length; i++) {
-      var pair = pairs[i].split('=');
-      var key = decodeURIComponent(pair[0]);
-      var keyLength = key.length;
-      var isArray = false;
-      var value = undefined;
-      if (!key) {
-        continue;
-      } else if (pair.length === 1) {
-        value = true;
-      } else {
-        if (keyLength > 2 && key.slice(keyLength - 2) === '[]') {
-          isArray = true;
-          key = key.slice(0, keyLength - 2);
-          if (!queryParams[key]) {
-            queryParams[key] = [];
-          }
-        }
-        value = pair[1] ? decodeURIComponent(pair[1]) : '';
-      }
-      if (isArray) {
-        queryParams[key].push(value);
-      } else {
-        queryParams[key] = value;
-      }
-    }
-    return queryParams;
-  }
-});
-
-_removeDefine();
-})();
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
 define("github:aurelia/event-aggregator@0.8.0/aurelia-event-aggregator", ["exports", "github:aurelia/logging@0.7.0"], function(exports, _aureliaLogging) {
   'use strict';
   exports.__esModule = true;
@@ -7168,7 +11424,7 @@ _removeDefine();
 })();
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/history@0.7.0/aurelia-history", ["exports"], function(exports) {
+define("github:aurelia/templating-router@0.16.1/router-view", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/templating@0.15.3", "github:aurelia/router@0.12.0", "github:aurelia/metadata@0.8.0"], function(exports, _aureliaDependencyInjection, _aureliaTemplating, _aureliaRouter, _aureliaMetadata) {
   'use strict';
   exports.__esModule = true;
   function _classCallCheck(instance, Constructor) {
@@ -7176,546 +11432,62 @@ define("github:aurelia/history@0.7.0/aurelia-history", ["exports"], function(exp
       throw new TypeError('Cannot call a class as a function');
     }
   }
-  var History = (function() {
-    function History() {
-      _classCallCheck(this, History);
+  var RouterView = (function() {
+    function RouterView(element, container, viewSlot, router) {
+      _classCallCheck(this, _RouterView);
+      this.element = element;
+      this.container = container;
+      this.viewSlot = viewSlot;
+      this.router = router;
+      this.router.registerViewPort(this, this.element.getAttribute('name'));
     }
-    History.prototype.activate = function activate(options) {
-      throw new Error('History must implement activate().');
+    RouterView.prototype.bind = function bind(bindingContext) {
+      this.container.viewModel = bindingContext;
     };
-    History.prototype.deactivate = function deactivate() {
-      throw new Error('History must implement deactivate().');
-    };
-    History.prototype.navigate = function navigate(fragment, options) {
-      throw new Error('History must implement navigate().');
-    };
-    History.prototype.navigateBack = function navigateBack() {
-      throw new Error('History must implement navigateBack().');
-    };
-    return History;
-  })();
-  exports.History = History;
-});
-
-_removeDefine();
-})();
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/bootstrapper@0.17.0", ["github:aurelia/bootstrapper@0.17.0/aurelia-bootstrapper"], function(main) {
-  return main;
-});
-
-_removeDefine();
-})();
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/bootstrapper@0.17.0/aurelia-bootstrapper", ["exports", "npm:core-js@0.9.18", "github:aurelia/framework@0.16.0"], function(exports, _coreJs, _aureliaFramework) {
-  'use strict';
-  exports.__esModule = true;
-  exports.bootstrap = bootstrap;
-  function _interopRequireDefault(obj) {
-    return obj && obj.__esModule ? obj : {'default': obj};
-  }
-  var _core = _interopRequireDefault(_coreJs);
-  var logger = _aureliaFramework.LogManager.getLogger('bootstrapper');
-  var readyQueue = [];
-  var isReady = false;
-  function onReady(callback) {
-    return new Promise(function(resolve, reject) {
-      if (!isReady) {
-        readyQueue.push(function() {
-          try {
-            resolve(callback());
-          } catch (e) {
-            reject(e);
-          }
-        });
-      } else {
-        resolve(callback());
-      }
-    });
-  }
-  function bootstrap(configure) {
-    return onReady(function() {
-      var loader = new window.AureliaLoader();
-      var aurelia = new _aureliaFramework.Aurelia(loader);
-      return configure(aurelia);
-    });
-  }
-  function ready(global) {
-    return new Promise(function(resolve, reject) {
-      if (global.document.readyState === 'complete') {
-        resolve(global.document);
-      } else {
-        global.document.addEventListener('DOMContentLoaded', completed, false);
-        global.addEventListener('load', completed, false);
-      }
-      function completed() {
-        global.document.removeEventListener('DOMContentLoaded', completed, false);
-        global.removeEventListener('load', completed, false);
-        resolve(global.document);
-      }
-    });
-  }
-  function ensureLoader() {
-    if (!window.AureliaLoader) {
-      if (window.System && !window.System.isFake) {
-        return System.normalize('aurelia-bootstrapper').then(function(bootstrapperName) {
-          return System.normalize('aurelia-loader-default', bootstrapperName).then(function(loaderName) {
-            return System['import'](loaderName);
-          });
-        });
-      } else if (window.require) {
-        return new Promise(function(resolve, reject) {
-          require(['aurelia-loader-default'], resolve, reject);
-        });
-      }
-      throw new Error('No window.AureliaLoader is defined and there is neither a System API (ES6) or a Require API (AMD) available to load your app.');
-    }
-    return Promise.resolve();
-  }
-  function preparePlatform() {
-    return System.normalize('aurelia-bootstrapper').then(function(bootstrapperName) {
-      return System.normalize('aurelia-framework', bootstrapperName).then(function(frameworkName) {
-        System.map['aurelia-framework'] = frameworkName;
-        return System.normalize('aurelia-loader', frameworkName).then(function(loaderName) {
-          var toLoad = [];
-          toLoad.push(System.normalize('aurelia-dependency-injection', frameworkName).then(function(name) {
-            System.map['aurelia-dependency-injection'] = name;
-          }));
-          toLoad.push(System.normalize('aurelia-router', bootstrapperName).then(function(name) {
-            System.map['aurelia-router'] = name;
-          }));
-          toLoad.push(System.normalize('aurelia-logging-console', bootstrapperName).then(function(name) {
-            System.map['aurelia-logging-console'] = name;
-          }));
-          if (!('content' in document.createElement('template'))) {
-            logger.debug('loading the HTMLTemplateElement polyfill');
-            toLoad.push(System.normalize('aurelia-html-template-element', loaderName).then(function(name) {
-              return System['import'](name);
-            }));
-          }
-          return Promise.all(toLoad);
-        });
-      });
-    });
-  }
-  function runningLocally() {
-    return window.location.protocol !== 'http' && window.location.protocol !== 'https';
-  }
-  function handleApp(appHost) {
-    var configModuleId = appHost.getAttribute('aurelia-app');
-    return configModuleId ? aureliaLoader.config(appHost, configModuleId) : aureliaLoader.defaultConfig(appHost);
-  }
-  var aureliaLoader = {
-    config: function config(appHost, configModuleId) {
-      var loader = new window.AureliaLoader();
-      return loader.loadModule(configModuleId).then(function(m) {
-        var aurelia = new _aureliaFramework.Aurelia(loader);
-        aurelia.host = appHost;
-        return m.configure(aurelia);
-      });
-    },
-    defaultConfig: function defaultConfig(appHost) {
-      var aurelia = new _aureliaFramework.Aurelia();
-      aurelia.host = appHost;
-      if (runningLocally()) {
-        aurelia.use.developmentLogging();
-      }
-      aurelia.use.standardConfiguration();
-      return aurelia.start().then(function(a) {
-        return a.setRoot();
-      });
-    }
-  };
-  function run() {
-    return ready(window).then(function(doc) {
-      var appHost = doc.querySelectorAll('[aurelia-app]');
-      return ensureLoader().then(function() {
-        return preparePlatform().then(function() {
-          for (var i = 0,
-              ii = appHost.length; i < ii; ++i) {
-            handleApp(appHost[i]);
-          }
-          isReady = true;
-          for (var i = 0,
-              ii = readyQueue.length; i < ii; ++i) {
-            readyQueue[i]();
-          }
-          readyQueue = [];
-        });
-      });
-    });
-  }
-  run();
-});
-
-_removeDefine();
-})();
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/framework@0.16.0", ["github:aurelia/framework@0.16.0/aurelia-framework"], function(main) {
-  return main;
-});
-
-_removeDefine();
-})();
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/framework@0.16.0/aurelia-framework", ["exports", "npm:core-js@0.9.18", "github:aurelia/logging@0.7.0", "github:aurelia/templating@0.15.3", "github:aurelia/path@0.9.0", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/loader@0.9.0", "github:aurelia/binding@0.9.1", "github:aurelia/metadata@0.8.0", "github:aurelia/task-queue@0.7.0"], function(exports, _coreJs, _aureliaLogging, _aureliaTemplating, _aureliaPath, _aureliaDependencyInjection, _aureliaLoader, _aureliaBinding, _aureliaMetadata, _aureliaTaskQueue) {
-  'use strict';
-  exports.__esModule = true;
-  function _interopExportWildcard(obj, defaults) {
-    var newObj = defaults({}, obj);
-    delete newObj['default'];
-    return newObj;
-  }
-  function _defaults(obj, defaults) {
-    var keys = Object.getOwnPropertyNames(defaults);
-    for (var i = 0; i < keys.length; i++) {
-      var key = keys[i];
-      var value = Object.getOwnPropertyDescriptor(defaults, key);
-      if (value && value.configurable && obj[key] === undefined) {
-        Object.defineProperty(obj, key, value);
-      }
-    }
-    return obj;
-  }
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError('Cannot call a class as a function');
-    }
-  }
-  var logger = _aureliaLogging.getLogger('aurelia');
-  function runTasks(config, tasks) {
-    var current = undefined;
-    var next = function next() {
-      if (current = tasks.shift()) {
-        return Promise.resolve(current(config)).then(next);
-      }
-      return Promise.resolve();
-    };
-    return next();
-  }
-  function loadPlugin(config, loader, info) {
-    logger.debug('Loading plugin ' + info.moduleId + '.');
-    config.resourcesRelativeTo = info.resourcesRelativeTo;
-    return loader.loadModule(info.moduleId).then(function(m) {
-      if ('configure' in m) {
-        return Promise.resolve(m.configure(config, info.config || {})).then(function() {
-          config.resourcesRelativeTo = null;
-          logger.debug('Configured plugin ' + info.moduleId + '.');
-        });
-      }
-      config.resourcesRelativeTo = null;
-      logger.debug('Loaded plugin ' + info.moduleId + '.');
-    });
-  }
-  function loadResources(container, resourcesToLoad, appResources) {
-    var viewEngine = container.get(_aureliaTemplating.ViewEngine);
-    var importIds = Object.keys(resourcesToLoad);
-    var names = new Array(importIds.length);
-    for (var i = 0,
-        ii = importIds.length; i < ii; ++i) {
-      names[i] = resourcesToLoad[importIds[i]];
-    }
-    return viewEngine.importViewResources(importIds, names, appResources);
-  }
-  function assertProcessed(plugins) {
-    if (plugins.processed) {
-      throw new Error('This config instance has already been applied. To load more plugins or global resources, create a new FrameworkConfiguration instance.');
-    }
-  }
-  var FrameworkConfiguration = (function() {
-    function FrameworkConfiguration(aurelia) {
+    RouterView.prototype.process = function process(viewPortInstruction, waitToSwap) {
       var _this = this;
-      _classCallCheck(this, FrameworkConfiguration);
-      this.aurelia = aurelia;
-      this.container = aurelia.container;
-      this.info = [];
-      this.processed = false;
-      this.preTasks = [];
-      this.postTasks = [];
-      this.resourcesToLoad = {};
-      this.preTask(function() {
-        return System.normalize('aurelia-bootstrapper').then(function(bootstrapperName) {
-          return _this.bootstrapperName = bootstrapperName;
-        });
-      });
-      this.postTask(function() {
-        return loadResources(aurelia.container, _this.resourcesToLoad, aurelia.resources);
-      });
-    }
-    FrameworkConfiguration.prototype.instance = function instance(type, _instance) {
-      this.container.registerInstance(type, _instance);
-      return this;
-    };
-    FrameworkConfiguration.prototype.singleton = function singleton(type, implementation) {
-      this.container.registerSingleton(type, implementation);
-      return this;
-    };
-    FrameworkConfiguration.prototype.transient = function transient(type, implementation) {
-      this.container.registerTransient(type, implementation);
-      return this;
-    };
-    FrameworkConfiguration.prototype.preTask = function preTask(task) {
-      assertProcessed(this);
-      this.preTasks.push(task);
-      return this;
-    };
-    FrameworkConfiguration.prototype.postTask = function postTask(task) {
-      assertProcessed(this);
-      this.postTasks.push(task);
-      return this;
-    };
-    FrameworkConfiguration.prototype.feature = function feature(plugin, config) {
-      plugin = plugin.endsWith('.js') || plugin.endsWith('.ts') ? plugin.substring(0, plugin.length - 3) : plugin;
-      return this.plugin({
-        moduleId: plugin + '/index',
-        resourcesRelativeTo: plugin,
-        config: config || {}
-      });
-    };
-    FrameworkConfiguration.prototype.globalResources = function globalResources(resources) {
-      assertProcessed(this);
-      var toAdd = Array.isArray(resources) ? resources : arguments;
-      var resource = undefined;
-      var path = undefined;
-      var resourcesRelativeTo = this.resourcesRelativeTo || '';
-      for (var i = 0,
-          ii = toAdd.length; i < ii; ++i) {
-        resource = toAdd[i];
-        if (typeof resource !== 'string') {
-          throw new Error('Invalid resource path [' + resource + ']. Resources must be specified as relative module IDs.');
+      var component = viewPortInstruction.component;
+      var viewStrategy = component.view;
+      var childContainer = component.childContainer;
+      var viewModel = component.bindingContext;
+      var viewModelResource = component.viewModelResource;
+      var metadata = viewModelResource.metadata;
+      if (!viewStrategy && 'getViewStrategy' in viewModel) {
+        viewStrategy = viewModel.getViewStrategy();
+      }
+      if (viewStrategy) {
+        viewStrategy = _aureliaTemplating.ViewStrategy.normalize(viewStrategy);
+        viewStrategy.makeRelativeTo(_aureliaMetadata.Origin.get(component.router.container.viewModel.constructor).moduleId);
+      }
+      return metadata.load(childContainer, viewModelResource.value, viewStrategy, true).then(function(viewFactory) {
+        viewPortInstruction.behavior = metadata.create(childContainer, _aureliaTemplating.BehaviorInstruction.dynamic(_this.element, viewModel, viewFactory));
+        if (waitToSwap) {
+          return;
         }
-        path = _aureliaPath.join(resourcesRelativeTo, resource);
-        this.resourcesToLoad[path] = this.resourcesToLoad[path];
-      }
-      return this;
+        _this.swap(viewPortInstruction);
+      });
     };
-    FrameworkConfiguration.prototype.globalName = function globalName(resourcePath, newName) {
-      assertProcessed(this);
-      this.resourcesToLoad[resourcePath] = newName;
-      return this;
-    };
-    FrameworkConfiguration.prototype.plugin = function plugin(_plugin, config) {
-      assertProcessed(this);
-      if (typeof _plugin === 'string') {
-        _plugin = _plugin.endsWith('.js') || _plugin.endsWith('.ts') ? _plugin.substring(0, _plugin.length - 3) : _plugin;
-        return this.plugin({
-          moduleId: _plugin,
-          resourcesRelativeTo: _plugin,
-          config: config || {}
-        });
-      }
-      this.info.push(_plugin);
-      return this;
-    };
-    FrameworkConfiguration.prototype._addNormalizedPlugin = function _addNormalizedPlugin(name, config) {
+    RouterView.prototype.swap = function swap(viewPortInstruction) {
       var _this2 = this;
-      var plugin = {
-        moduleId: name,
-        resourcesRelativeTo: name,
-        config: config || {}
-      };
-      this.plugin(plugin);
-      this.preTask(function() {
-        return System.normalize(name, _this2.bootstrapperName).then(function(normalizedName) {
-          normalizedName = normalizedName.endsWith('.js') || normalizedName.endsWith('.ts') ? normalizedName.substring(0, normalizedName.length - 3) : normalizedName;
-          plugin.moduleId = normalizedName;
-          plugin.resourcesRelativeTo = normalizedName;
-          System.map[name] = normalizedName;
+      var removeResponse = this.viewSlot.removeAll(true);
+      if (removeResponse instanceof Promise) {
+        return removeResponse.then(function() {
+          viewPortInstruction.behavior.view.bind(viewPortInstruction.behavior.bindingContext);
+          _this2.viewSlot.add(viewPortInstruction.behavior.view);
+          _this2.view = viewPortInstruction.behavior.view;
         });
-      });
-      return this;
-    };
-    FrameworkConfiguration.prototype.defaultBindingLanguage = function defaultBindingLanguage() {
-      return this._addNormalizedPlugin('aurelia-templating-binding');
-    };
-    FrameworkConfiguration.prototype.router = function router() {
-      return this._addNormalizedPlugin('aurelia-templating-router');
-    };
-    FrameworkConfiguration.prototype.history = function history() {
-      return this._addNormalizedPlugin('aurelia-history-browser');
-    };
-    FrameworkConfiguration.prototype.defaultResources = function defaultResources() {
-      return this._addNormalizedPlugin('aurelia-templating-resources');
-    };
-    FrameworkConfiguration.prototype.eventAggregator = function eventAggregator() {
-      return this._addNormalizedPlugin('aurelia-event-aggregator');
-    };
-    FrameworkConfiguration.prototype.standardConfiguration = function standardConfiguration() {
-      return this.defaultBindingLanguage().defaultResources().history().router().eventAggregator();
-    };
-    FrameworkConfiguration.prototype.developmentLogging = function developmentLogging() {
-      var _this3 = this;
-      this.preTask(function() {
-        return System.normalize('aurelia-logging-console', _this3.bootstrapperName).then(function(name) {
-          return _this3.aurelia.loader.loadModule(name).then(function(m) {
-            _aureliaLogging.addAppender(new m.ConsoleAppender());
-            _aureliaLogging.setLevel(_aureliaLogging.logLevel.debug);
-          });
-        });
-      });
-      return this;
-    };
-    FrameworkConfiguration.prototype.apply = function apply() {
-      var _this4 = this;
-      if (this.processed) {
-        return Promise.resolve();
       }
-      return runTasks(this, this.preTasks).then(function() {
-        var loader = _this4.aurelia.loader;
-        var info = _this4.info;
-        var current = undefined;
-        var next = function next() {
-          if (current = info.shift()) {
-            return loadPlugin(_this4, loader, current).then(next);
-          }
-          _this4.processed = true;
-          return Promise.resolve();
-        };
-        return next().then(function() {
-          return runTasks(_this4, _this4.postTasks);
-        });
-      });
+      viewPortInstruction.behavior.view.bind(viewPortInstruction.behavior.bindingContext);
+      this.viewSlot.add(viewPortInstruction.behavior.view);
+      this.view = viewPortInstruction.behavior.view;
     };
-    return FrameworkConfiguration;
+    var _RouterView = RouterView;
+    RouterView = _aureliaDependencyInjection.inject(Element, _aureliaDependencyInjection.Container, _aureliaTemplating.ViewSlot, _aureliaRouter.Router)(RouterView) || RouterView;
+    RouterView = _aureliaTemplating.noView(RouterView) || RouterView;
+    RouterView = _aureliaTemplating.customElement('router-view')(RouterView) || RouterView;
+    return RouterView;
   })();
-  exports.FrameworkConfiguration = FrameworkConfiguration;
-  if (!window.CustomEvent || typeof window.CustomEvent !== 'function') {
-    var _CustomEvent = function _CustomEvent(event, params) {
-      params = params || {
-        bubbles: false,
-        cancelable: false,
-        detail: undefined
-      };
-      var evt = document.createEvent('CustomEvent');
-      evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
-      return evt;
-    };
-    _CustomEvent.prototype = window.Event.prototype;
-    window.CustomEvent = _CustomEvent;
-  }
-  function preventActionlessFormSubmit() {
-    document.body.addEventListener('submit', function(evt) {
-      var target = evt.target;
-      var action = target.action;
-      if (target.tagName.toLowerCase() === 'form' && !action) {
-        evt.preventDefault();
-      }
-    });
-  }
-  var Aurelia = (function() {
-    function Aurelia(loader, container, resources) {
-      _classCallCheck(this, Aurelia);
-      this.loader = loader || new window.AureliaLoader();
-      this.container = container || new _aureliaDependencyInjection.Container();
-      this.resources = resources || new _aureliaTemplating.ViewResources();
-      this.use = new FrameworkConfiguration(this);
-      this.logger = _aureliaLogging.getLogger('aurelia');
-      this.hostConfigured = false;
-      this.host = null;
-      this.use.instance(Aurelia, this);
-      this.use.instance(_aureliaLoader.Loader, this.loader);
-      this.use.instance(_aureliaTemplating.ViewResources, this.resources);
-      this.container.makeGlobal();
-    }
-    Aurelia.prototype.start = function start() {
-      var _this5 = this;
-      if (this.started) {
-        return Promise.resolve(this);
-      }
-      this.started = true;
-      this.logger.info('Aurelia Starting');
-      return this.use.apply().then(function() {
-        preventActionlessFormSubmit();
-        if (!_this5.container.hasHandler(_aureliaTemplating.BindingLanguage)) {
-          var message = 'You must configure Aurelia with a BindingLanguage implementation.';
-          _this5.logger.error(message);
-          throw new Error(message);
-        }
-        if (!_this5.container.hasHandler(_aureliaTemplating.Animator)) {
-          _aureliaTemplating.Animator.configureDefault(_this5.container);
-        }
-        _this5.logger.info('Aurelia Started');
-        var evt = new window.CustomEvent('aurelia-started', {
-          bubbles: true,
-          cancelable: true
-        });
-        document.dispatchEvent(evt);
-        return _this5;
-      });
-    };
-    Aurelia.prototype.enhance = function enhance() {
-      var _this6 = this;
-      var bindingContext = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-      var applicationHost = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
-      this._configureHost(applicationHost);
-      return new Promise(function(resolve) {
-        var viewEngine = _this6.container.get(_aureliaTemplating.ViewEngine);
-        _this6.root = viewEngine.enhance(_this6.container, _this6.host, _this6.resources, bindingContext);
-        _this6.root.attached();
-        _this6._onAureliaComposed();
-        return _this6;
-      });
-    };
-    Aurelia.prototype.setRoot = function setRoot() {
-      var _this7 = this;
-      var root = arguments.length <= 0 || arguments[0] === undefined ? 'app' : arguments[0];
-      var applicationHost = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
-      var compositionEngine = undefined;
-      var instruction = {};
-      this._configureHost(applicationHost);
-      compositionEngine = this.container.get(_aureliaTemplating.CompositionEngine);
-      instruction.viewModel = root;
-      instruction.container = instruction.childContainer = this.container;
-      instruction.viewSlot = this.hostSlot;
-      instruction.host = this.host;
-      return compositionEngine.compose(instruction).then(function(r) {
-        _this7.root = r;
-        instruction.viewSlot.attached();
-        _this7._onAureliaComposed();
-        return _this7;
-      });
-    };
-    Aurelia.prototype._configureHost = function _configureHost(applicationHost) {
-      if (this.hostConfigured) {
-        return;
-      }
-      applicationHost = applicationHost || this.host;
-      if (!applicationHost || typeof applicationHost === 'string') {
-        this.host = document.getElementById(applicationHost || 'applicationHost') || document.body;
-      } else {
-        this.host = applicationHost;
-      }
-      this.hostConfigured = true;
-      this.host.aurelia = this;
-      this.hostSlot = new _aureliaTemplating.ViewSlot(this.host, true);
-      this.hostSlot.transformChildNodesIntoView();
-      this.container.registerInstance(_aureliaTemplating.DOMBoundary, this.host);
-    };
-    Aurelia.prototype._onAureliaComposed = function _onAureliaComposed() {
-      var evt = new window.CustomEvent('aurelia-composed', {
-        bubbles: true,
-        cancelable: true
-      });
-      setTimeout(function() {
-        return document.dispatchEvent(evt);
-      }, 1);
-    };
-    return Aurelia;
-  })();
-  exports.Aurelia = Aurelia;
-  _defaults(exports, _interopExportWildcard(_aureliaDependencyInjection, _defaults));
-  _defaults(exports, _interopExportWildcard(_aureliaBinding, _defaults));
-  _defaults(exports, _interopExportWildcard(_aureliaMetadata, _defaults));
-  _defaults(exports, _interopExportWildcard(_aureliaTemplating, _defaults));
-  _defaults(exports, _interopExportWildcard(_aureliaLoader, _defaults));
-  _defaults(exports, _interopExportWildcard(_aureliaTaskQueue, _defaults));
-  _defaults(exports, _interopExportWildcard(_aureliaPath, _defaults));
-  var LogManager = _aureliaLogging;
-  exports.LogManager = LogManager;
+  exports.RouterView = RouterView;
 });
 
 _removeDefine();
@@ -7723,30 +11495,6 @@ _removeDefine();
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
 define("github:aurelia/templating@0.15.3", ["github:aurelia/templating@0.15.3/aurelia-templating"], function(main) {
-  return main;
-});
-
-_removeDefine();
-})();
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/loader@0.9.0", ["github:aurelia/loader@0.9.0/aurelia-loader"], function(main) {
-  return main;
-});
-
-_removeDefine();
-})();
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/binding@0.9.1", ["github:aurelia/binding@0.9.1/aurelia-binding"], function(main) {
-  return main;
-});
-
-_removeDefine();
-})();
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/task-queue@0.7.0", ["github:aurelia/task-queue@0.7.0/aurelia-task-queue"], function(main) {
   return main;
 });
 
@@ -10984,133 +14732,139 @@ _removeDefine();
 })();
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/loader@0.9.0/aurelia-loader", ["exports", "github:zloirock/core-js@0.8.4", "github:aurelia/path@0.9.0", "github:aurelia/metadata@0.8.0"], function(exports, _coreJs, _aureliaPath, _aureliaMetadata) {
+define("github:aurelia/binding@0.9.1", ["github:aurelia/binding@0.9.1/aurelia-binding"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/task-queue@0.7.0", ["github:aurelia/task-queue@0.7.0/aurelia-task-queue"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/task-queue@0.7.0/aurelia-task-queue", ["exports"], function(exports) {
   'use strict';
   exports.__esModule = true;
-  var _createClass = (function() {
-    function defineProperties(target, props) {
-      for (var i = 0; i < props.length; i++) {
-        var descriptor = props[i];
-        descriptor.enumerable = descriptor.enumerable || false;
-        descriptor.configurable = true;
-        if ('value' in descriptor)
-          descriptor.writable = true;
-        Object.defineProperty(target, descriptor.key, descriptor);
-      }
-    }
-    return function(Constructor, protoProps, staticProps) {
-      if (protoProps)
-        defineProperties(Constructor.prototype, protoProps);
-      if (staticProps)
-        defineProperties(Constructor, staticProps);
-      return Constructor;
-    };
-  })();
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
       throw new TypeError('Cannot call a class as a function');
     }
   }
-  var TemplateDependency = function TemplateDependency(src, name) {
-    _classCallCheck(this, TemplateDependency);
-    this.src = src;
-    this.name = name;
-  };
-  exports.TemplateDependency = TemplateDependency;
-  var TemplateRegistryEntry = (function() {
-    function TemplateRegistryEntry(address) {
-      _classCallCheck(this, TemplateRegistryEntry);
-      this.address = address;
-      this.template = null;
-      this.dependencies = null;
-      this.resources = null;
-      this.factory = null;
+  var BrowserMutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+  var hasSetImmediate = typeof setImmediate === 'function';
+  function makeRequestFlushFromMutationObserver(flush) {
+    var toggle = 1;
+    var observer = new BrowserMutationObserver(flush);
+    var node = document.createTextNode('');
+    observer.observe(node, {characterData: true});
+    return function requestFlush() {
+      toggle = -toggle;
+      node.data = toggle;
+    };
+  }
+  function makeRequestFlushFromTimer(flush) {
+    return function requestFlush() {
+      var timeoutHandle = setTimeout(handleFlushTimer, 0);
+      var intervalHandle = setInterval(handleFlushTimer, 50);
+      function handleFlushTimer() {
+        clearTimeout(timeoutHandle);
+        clearInterval(intervalHandle);
+        flush();
+      }
+    };
+  }
+  var TaskQueue = (function() {
+    function TaskQueue() {
+      var _this = this;
+      _classCallCheck(this, TaskQueue);
+      this.microTaskQueue = [];
+      this.microTaskQueueCapacity = 1024;
+      this.taskQueue = [];
+      if (typeof BrowserMutationObserver === 'function') {
+        this.requestFlushMicroTaskQueue = makeRequestFlushFromMutationObserver(function() {
+          return _this.flushMicroTaskQueue();
+        });
+      } else {
+        this.requestFlushMicroTaskQueue = makeRequestFlushFromTimer(function() {
+          return _this.flushMicroTaskQueue();
+        });
+      }
+      this.requestFlushTaskQueue = makeRequestFlushFromTimer(function() {
+        return _this.flushTaskQueue();
+      });
     }
-    TemplateRegistryEntry.prototype.setTemplate = function setTemplate(template) {
-      var address = this.address;
-      var useResources = undefined;
-      var current = undefined;
-      var src = undefined;
-      this.template = template;
-      useResources = template.content.querySelectorAll('require');
-      this.dependencies = new Array(useResources.length);
-      if (useResources.length === 0) {
-        return;
+    TaskQueue.prototype.queueMicroTask = function queueMicroTask(task) {
+      if (this.microTaskQueue.length < 1) {
+        this.requestFlushMicroTaskQueue();
       }
-      for (var i = 0,
-          ii = useResources.length; i < ii; ++i) {
-        current = useResources[i];
-        src = current.getAttribute('from');
-        if (!src) {
-          throw new Error('<require> element in ' + address + ' has no "from" attribute.');
+      this.microTaskQueue.push(task);
+    };
+    TaskQueue.prototype.queueTask = function queueTask(task) {
+      if (this.taskQueue.length < 1) {
+        this.requestFlushTaskQueue();
+      }
+      this.taskQueue.push(task);
+    };
+    TaskQueue.prototype.flushTaskQueue = function flushTaskQueue() {
+      var queue = this.taskQueue;
+      var index = 0;
+      var task = undefined;
+      this.taskQueue = [];
+      try {
+        while (index < queue.length) {
+          task = queue[index];
+          task.call();
+          index++;
         }
-        this.dependencies[i] = new TemplateDependency(_aureliaPath.relativeToFile(src, address), current.getAttribute('as'));
-        if (current.parentNode) {
-          current.parentNode.removeChild(current);
+      } catch (error) {
+        this.onError(error, task);
+      }
+    };
+    TaskQueue.prototype.flushMicroTaskQueue = function flushMicroTaskQueue() {
+      var queue = this.microTaskQueue;
+      var capacity = this.microTaskQueueCapacity;
+      var index = 0;
+      var task = undefined;
+      try {
+        while (index < queue.length) {
+          task = queue[index];
+          task.call();
+          index++;
+          if (index > capacity) {
+            for (var scan = 0; scan < index; scan++) {
+              queue[scan] = queue[scan + index];
+            }
+            queue.length -= index;
+            index = 0;
+          }
         }
+      } catch (error) {
+        this.onError(error, task);
+      }
+      queue.length = 0;
+    };
+    TaskQueue.prototype.onError = function onError(error, task) {
+      if ('onError' in task) {
+        task.onError(error);
+      } else if (hasSetImmediate) {
+        setImmediate(function() {
+          throw error;
+        });
+      } else {
+        setTimeout(function() {
+          throw error;
+        }, 0);
       }
     };
-    TemplateRegistryEntry.prototype.addDependency = function addDependency(src, name) {
-      if (typeof src === 'string') {
-        this.dependencies.push(new TemplateDependency(_aureliaPath.relativeToFile(src, this.address), name));
-      } else if (typeof src === 'function') {
-        var origin = _aureliaMetadata.Origin.get(src);
-        this.dependencies.push(new TemplateDependency(origin.moduleId, name));
-      }
-    };
-    TemplateRegistryEntry.prototype.setResources = function setResources(resources) {
-      this.resources = resources;
-    };
-    TemplateRegistryEntry.prototype.setFactory = function setFactory(factory) {
-      this.factory = factory;
-    };
-    _createClass(TemplateRegistryEntry, [{
-      key: 'templateIsLoaded',
-      get: function get() {
-        return this.template !== null;
-      }
-    }, {
-      key: 'isReady',
-      get: function get() {
-        return this.factory !== null;
-      }
-    }]);
-    return TemplateRegistryEntry;
+    return TaskQueue;
   })();
-  exports.TemplateRegistryEntry = TemplateRegistryEntry;
-  var Loader = (function() {
-    function Loader() {
-      _classCallCheck(this, Loader);
-      this.templateRegistry = {};
-    }
-    Loader.prototype.loadModule = function loadModule(id) {
-      throw new Error('Loaders must implement loadModule(id).');
-    };
-    Loader.prototype.loadAllModules = function loadAllModules(ids) {
-      throw new Error('Loader must implement loadAllModules(ids).');
-    };
-    Loader.prototype.loadTemplate = function loadTemplate(url) {
-      throw new Error('Loader must implement loadTemplate(url).');
-    };
-    Loader.prototype.loadText = function loadText(url) {
-      throw new Error('Loader must implement loadText(url).');
-    };
-    Loader.prototype.applyPluginToUrl = function applyPluginToUrl(url, pluginName) {
-      throw new Error('Loader must implement applyPluginToUrl(url, pluginName).');
-    };
-    Loader.prototype.addPlugin = function addPlugin(pluginName, implementation) {
-      throw new Error('Loader must implement addPlugin(pluginName, implementation).');
-    };
-    Loader.prototype.getOrCreateTemplateRegistryEntry = function getOrCreateTemplateRegistryEntry(id) {
-      var entry = this.templateRegistry[id];
-      if (entry === undefined) {
-        this.templateRegistry[id] = entry = new TemplateRegistryEntry(id);
-      }
-      return entry;
-    };
-    return Loader;
-  })();
-  exports.Loader = Loader;
+  exports.TaskQueue = TaskQueue;
 });
 
 _removeDefine();
@@ -15292,7 +19046,7 @@ _removeDefine();
 })();
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/task-queue@0.7.0/aurelia-task-queue", ["exports"], function(exports) {
+define("github:aurelia/templating-router@0.16.1/route-href", ["exports", "github:aurelia/templating@0.15.3", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/router@0.12.0"], function(exports, _aureliaTemplating, _aureliaDependencyInjection, _aureliaRouter) {
   'use strict';
   exports.__esModule = true;
   function _classCallCheck(instance, Constructor) {
@@ -15300,3700 +19054,2832 @@ define("github:aurelia/task-queue@0.7.0/aurelia-task-queue", ["exports"], functi
       throw new TypeError('Cannot call a class as a function');
     }
   }
-  var BrowserMutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-  var hasSetImmediate = typeof setImmediate === 'function';
-  function makeRequestFlushFromMutationObserver(flush) {
-    var toggle = 1;
-    var observer = new BrowserMutationObserver(flush);
-    var node = document.createTextNode('');
-    observer.observe(node, {characterData: true});
-    return function requestFlush() {
-      toggle = -toggle;
-      node.data = toggle;
-    };
-  }
-  function makeRequestFlushFromTimer(flush) {
-    return function requestFlush() {
-      var timeoutHandle = setTimeout(handleFlushTimer, 0);
-      var intervalHandle = setInterval(handleFlushTimer, 50);
-      function handleFlushTimer() {
-        clearTimeout(timeoutHandle);
-        clearInterval(intervalHandle);
-        flush();
-      }
-    };
-  }
-  var TaskQueue = (function() {
-    function TaskQueue() {
-      var _this = this;
-      _classCallCheck(this, TaskQueue);
-      this.microTaskQueue = [];
-      this.microTaskQueueCapacity = 1024;
-      this.taskQueue = [];
-      if (typeof BrowserMutationObserver === 'function') {
-        this.requestFlushMicroTaskQueue = makeRequestFlushFromMutationObserver(function() {
-          return _this.flushMicroTaskQueue();
-        });
-      } else {
-        this.requestFlushMicroTaskQueue = makeRequestFlushFromTimer(function() {
-          return _this.flushMicroTaskQueue();
-        });
-      }
-      this.requestFlushTaskQueue = makeRequestFlushFromTimer(function() {
-        return _this.flushTaskQueue();
-      });
+  var RouteHref = (function() {
+    function RouteHref(router, element) {
+      _classCallCheck(this, _RouteHref);
+      this.router = router;
+      this.element = element;
     }
-    TaskQueue.prototype.queueMicroTask = function queueMicroTask(task) {
-      if (this.microTaskQueue.length < 1) {
-        this.requestFlushMicroTaskQueue();
-      }
-      this.microTaskQueue.push(task);
+    RouteHref.prototype.bind = function bind() {
+      this.processChange();
     };
-    TaskQueue.prototype.queueTask = function queueTask(task) {
-      if (this.taskQueue.length < 1) {
-        this.requestFlushTaskQueue();
+    RouteHref.prototype.attributeChanged = function attributeChanged(value, previous) {
+      if (previous) {
+        this.element.removeAttribute(previous);
       }
-      this.taskQueue.push(task);
+      this.processChange();
     };
-    TaskQueue.prototype.flushTaskQueue = function flushTaskQueue() {
-      var queue = this.taskQueue;
-      var index = 0;
-      var task = undefined;
-      this.taskQueue = [];
-      try {
-        while (index < queue.length) {
-          task = queue[index];
-          task.call();
-          index++;
-        }
-      } catch (error) {
-        this.onError(error, task);
-      }
+    RouteHref.prototype.processChange = function processChange() {
+      var _this = this;
+      this.router.ensureConfigured().then(function() {
+        var href = _this.router.generate(_this.route, _this.params);
+        _this.element.setAttribute(_this.attribute, href);
+      });
     };
-    TaskQueue.prototype.flushMicroTaskQueue = function flushMicroTaskQueue() {
-      var queue = this.microTaskQueue;
-      var capacity = this.microTaskQueueCapacity;
-      var index = 0;
-      var task = undefined;
-      try {
-        while (index < queue.length) {
-          task = queue[index];
-          task.call();
-          index++;
-          if (index > capacity) {
-            for (var scan = 0; scan < index; scan++) {
-              queue[scan] = queue[scan + index];
-            }
-            queue.length -= index;
-            index = 0;
-          }
-        }
-      } catch (error) {
-        this.onError(error, task);
-      }
-      queue.length = 0;
-    };
-    TaskQueue.prototype.onError = function onError(error, task) {
-      if ('onError' in task) {
-        task.onError(error);
-      } else if (hasSetImmediate) {
-        setImmediate(function() {
-          throw error;
-        });
-      } else {
-        setTimeout(function() {
-          throw error;
-        }, 0);
-      }
-    };
-    return TaskQueue;
+    var _RouteHref = RouteHref;
+    RouteHref = _aureliaDependencyInjection.inject(_aureliaRouter.Router, Element)(RouteHref) || RouteHref;
+    RouteHref = _aureliaTemplating.bindable({
+      name: 'attribute',
+      defaultValue: 'href'
+    })(RouteHref) || RouteHref;
+    RouteHref = _aureliaTemplating.bindable({
+      name: 'params',
+      changeHandler: 'processChange'
+    })(RouteHref) || RouteHref;
+    RouteHref = _aureliaTemplating.bindable({
+      name: 'route',
+      changeHandler: 'processChange'
+    })(RouteHref) || RouteHref;
+    RouteHref = _aureliaTemplating.customAttribute('route-href')(RouteHref) || RouteHref;
+    return RouteHref;
   })();
-  exports.TaskQueue = TaskQueue;
+  exports.RouteHref = RouteHref;
 });
 
 _removeDefine();
 })();
-System.registerDynamic("github:zloirock/core-js@0.8.4", ["github:zloirock/core-js@0.8.4/index"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  module.exports = require("github:zloirock/core-js@0.8.4/index");
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/index", ["github:zloirock/core-js@0.8.4/shim", "github:zloirock/core-js@0.8.4/modules/core.dict", "github:zloirock/core-js@0.8.4/modules/core.iter-helpers", "github:zloirock/core-js@0.8.4/modules/core.$for", "github:zloirock/core-js@0.8.4/modules/core.delay", "github:zloirock/core-js@0.8.4/modules/core.binding", "github:zloirock/core-js@0.8.4/modules/core.object", "github:zloirock/core-js@0.8.4/modules/core.array.turn", "github:zloirock/core-js@0.8.4/modules/core.number.iterator", "github:zloirock/core-js@0.8.4/modules/core.number.math", "github:zloirock/core-js@0.8.4/modules/core.string.escape-html", "github:zloirock/core-js@0.8.4/modules/core.date", "github:zloirock/core-js@0.8.4/modules/core.global", "github:zloirock/core-js@0.8.4/modules/core.log", "github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  require("github:zloirock/core-js@0.8.4/shim");
-  require("github:zloirock/core-js@0.8.4/modules/core.dict");
-  require("github:zloirock/core-js@0.8.4/modules/core.iter-helpers");
-  require("github:zloirock/core-js@0.8.4/modules/core.$for");
-  require("github:zloirock/core-js@0.8.4/modules/core.delay");
-  require("github:zloirock/core-js@0.8.4/modules/core.binding");
-  require("github:zloirock/core-js@0.8.4/modules/core.object");
-  require("github:zloirock/core-js@0.8.4/modules/core.array.turn");
-  require("github:zloirock/core-js@0.8.4/modules/core.number.iterator");
-  require("github:zloirock/core-js@0.8.4/modules/core.number.math");
-  require("github:zloirock/core-js@0.8.4/modules/core.string.escape-html");
-  require("github:zloirock/core-js@0.8.4/modules/core.date");
-  require("github:zloirock/core-js@0.8.4/modules/core.global");
-  require("github:zloirock/core-js@0.8.4/modules/core.log");
-  module.exports = require("github:zloirock/core-js@0.8.4/modules/$").core;
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/shim", ["github:zloirock/core-js@0.8.4/modules/es5", "github:zloirock/core-js@0.8.4/modules/es6.symbol", "github:zloirock/core-js@0.8.4/modules/es6.object.assign", "github:zloirock/core-js@0.8.4/modules/es6.object.is", "github:zloirock/core-js@0.8.4/modules/es6.object.set-prototype-of", "github:zloirock/core-js@0.8.4/modules/es6.object.to-string", "github:zloirock/core-js@0.8.4/modules/es6.object.statics-accept-primitives", "github:zloirock/core-js@0.8.4/modules/es6.function.name", "github:zloirock/core-js@0.8.4/modules/es6.number.constructor", "github:zloirock/core-js@0.8.4/modules/es6.number.statics", "github:zloirock/core-js@0.8.4/modules/es6.math", "github:zloirock/core-js@0.8.4/modules/es6.string.from-code-point", "github:zloirock/core-js@0.8.4/modules/es6.string.raw", "github:zloirock/core-js@0.8.4/modules/es6.string.iterator", "github:zloirock/core-js@0.8.4/modules/es6.string.code-point-at", "github:zloirock/core-js@0.8.4/modules/es6.string.ends-with", "github:zloirock/core-js@0.8.4/modules/es6.string.includes", "github:zloirock/core-js@0.8.4/modules/es6.string.repeat", "github:zloirock/core-js@0.8.4/modules/es6.string.starts-with", "github:zloirock/core-js@0.8.4/modules/es6.array.from", "github:zloirock/core-js@0.8.4/modules/es6.array.of", "github:zloirock/core-js@0.8.4/modules/es6.array.iterator", "github:zloirock/core-js@0.8.4/modules/es6.array.species", "github:zloirock/core-js@0.8.4/modules/es6.array.copy-within", "github:zloirock/core-js@0.8.4/modules/es6.array.fill", "github:zloirock/core-js@0.8.4/modules/es6.array.find", "github:zloirock/core-js@0.8.4/modules/es6.array.find-index", "github:zloirock/core-js@0.8.4/modules/es6.regexp", "github:zloirock/core-js@0.8.4/modules/es6.promise", "github:zloirock/core-js@0.8.4/modules/es6.map", "github:zloirock/core-js@0.8.4/modules/es6.set", "github:zloirock/core-js@0.8.4/modules/es6.weak-map", "github:zloirock/core-js@0.8.4/modules/es6.weak-set", "github:zloirock/core-js@0.8.4/modules/es6.reflect", "github:zloirock/core-js@0.8.4/modules/es7.array.includes", "github:zloirock/core-js@0.8.4/modules/es7.string.at", "github:zloirock/core-js@0.8.4/modules/es7.regexp.escape", "github:zloirock/core-js@0.8.4/modules/es7.object.get-own-property-descriptors", "github:zloirock/core-js@0.8.4/modules/es7.object.to-array", "github:zloirock/core-js@0.8.4/modules/es7.set.to-json", "github:zloirock/core-js@0.8.4/modules/js.array.statics", "github:zloirock/core-js@0.8.4/modules/web.timers", "github:zloirock/core-js@0.8.4/modules/web.immediate", "github:zloirock/core-js@0.8.4/modules/web.dom.iterable", "github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  require("github:zloirock/core-js@0.8.4/modules/es5");
-  require("github:zloirock/core-js@0.8.4/modules/es6.symbol");
-  require("github:zloirock/core-js@0.8.4/modules/es6.object.assign");
-  require("github:zloirock/core-js@0.8.4/modules/es6.object.is");
-  require("github:zloirock/core-js@0.8.4/modules/es6.object.set-prototype-of");
-  require("github:zloirock/core-js@0.8.4/modules/es6.object.to-string");
-  require("github:zloirock/core-js@0.8.4/modules/es6.object.statics-accept-primitives");
-  require("github:zloirock/core-js@0.8.4/modules/es6.function.name");
-  require("github:zloirock/core-js@0.8.4/modules/es6.number.constructor");
-  require("github:zloirock/core-js@0.8.4/modules/es6.number.statics");
-  require("github:zloirock/core-js@0.8.4/modules/es6.math");
-  require("github:zloirock/core-js@0.8.4/modules/es6.string.from-code-point");
-  require("github:zloirock/core-js@0.8.4/modules/es6.string.raw");
-  require("github:zloirock/core-js@0.8.4/modules/es6.string.iterator");
-  require("github:zloirock/core-js@0.8.4/modules/es6.string.code-point-at");
-  require("github:zloirock/core-js@0.8.4/modules/es6.string.ends-with");
-  require("github:zloirock/core-js@0.8.4/modules/es6.string.includes");
-  require("github:zloirock/core-js@0.8.4/modules/es6.string.repeat");
-  require("github:zloirock/core-js@0.8.4/modules/es6.string.starts-with");
-  require("github:zloirock/core-js@0.8.4/modules/es6.array.from");
-  require("github:zloirock/core-js@0.8.4/modules/es6.array.of");
-  require("github:zloirock/core-js@0.8.4/modules/es6.array.iterator");
-  require("github:zloirock/core-js@0.8.4/modules/es6.array.species");
-  require("github:zloirock/core-js@0.8.4/modules/es6.array.copy-within");
-  require("github:zloirock/core-js@0.8.4/modules/es6.array.fill");
-  require("github:zloirock/core-js@0.8.4/modules/es6.array.find");
-  require("github:zloirock/core-js@0.8.4/modules/es6.array.find-index");
-  require("github:zloirock/core-js@0.8.4/modules/es6.regexp");
-  require("github:zloirock/core-js@0.8.4/modules/es6.promise");
-  require("github:zloirock/core-js@0.8.4/modules/es6.map");
-  require("github:zloirock/core-js@0.8.4/modules/es6.set");
-  require("github:zloirock/core-js@0.8.4/modules/es6.weak-map");
-  require("github:zloirock/core-js@0.8.4/modules/es6.weak-set");
-  require("github:zloirock/core-js@0.8.4/modules/es6.reflect");
-  require("github:zloirock/core-js@0.8.4/modules/es7.array.includes");
-  require("github:zloirock/core-js@0.8.4/modules/es7.string.at");
-  require("github:zloirock/core-js@0.8.4/modules/es7.regexp.escape");
-  require("github:zloirock/core-js@0.8.4/modules/es7.object.get-own-property-descriptors");
-  require("github:zloirock/core-js@0.8.4/modules/es7.object.to-array");
-  require("github:zloirock/core-js@0.8.4/modules/es7.set.to-json");
-  require("github:zloirock/core-js@0.8.4/modules/js.array.statics");
-  require("github:zloirock/core-js@0.8.4/modules/web.timers");
-  require("github:zloirock/core-js@0.8.4/modules/web.immediate");
-  require("github:zloirock/core-js@0.8.4/modules/web.dom.iterable");
-  module.exports = require("github:zloirock/core-js@0.8.4/modules/$").core;
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.dict", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.assign", "github:zloirock/core-js@0.8.4/modules/$.keyof", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      assign = require("github:zloirock/core-js@0.8.4/modules/$.assign"),
-      keyOf = require("github:zloirock/core-js@0.8.4/modules/$.keyof"),
-      ITER = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('iter'),
-      assert = require("github:zloirock/core-js@0.8.4/modules/$.assert"),
-      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
-      step = $iter.step,
-      getKeys = $.getKeys,
-      toObject = $.toObject,
-      has = $.has;
-  function Dict(iterable) {
-    var dict = $.create(null);
-    if (iterable != undefined) {
-      if ($iter.is(iterable)) {
-        $iter.forOf(iterable, true, function(key, value) {
-          dict[key] = value;
-        });
-      } else
-        assign(dict, iterable);
-    }
-    return dict;
-  }
-  Dict.prototype = null;
-  function DictIterator(iterated, kind) {
-    $.set(this, ITER, {
-      o: toObject(iterated),
-      a: getKeys(iterated),
-      i: 0,
-      k: kind
-    });
-  }
-  $iter.create(DictIterator, 'Dict', function() {
-    var iter = this[ITER],
-        O = iter.o,
-        keys = iter.a,
-        kind = iter.k,
-        key;
-    do {
-      if (iter.i >= keys.length) {
-        iter.o = undefined;
-        return step(1);
-      }
-    } while (!has(O, key = keys[iter.i++]));
-    if (kind == 'key')
-      return step(0, key);
-    if (kind == 'value')
-      return step(0, O[key]);
-    return step(0, [key, O[key]]);
-  });
-  function createDictIter(kind) {
-    return function(it) {
-      return new DictIterator(it, kind);
-    };
-  }
-  function generic(A, B) {
-    return typeof A == 'function' ? A : B;
-  }
-  function createDictMethod(TYPE) {
-    var IS_MAP = TYPE == 1,
-        IS_EVERY = TYPE == 4;
-    return function(object, callbackfn, that) {
-      var f = ctx(callbackfn, that, 3),
-          O = toObject(object),
-          result = IS_MAP || TYPE == 7 || TYPE == 2 ? new (generic(this, Dict)) : undefined,
-          key,
-          val,
-          res;
-      for (key in O)
-        if (has(O, key)) {
-          val = O[key];
-          res = f(val, key, object);
-          if (TYPE) {
-            if (IS_MAP)
-              result[key] = res;
-            else if (res)
-              switch (TYPE) {
-                case 2:
-                  result[key] = val;
-                  break;
-                case 3:
-                  return true;
-                case 5:
-                  return val;
-                case 6:
-                  return key;
-                case 7:
-                  result[res[0]] = res[1];
-              }
-            else if (IS_EVERY)
-              return false;
-          }
-        }
-      return TYPE == 3 || IS_EVERY ? IS_EVERY : result;
-    };
-  }
-  function createDictReduce(IS_TURN) {
-    return function(object, mapfn, init) {
-      assert.fn(mapfn);
-      var O = toObject(object),
-          keys = getKeys(O),
-          length = keys.length,
-          i = 0,
-          memo,
-          key,
-          result;
-      if (IS_TURN) {
-        memo = init == undefined ? new (generic(this, Dict)) : Object(init);
-      } else if (arguments.length < 3) {
-        assert(length, 'Reduce of empty object with no initial value');
-        memo = O[keys[i++]];
-      } else
-        memo = Object(init);
-      while (length > i)
-        if (has(O, key = keys[i++])) {
-          result = mapfn(memo, O[key], key, object);
-          if (IS_TURN) {
-            if (result === false)
-              break;
-          } else
-            memo = result;
-        }
-      return memo;
-    };
-  }
-  var findKey = createDictMethod(6);
-  $def($def.G + $def.F, {Dict: $.mix(Dict, {
-      keys: createDictIter('key'),
-      values: createDictIter('value'),
-      entries: createDictIter('key+value'),
-      forEach: createDictMethod(0),
-      map: createDictMethod(1),
-      filter: createDictMethod(2),
-      some: createDictMethod(3),
-      every: createDictMethod(4),
-      find: createDictMethod(5),
-      findKey: findKey,
-      mapPairs: createDictMethod(7),
-      reduce: createDictReduce(false),
-      turn: createDictReduce(true),
-      keyOf: keyOf,
-      includes: function(object, el) {
-        return (el == el ? keyOf(object, el) : findKey(object, function(it) {
-          return it != it;
-        })) !== undefined;
-      },
-      has: has,
-      get: function(object, key) {
-        if (has(object, key))
-          return object[key];
-      },
-      set: $.def,
-      isDict: function(it) {
-        return $.isObject(it) && $.getProto(it) === Dict.prototype;
-      }
-    })});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.iter-helpers", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var core = require("github:zloirock/core-js@0.8.4/modules/$").core,
-      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter");
-  core.isIterable = $iter.is;
-  core.getIterator = $iter.get;
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.$for", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-router@0.16.1/route-loader", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/templating@0.15.3", "github:aurelia/router@0.12.0", "github:aurelia/path@0.9.0", "github:aurelia/metadata@0.8.0"], function(exports, _aureliaDependencyInjection, _aureliaTemplating, _aureliaRouter, _aureliaPath, _aureliaMetadata) {
   'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
-      safe = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe,
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
-      ENTRIES = safe('entries'),
-      FN = safe('fn'),
-      ITER = safe('iter'),
-      forOf = $iter.forOf,
-      stepCall = $iter.stepCall,
-      getIterator = $iter.get,
-      setIterator = $iter.set,
-      createIterator = $iter.create;
-  function $for(iterable, entries) {
-    if (!(this instanceof $for))
-      return new $for(iterable, entries);
-    this[ITER] = getIterator(iterable);
-    this[ENTRIES] = !!entries;
+  exports.__esModule = true;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
   }
-  createIterator($for, 'Wrapper', function() {
-    return this[ITER].next();
-  });
-  var $forProto = $for.prototype;
-  setIterator($forProto, function() {
-    return this[ITER];
-  });
-  function createChainIterator(next) {
-    function Iterator(iter, fn, that) {
-      this[ITER] = getIterator(iter);
-      this[ENTRIES] = iter[ENTRIES];
-      this[FN] = ctx(fn, that, iter[ENTRIES] ? 2 : 1);
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== 'function' && superClass !== null) {
+      throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass);
     }
-    createIterator(Iterator, 'Chain', next, $forProto);
-    setIterator(Iterator.prototype, $.that);
-    return Iterator;
+    subClass.prototype = Object.create(superClass && superClass.prototype, {constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }});
+    if (superClass)
+      Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
-  var MapIter = createChainIterator(function() {
-    var step = this[ITER].next();
-    return step.done ? step : $iter.step(0, stepCall(this[ITER], this[FN], step.value, this[ENTRIES]));
-  });
-  var FilterIter = createChainIterator(function() {
-    for (; ; ) {
-      var step = this[ITER].next();
-      if (step.done || stepCall(this[ITER], this[FN], step.value, this[ENTRIES]))
-        return step;
+  var TemplatingRouteLoader = (function(_RouteLoader) {
+    _inherits(TemplatingRouteLoader, _RouteLoader);
+    function TemplatingRouteLoader(compositionEngine) {
+      _classCallCheck(this, _TemplatingRouteLoader);
+      _RouteLoader.call(this);
+      this.compositionEngine = compositionEngine;
     }
-  });
-  $.mix($forProto, {
-    of: function(fn, that) {
-      forOf(this, this[ENTRIES], fn, that);
-    },
-    array: function(fn, that) {
-      var result = [];
-      forOf(fn != undefined ? this.map(fn, that) : this, false, result.push, result);
-      return result;
-    },
-    filter: function(fn, that) {
-      return new FilterIter(this, fn, that);
-    },
-    map: function(fn, that) {
-      return new MapIter(this, fn, that);
-    }
-  });
-  $for.isIterable = $iter.is;
-  $for.getIterator = getIterator;
-  $def($def.G + $def.F, {$for: $for});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.delay", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.partial"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      partial = require("github:zloirock/core-js@0.8.4/modules/$.partial");
-  $def($def.G + $def.F, {delay: function(time) {
-      return new ($.core.Promise || $.g.Promise)(function(resolve) {
-        setTimeout(partial.call(resolve, true), time);
-      });
-    }});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.binding", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.invoke", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.partial"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      invoke = require("github:zloirock/core-js@0.8.4/modules/$.invoke"),
-      hide = $.hide,
-      assertFunction = require("github:zloirock/core-js@0.8.4/modules/$.assert").fn,
-      _ = $.DESC ? require("github:zloirock/core-js@0.8.4/modules/$.uid")('tie') : 'toLocaleString',
-      toLocaleString = {}.toLocaleString;
-  $.core._ = $.path._ = $.path._ || {};
-  $def($def.P + $def.F, 'Function', {
-    part: require("github:zloirock/core-js@0.8.4/modules/$.partial"),
-    only: function(numberArguments, that) {
-      var fn = assertFunction(this),
-          n = $.toLength(numberArguments),
-          isThat = arguments.length > 1;
-      return function() {
-        var length = Math.min(n, arguments.length),
-            args = Array(length),
-            i = 0;
-        while (length > i)
-          args[i] = arguments[i++];
-        return invoke(fn, args, isThat ? that : this);
+    TemplatingRouteLoader.prototype.loadRoute = function loadRoute(router, config) {
+      var childContainer = router.container.createChild();
+      var instruction = {
+        viewModel: _aureliaPath.relativeToFile(config.moduleId, _aureliaMetadata.Origin.get(router.container.viewModel.constructor).moduleId),
+        childContainer: childContainer,
+        view: config.view || config.viewStrategy
       };
-    }
-  });
-  function tie(key) {
-    var that = this,
-        bound = {};
-    return hide(that, _, function(key) {
-      if (key === undefined || !(key in that))
-        return toLocaleString.call(that);
-      return $.has(bound, key) ? bound[key] : bound[key] = ctx(that[key], that, -1);
-    })[_](key);
-  }
-  hide($.path._, 'toString', function() {
-    return _;
-  });
-  hide(Object.prototype, _, tie);
-  $.DESC || hide(Array.prototype, _, tie);
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.object", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.own-keys", "github:zloirock/core-js@0.8.4/modules/$.cof"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      ownKeys = require("github:zloirock/core-js@0.8.4/modules/$.own-keys");
-  function define(target, mixin) {
-    var keys = ownKeys($.toObject(mixin)),
-        length = keys.length,
-        i = 0,
-        key;
-    while (length > i)
-      $.setDesc(target, key = keys[i++], $.getDesc(mixin, key));
-    return target;
-  }
-  $def($def.S + $def.F, 'Object', {
-    isObject: $.isObject,
-    classof: require("github:zloirock/core-js@0.8.4/modules/$.cof").classof,
-    define: define,
-    make: function(proto, mixin) {
-      return define($.create(proto), mixin);
-    }
-  });
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.number.iterator", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      ITER = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('iter'),
-      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
-      step = $iter.step,
-      NUMBER = 'Number';
-  function NumberIterator(iterated) {
-    $.set(this, ITER, {
-      l: $.toLength(iterated),
-      i: 0
-    });
-  }
-  $iter.create(NumberIterator, NUMBER, function() {
-    var iter = this[ITER],
-        i = iter.i++;
-    return i < iter.l ? step(0, i) : step(1);
-  });
-  $iter.define(Number, NUMBER, function() {
-    return new NumberIterator(this);
-  });
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.array.turn", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.unscope"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      assertFunction = require("github:zloirock/core-js@0.8.4/modules/$.assert").fn;
-  $def($def.P + $def.F, 'Array', {turn: function(fn, target) {
-      assertFunction(fn);
-      var memo = target == undefined ? [] : Object(target),
-          O = $.ES5Object(this),
-          length = $.toLength(O.length),
-          index = 0;
-      while (length > index)
-        if (fn(memo, O[index], index++, this) === false)
-          break;
-      return memo;
-    }});
-  require("github:zloirock/core-js@0.8.4/modules/$.unscope")('turn');
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.number.math", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.invoke"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      invoke = require("github:zloirock/core-js@0.8.4/modules/$.invoke"),
-      methods = {};
-  methods.random = function(lim) {
-    var a = +this,
-        b = lim == undefined ? 0 : +lim,
-        m = Math.min(a, b);
-    return Math.random() * (Math.max(a, b) - m) + m;
-  };
-  if ($.FW)
-    $.each.call(('round,floor,ceil,abs,sin,asin,cos,acos,tan,atan,exp,sqrt,max,min,pow,atan2,' + 'acosh,asinh,atanh,cbrt,clz32,cosh,expm1,hypot,imul,log1p,log10,log2,sign,sinh,tanh,trunc').split(','), function(key) {
-      var fn = Math[key];
-      if (fn)
-        methods[key] = function() {
-          var args = [+this],
-              i = 0;
-          while (arguments.length > i)
-            args.push(arguments[i++]);
-          return invoke(fn, args);
-        };
-    });
-  $def($def.P + $def.F, 'Number', methods);
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.date", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      core = $.core,
-      formatRegExp = /\b\w\w?\b/g,
-      flexioRegExp = /:(.*)\|(.*)$/,
-      locales = {},
-      current = 'en',
-      SECONDS = 'Seconds',
-      MINUTES = 'Minutes',
-      HOURS = 'Hours',
-      DATE = 'Date',
-      MONTH = 'Month',
-      YEAR = 'FullYear';
-  function lz(num) {
-    return num > 9 ? num : '0' + num;
-  }
-  function createFormat(prefix) {
-    return function(template, locale) {
-      var that = this,
-          dict = locales[$.has(locales, locale) ? locale : current];
-      function get(unit) {
-        return that[prefix + unit]();
-      }
-      return String(template).replace(formatRegExp, function(part) {
-        switch (part) {
-          case 's':
-            return get(SECONDS);
-          case 'ss':
-            return lz(get(SECONDS));
-          case 'm':
-            return get(MINUTES);
-          case 'mm':
-            return lz(get(MINUTES));
-          case 'h':
-            return get(HOURS);
-          case 'hh':
-            return lz(get(HOURS));
-          case 'D':
-            return get(DATE);
-          case 'DD':
-            return lz(get(DATE));
-          case 'W':
-            return dict[0][get('Day')];
-          case 'N':
-            return get(MONTH) + 1;
-          case 'NN':
-            return lz(get(MONTH) + 1);
-          case 'M':
-            return dict[2][get(MONTH)];
-          case 'MM':
-            return dict[1][get(MONTH)];
-          case 'Y':
-            return get(YEAR);
-          case 'YY':
-            return lz(get(YEAR) % 100);
-        }
-        return part;
-      });
-    };
-  }
-  function addLocale(lang, locale) {
-    function split(index) {
-      var result = [];
-      $.each.call(locale.months.split(','), function(it) {
-        result.push(it.replace(flexioRegExp, '$' + index));
-      });
-      return result;
-    }
-    locales[lang] = [locale.weekdays.split(','), split(1), split(2)];
-    return core;
-  }
-  $def($def.P + $def.F, DATE, {
-    format: createFormat('get'),
-    formatUTC: createFormat('getUTC')
-  });
-  addLocale(current, {
-    weekdays: 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
-    months: 'January,February,March,April,May,June,July,August,September,October,November,December'
-  });
-  addLocale('ru', {
-    weekdays: 'Воскресенье,Понедельник,Вторник,Среда,Четверг,Пятница,Суббота',
-    months: 'Январ:я|ь,Феврал:я|ь,Март:а|,Апрел:я|ь,Ма:я|й,Июн:я|ь,' + 'Июл:я|ь,Август:а|,Сентябр:я|ь,Октябр:я|ь,Ноябр:я|ь,Декабр:я|ь'
-  });
-  core.locale = function(locale) {
-    return $.has(locales, locale) ? current = locale : current;
-  };
-  core.addLocale = addLocale;
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.string.escape-html", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.replacer"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      replacer = require("github:zloirock/core-js@0.8.4/modules/$.replacer");
-  var escapeHTMLDict = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&apos;'
-  },
-      unescapeHTMLDict = {},
-      key;
-  for (key in escapeHTMLDict)
-    unescapeHTMLDict[escapeHTMLDict[key]] = key;
-  $def($def.P + $def.F, 'String', {
-    escapeHTML: replacer(/[&<>"']/g, escapeHTMLDict),
-    unescapeHTML: replacer(/&(?:amp|lt|gt|quot|apos);/g, unescapeHTMLDict)
-  });
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.log", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.assign"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      log = {},
-      enabled = true;
-  $.each.call(('assert,clear,count,debug,dir,dirxml,error,exception,' + 'group,groupCollapsed,groupEnd,info,isIndependentlyComposed,log,' + 'markTimeline,profile,profileEnd,table,time,timeEnd,timeline,' + 'timelineEnd,timeStamp,trace,warn').split(','), function(key) {
-    log[key] = function() {
-      if (enabled && $.g.console && $.isFunction(console[key])) {
-        return Function.apply.call(console[key], console, arguments);
-      }
-    };
-  });
-  $def($def.G + $def.F, {log: require("github:zloirock/core-js@0.8.4/modules/$.assign")(log.log, log, {
-      enable: function() {
-        enabled = true;
-      },
-      disable: function() {
-        enabled = false;
-      }
-    })});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/core.global", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  $def($def.G + $def.F, {global: require("github:zloirock/core-js@0.8.4/modules/$").g});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$", ["github:zloirock/core-js@0.8.4/modules/$.fw"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var global = typeof self != 'undefined' ? self : Function('return this')(),
-      core = {},
-      defineProperty = Object.defineProperty,
-      hasOwnProperty = {}.hasOwnProperty,
-      ceil = Math.ceil,
-      floor = Math.floor,
-      max = Math.max,
-      min = Math.min;
-  var DESC = !!function() {
-    try {
-      return defineProperty({}, 'a', {get: function() {
-          return 2;
-        }}).a == 2;
-    } catch (e) {}
-  }();
-  var hide = createDefiner(1);
-  function toInteger(it) {
-    return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
-  }
-  function desc(bitmap, value) {
-    return {
-      enumerable: !(bitmap & 1),
-      configurable: !(bitmap & 2),
-      writable: !(bitmap & 4),
-      value: value
-    };
-  }
-  function simpleSet(object, key, value) {
-    object[key] = value;
-    return object;
-  }
-  function createDefiner(bitmap) {
-    return DESC ? function(object, key, value) {
-      return $.setDesc(object, key, desc(bitmap, value));
-    } : simpleSet;
-  }
-  function isObject(it) {
-    return it !== null && (typeof it == 'object' || typeof it == 'function');
-  }
-  function isFunction(it) {
-    return typeof it == 'function';
-  }
-  function assertDefined(it) {
-    if (it == undefined)
-      throw TypeError("Can't call method on  " + it);
-    return it;
-  }
-  var $ = module.exports = require("github:zloirock/core-js@0.8.4/modules/$.fw")({
-    g: global,
-    core: core,
-    html: global.document && document.documentElement,
-    isObject: isObject,
-    isFunction: isFunction,
-    it: function(it) {
-      return it;
-    },
-    that: function() {
-      return this;
-    },
-    toInteger: toInteger,
-    toLength: function(it) {
-      return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0;
-    },
-    toIndex: function(index, length) {
-      index = toInteger(index);
-      return index < 0 ? max(index + length, 0) : min(index, length);
-    },
-    has: function(it, key) {
-      return hasOwnProperty.call(it, key);
-    },
-    create: Object.create,
-    getProto: Object.getPrototypeOf,
-    DESC: DESC,
-    desc: desc,
-    getDesc: Object.getOwnPropertyDescriptor,
-    setDesc: defineProperty,
-    getKeys: Object.keys,
-    getNames: Object.getOwnPropertyNames,
-    getSymbols: Object.getOwnPropertySymbols,
-    assertDefined: assertDefined,
-    ES5Object: Object,
-    toObject: function(it) {
-      return $.ES5Object(assertDefined(it));
-    },
-    hide: hide,
-    def: createDefiner(0),
-    set: global.Symbol ? simpleSet : hide,
-    mix: function(target, src) {
-      for (var key in src)
-        hide(target, key, src[key]);
-      return target;
-    },
-    each: [].forEach
-  });
-  if (typeof __e != 'undefined')
-    __e = core;
-  if (typeof __g != 'undefined')
-    __g = global;
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.symbol", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.keyof", "github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      setTag = require("github:zloirock/core-js@0.8.4/modules/$.cof").set,
-      uid = require("github:zloirock/core-js@0.8.4/modules/$.uid"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      keyOf = require("github:zloirock/core-js@0.8.4/modules/$.keyof"),
-      has = $.has,
-      hide = $.hide,
-      getNames = $.getNames,
-      toObject = $.toObject,
-      Symbol = $.g.Symbol,
-      Base = Symbol,
-      setter = false,
-      TAG = uid.safe('tag'),
-      SymbolRegistry = {},
-      AllSymbols = {};
-  function wrap(tag) {
-    var sym = AllSymbols[tag] = $.set($.create(Symbol.prototype), TAG, tag);
-    $.DESC && setter && $.setDesc(Object.prototype, tag, {
-      configurable: true,
-      set: function(value) {
-        hide(this, tag, value);
-      }
-    });
-    return sym;
-  }
-  if (!$.isFunction(Symbol)) {
-    Symbol = function Symbol(description) {
-      if (this instanceof Symbol)
-        throw TypeError('Symbol is not a constructor');
-      return wrap(uid(description));
-    };
-    hide(Symbol.prototype, 'toString', function() {
-      return this[TAG];
-    });
-  }
-  $def($def.G + $def.W, {Symbol: Symbol});
-  var symbolStatics = {
-    'for': function(key) {
-      return has(SymbolRegistry, key += '') ? SymbolRegistry[key] : SymbolRegistry[key] = Symbol(key);
-    },
-    keyFor: function keyFor(key) {
-      return keyOf(SymbolRegistry, key);
-    },
-    pure: uid.safe,
-    set: $.set,
-    useSetter: function() {
-      setter = true;
-    },
-    useSimple: function() {
-      setter = false;
-    }
-  };
-  $.each.call(('hasInstance,isConcatSpreadable,iterator,match,replace,search,' + 'species,split,toPrimitive,toStringTag,unscopables').split(','), function(it) {
-    var sym = require("github:zloirock/core-js@0.8.4/modules/$.wks")(it);
-    symbolStatics[it] = Symbol === Base ? sym : wrap(sym);
-  });
-  setter = true;
-  $def($def.S, 'Symbol', symbolStatics);
-  $def($def.S + $def.F * (Symbol != Base), 'Object', {
-    getOwnPropertyNames: function getOwnPropertyNames(it) {
-      var names = getNames(toObject(it)),
-          result = [],
-          key,
-          i = 0;
-      while (names.length > i)
-        has(AllSymbols, key = names[i++]) || result.push(key);
-      return result;
-    },
-    getOwnPropertySymbols: function getOwnPropertySymbols(it) {
-      var names = getNames(toObject(it)),
-          result = [],
-          key,
-          i = 0;
-      while (names.length > i)
-        has(AllSymbols, key = names[i++]) && result.push(AllSymbols[key]);
-      return result;
-    }
-  });
-  setTag(Symbol, 'Symbol');
-  setTag(Math, 'Math', true);
-  setTag($.g.JSON, 'JSON', true);
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.object.assign", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.assign"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  $def($def.S, 'Object', {assign: require("github:zloirock/core-js@0.8.4/modules/$.assign")});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es5", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.invoke", "github:zloirock/core-js@0.8.4/modules/$.array-methods", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.array-includes", "github:zloirock/core-js@0.8.4/modules/$.replacer"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      invoke = require("github:zloirock/core-js@0.8.4/modules/$.invoke"),
-      arrayMethod = require("github:zloirock/core-js@0.8.4/modules/$.array-methods"),
-      IE_PROTO = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('__proto__'),
-      assert = require("github:zloirock/core-js@0.8.4/modules/$.assert"),
-      assertObject = assert.obj,
-      ObjectProto = Object.prototype,
-      A = [],
-      slice = A.slice,
-      indexOf = A.indexOf,
-      classof = cof.classof,
-      defineProperties = Object.defineProperties,
-      has = $.has,
-      defineProperty = $.setDesc,
-      getOwnDescriptor = $.getDesc,
-      isFunction = $.isFunction,
-      toObject = $.toObject,
-      toLength = $.toLength,
-      IE8_DOM_DEFINE = false;
-  if (!$.DESC) {
-    try {
-      IE8_DOM_DEFINE = defineProperty(document.createElement('div'), 'x', {get: function() {
-          return 8;
-        }}).x == 8;
-    } catch (e) {}
-    $.setDesc = function(O, P, Attributes) {
-      if (IE8_DOM_DEFINE)
-        try {
-          return defineProperty(O, P, Attributes);
-        } catch (e) {}
-      if ('get' in Attributes || 'set' in Attributes)
-        throw TypeError('Accessors not supported!');
-      if ('value' in Attributes)
-        assertObject(O)[P] = Attributes.value;
-      return O;
-    };
-    $.getDesc = function(O, P) {
-      if (IE8_DOM_DEFINE)
-        try {
-          return getOwnDescriptor(O, P);
-        } catch (e) {}
-      if (has(O, P))
-        return $.desc(!ObjectProto.propertyIsEnumerable.call(O, P), O[P]);
-    };
-    defineProperties = function(O, Properties) {
-      assertObject(O);
-      var keys = $.getKeys(Properties),
-          length = keys.length,
-          i = 0,
-          P;
-      while (length > i)
-        $.setDesc(O, P = keys[i++], Properties[P]);
-      return O;
-    };
-  }
-  $def($def.S + $def.F * !$.DESC, 'Object', {
-    getOwnPropertyDescriptor: $.getDesc,
-    defineProperty: $.setDesc,
-    defineProperties: defineProperties
-  });
-  var keys1 = ('constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,' + 'toLocaleString,toString,valueOf').split(','),
-      keys2 = keys1.concat('length', 'prototype'),
-      keysLen1 = keys1.length;
-  var createDict = function() {
-    var iframe = document.createElement('iframe'),
-        i = keysLen1,
-        gt = '>',
-        iframeDocument;
-    iframe.style.display = 'none';
-    $.html.appendChild(iframe);
-    iframe.src = 'javascript:';
-    iframeDocument = iframe.contentWindow.document;
-    iframeDocument.open();
-    iframeDocument.write('<script>document.F=Object</script' + gt);
-    iframeDocument.close();
-    createDict = iframeDocument.F;
-    while (i--)
-      delete createDict.prototype[keys1[i]];
-    return createDict();
-  };
-  function createGetKeys(names, length) {
-    return function(object) {
-      var O = toObject(object),
-          i = 0,
-          result = [],
-          key;
-      for (key in O)
-        if (key != IE_PROTO)
-          has(O, key) && result.push(key);
-      while (length > i)
-        if (has(O, key = names[i++])) {
-          ~indexOf.call(result, key) || result.push(key);
-        }
-      return result;
-    };
-  }
-  function isPrimitive(it) {
-    return !$.isObject(it);
-  }
-  function Empty() {}
-  $def($def.S, 'Object', {
-    getPrototypeOf: $.getProto = $.getProto || function(O) {
-      O = Object(assert.def(O));
-      if (has(O, IE_PROTO))
-        return O[IE_PROTO];
-      if (isFunction(O.constructor) && O instanceof O.constructor) {
-        return O.constructor.prototype;
-      }
-      return O instanceof Object ? ObjectProto : null;
-    },
-    getOwnPropertyNames: $.getNames = $.getNames || createGetKeys(keys2, keys2.length, true),
-    create: $.create = $.create || function(O, Properties) {
-      var result;
-      if (O !== null) {
-        Empty.prototype = assertObject(O);
-        result = new Empty();
-        Empty.prototype = null;
-        result[IE_PROTO] = O;
-      } else
-        result = createDict();
-      return Properties === undefined ? result : defineProperties(result, Properties);
-    },
-    keys: $.getKeys = $.getKeys || createGetKeys(keys1, keysLen1, false),
-    seal: $.it,
-    freeze: $.it,
-    preventExtensions: $.it,
-    isSealed: isPrimitive,
-    isFrozen: isPrimitive,
-    isExtensible: $.isObject
-  });
-  $def($def.P, 'Function', {bind: function(that) {
-      var fn = assert.fn(this),
-          partArgs = slice.call(arguments, 1);
-      function bound() {
-        var args = partArgs.concat(slice.call(arguments));
-        return invoke(fn, args, this instanceof bound ? $.create(fn.prototype) : that);
-      }
-      if (fn.prototype)
-        bound.prototype = fn.prototype;
-      return bound;
-    }});
-  function arrayMethodFix(fn) {
-    return function() {
-      return fn.apply($.ES5Object(this), arguments);
-    };
-  }
-  if (!(0 in Object('z') && 'z'[0] == 'z')) {
-    $.ES5Object = function(it) {
-      return cof(it) == 'String' ? it.split('') : Object(it);
-    };
-  }
-  $def($def.P + $def.F * ($.ES5Object != Object), 'Array', {
-    slice: arrayMethodFix(slice),
-    join: arrayMethodFix(A.join)
-  });
-  $def($def.S, 'Array', {isArray: function(arg) {
-      return cof(arg) == 'Array';
-    }});
-  function createArrayReduce(isRight) {
-    return function(callbackfn, memo) {
-      assert.fn(callbackfn);
-      var O = toObject(this),
-          length = toLength(O.length),
-          index = isRight ? length - 1 : 0,
-          i = isRight ? -1 : 1;
-      if (arguments.length < 2)
-        for (; ; ) {
-          if (index in O) {
-            memo = O[index];
-            index += i;
-            break;
-          }
-          index += i;
-          assert(isRight ? index >= 0 : length > index, 'Reduce of empty array with no initial value');
-        }
-      for (; isRight ? index >= 0 : length > index; index += i)
-        if (index in O) {
-          memo = callbackfn(memo, O[index], index, this);
-        }
-      return memo;
-    };
-  }
-  $def($def.P, 'Array', {
-    forEach: $.each = $.each || arrayMethod(0),
-    map: arrayMethod(1),
-    filter: arrayMethod(2),
-    some: arrayMethod(3),
-    every: arrayMethod(4),
-    reduce: createArrayReduce(false),
-    reduceRight: createArrayReduce(true),
-    indexOf: indexOf = indexOf || require("github:zloirock/core-js@0.8.4/modules/$.array-includes")(false),
-    lastIndexOf: function(el, fromIndex) {
-      var O = toObject(this),
-          length = toLength(O.length),
-          index = length - 1;
-      if (arguments.length > 1)
-        index = Math.min(index, $.toInteger(fromIndex));
-      if (index < 0)
-        index = toLength(length + index);
-      for (; index >= 0; index--)
-        if (index in O)
-          if (O[index] === el)
-            return index;
-      return -1;
-    }
-  });
-  $def($def.P, 'String', {trim: require("github:zloirock/core-js@0.8.4/modules/$.replacer")(/^\s*([\s\S]*\S)?\s*$/, '$1')});
-  $def($def.S, 'Date', {now: function() {
-      return +new Date;
-    }});
-  function lz(num) {
-    return num > 9 ? num : '0' + num;
-  }
-  $def($def.P, 'Date', {toISOString: function() {
-      if (!isFinite(this))
-        throw RangeError('Invalid time value');
-      var d = this,
-          y = d.getUTCFullYear(),
-          m = d.getUTCMilliseconds(),
-          s = y < 0 ? '-' : y > 9999 ? '+' : '';
-      return s + ('00000' + Math.abs(y)).slice(s ? -6 : -4) + '-' + lz(d.getUTCMonth() + 1) + '-' + lz(d.getUTCDate()) + 'T' + lz(d.getUTCHours()) + ':' + lz(d.getUTCMinutes()) + ':' + lz(d.getUTCSeconds()) + '.' + (m > 99 ? m : '0' + lz(m)) + 'Z';
-    }});
-  if (classof(function() {
-    return arguments;
-  }()) == 'Object')
-    cof.classof = function(it) {
-      var tag = classof(it);
-      return tag == 'Object' && isFunction(it.callee) ? 'Arguments' : tag;
-    };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.object.is", ["github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  $def($def.S, 'Object', {is: function is(x, y) {
-      return x === y ? x !== 0 || 1 / x === 1 / y : x != x && y != y;
-    }});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.object.set-prototype-of", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.set-proto"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  $def($def.S, 'Object', {setPrototypeOf: require("github:zloirock/core-js@0.8.4/modules/$.set-proto").set});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.object.to-string", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
-      tmp = {};
-  tmp[require("github:zloirock/core-js@0.8.4/modules/$.wks")('toStringTag')] = 'z';
-  if ($.FW && cof(tmp) != 'z')
-    $.hide(Object.prototype, 'toString', function toString() {
-      return '[object ' + cof.classof(this) + ']';
-    });
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.object.statics-accept-primitives", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      isObject = $.isObject,
-      toObject = $.toObject;
-  function wrapObjectMethod(METHOD, MODE) {
-    var fn = ($.core.Object || {})[METHOD] || Object[METHOD],
-        f = 0,
-        o = {};
-    o[METHOD] = MODE == 1 ? function(it) {
-      return isObject(it) ? fn(it) : it;
-    } : MODE == 2 ? function(it) {
-      return isObject(it) ? fn(it) : true;
-    } : MODE == 3 ? function(it) {
-      return isObject(it) ? fn(it) : false;
-    } : MODE == 4 ? function getOwnPropertyDescriptor(it, key) {
-      return fn(toObject(it), key);
-    } : MODE == 5 ? function getPrototypeOf(it) {
-      return fn(Object($.assertDefined(it)));
-    } : function(it) {
-      return fn(toObject(it));
-    };
-    try {
-      fn('z');
-    } catch (e) {
-      f = 1;
-    }
-    $def($def.S + $def.F * f, 'Object', o);
-  }
-  wrapObjectMethod('freeze', 1);
-  wrapObjectMethod('seal', 1);
-  wrapObjectMethod('preventExtensions', 1);
-  wrapObjectMethod('isFrozen', 2);
-  wrapObjectMethod('isSealed', 2);
-  wrapObjectMethod('isExtensible', 3);
-  wrapObjectMethod('getOwnPropertyDescriptor', 4);
-  wrapObjectMethod('getPrototypeOf', 5);
-  wrapObjectMethod('keys');
-  wrapObjectMethod('getOwnPropertyNames');
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.function.name", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      NAME = 'name',
-      setDesc = $.setDesc,
-      FunctionProto = Function.prototype;
-  NAME in FunctionProto || $.FW && $.DESC && setDesc(FunctionProto, NAME, {
-    configurable: true,
-    get: function() {
-      var match = String(this).match(/^\s*function ([^ (]*)/),
-          name = match ? match[1] : '';
-      $.has(this, NAME) || setDesc(this, NAME, $.desc(5, name));
-      return name;
-    },
-    set: function(value) {
-      $.has(this, NAME) || setDesc(this, NAME, $.desc(0, value));
-    }
-  });
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.number.constructor", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      isObject = $.isObject,
-      isFunction = $.isFunction,
-      NUMBER = 'Number',
-      Number = $.g[NUMBER],
-      Base = Number,
-      proto = Number.prototype;
-  function toPrimitive(it) {
-    var fn,
-        val;
-    if (isFunction(fn = it.valueOf) && !isObject(val = fn.call(it)))
-      return val;
-    if (isFunction(fn = it.toString) && !isObject(val = fn.call(it)))
-      return val;
-    throw TypeError("Can't convert object to number");
-  }
-  function toNumber(it) {
-    if (isObject(it))
-      it = toPrimitive(it);
-    if (typeof it == 'string' && it.length > 2 && it.charCodeAt(0) == 48) {
-      var binary = false;
-      switch (it.charCodeAt(1)) {
-        case 66:
-        case 98:
-          binary = true;
-        case 79:
-        case 111:
-          return parseInt(it.slice(2), binary ? 2 : 8);
-      }
-    }
-    return +it;
-  }
-  if ($.FW && !(Number('0o1') && Number('0b1'))) {
-    Number = function Number(it) {
-      return this instanceof Number ? new Base(toNumber(it)) : toNumber(it);
-    };
-    $.each.call($.DESC ? $.getNames(Base) : ('MAX_VALUE,MIN_VALUE,NaN,NEGATIVE_INFINITY,POSITIVE_INFINITY,' + 'EPSILON,isFinite,isInteger,isNaN,isSafeInteger,MAX_SAFE_INTEGER,' + 'MIN_SAFE_INTEGER,parseFloat,parseInt,isInteger').split(','), function(key) {
-      if ($.has(Base, key) && !$.has(Number, key)) {
-        $.setDesc(Number, key, $.getDesc(Base, key));
-      }
-    });
-    Number.prototype = proto;
-    proto.constructor = Number;
-    $.hide($.g, NUMBER, Number);
-  }
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.math", ["github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var Infinity = 1 / 0,
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      E = Math.E,
-      pow = Math.pow,
-      abs = Math.abs,
-      exp = Math.exp,
-      log = Math.log,
-      sqrt = Math.sqrt,
-      ceil = Math.ceil,
-      floor = Math.floor,
-      EPSILON = pow(2, -52),
-      EPSILON32 = pow(2, -23),
-      MAX32 = pow(2, 127) * (2 - EPSILON32),
-      MIN32 = pow(2, -126);
-  function roundTiesToEven(n) {
-    return n + 1 / EPSILON - 1 / EPSILON;
-  }
-  function sign(x) {
-    return (x = +x) == 0 || x != x ? x : x < 0 ? -1 : 1;
-  }
-  function asinh(x) {
-    return !isFinite(x = +x) || x == 0 ? x : x < 0 ? -asinh(-x) : log(x + sqrt(x * x + 1));
-  }
-  function expm1(x) {
-    return (x = +x) == 0 ? x : x > -1e-6 && x < 1e-6 ? x + x * x / 2 : exp(x) - 1;
-  }
-  $def($def.S, 'Math', {
-    acosh: function acosh(x) {
-      return (x = +x) < 1 ? NaN : isFinite(x) ? log(x / E + sqrt(x + 1) * sqrt(x - 1) / E) + 1 : x;
-    },
-    asinh: asinh,
-    atanh: function atanh(x) {
-      return (x = +x) == 0 ? x : log((1 + x) / (1 - x)) / 2;
-    },
-    cbrt: function cbrt(x) {
-      return sign(x = +x) * pow(abs(x), 1 / 3);
-    },
-    clz32: function clz32(x) {
-      return (x >>>= 0) ? 31 - floor(log(x + 0.5) * Math.LOG2E) : 32;
-    },
-    cosh: function cosh(x) {
-      return (exp(x = +x) + exp(-x)) / 2;
-    },
-    expm1: expm1,
-    fround: function fround(x) {
-      var $abs = abs(x),
-          $sign = sign(x),
-          a,
-          result;
-      if ($abs < MIN32)
-        return $sign * roundTiesToEven($abs / MIN32 / EPSILON32) * MIN32 * EPSILON32;
-      a = (1 + EPSILON32 / EPSILON) * $abs;
-      result = a - (a - $abs);
-      if (result > MAX32 || result != result)
-        return $sign * Infinity;
-      return $sign * result;
-    },
-    hypot: function hypot(value1, value2) {
-      var sum = 0,
-          len1 = arguments.length,
-          len2 = len1,
-          args = Array(len1),
-          larg = -Infinity,
-          arg;
-      while (len1--) {
-        arg = args[len1] = +arguments[len1];
-        if (arg == Infinity || arg == -Infinity)
-          return Infinity;
-        if (arg > larg)
-          larg = arg;
-      }
-      larg = arg || 1;
-      while (len2--)
-        sum += pow(args[len2] / larg, 2);
-      return larg * sqrt(sum);
-    },
-    imul: function imul(x, y) {
-      var UInt16 = 0xffff,
-          xn = +x,
-          yn = +y,
-          xl = UInt16 & xn,
-          yl = UInt16 & yn;
-      return 0 | xl * yl + ((UInt16 & xn >>> 16) * yl + xl * (UInt16 & yn >>> 16) << 16 >>> 0);
-    },
-    log1p: function log1p(x) {
-      return (x = +x) > -1e-8 && x < 1e-8 ? x - x * x / 2 : log(1 + x);
-    },
-    log10: function log10(x) {
-      return log(x) / Math.LN10;
-    },
-    log2: function log2(x) {
-      return log(x) / Math.LN2;
-    },
-    sign: sign,
-    sinh: function sinh(x) {
-      return abs(x = +x) < 1 ? (expm1(x) - expm1(-x)) / 2 : (exp(x - 1) - exp(-x - 1)) * (E / 2);
-    },
-    tanh: function tanh(x) {
-      var a = expm1(x = +x),
-          b = expm1(-x);
-      return a == Infinity ? 1 : b == Infinity ? -1 : (a - b) / (exp(x) + exp(-x));
-    },
-    trunc: function trunc(it) {
-      return (it > 0 ? floor : ceil)(it);
-    }
-  });
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.number.statics", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      abs = Math.abs,
-      floor = Math.floor,
-      _isFinite = $.g.isFinite,
-      MAX_SAFE_INTEGER = 0x1fffffffffffff;
-  function isInteger(it) {
-    return !$.isObject(it) && _isFinite(it) && floor(it) === it;
-  }
-  $def($def.S, 'Number', {
-    EPSILON: Math.pow(2, -52),
-    isFinite: function isFinite(it) {
-      return typeof it == 'number' && _isFinite(it);
-    },
-    isInteger: isInteger,
-    isNaN: function isNaN(number) {
-      return number != number;
-    },
-    isSafeInteger: function isSafeInteger(number) {
-      return isInteger(number) && abs(number) <= MAX_SAFE_INTEGER;
-    },
-    MAX_SAFE_INTEGER: MAX_SAFE_INTEGER,
-    MIN_SAFE_INTEGER: -MAX_SAFE_INTEGER,
-    parseFloat: parseFloat,
-    parseInt: parseInt
-  });
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.from-code-point", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      toIndex = require("github:zloirock/core-js@0.8.4/modules/$").toIndex,
-      fromCharCode = String.fromCharCode;
-  $def($def.S, 'String', {fromCodePoint: function fromCodePoint(x) {
-      var res = [],
-          len = arguments.length,
-          i = 0,
-          code;
-      while (len > i) {
-        code = +arguments[i++];
-        if (toIndex(code, 0x10ffff) !== code)
-          throw RangeError(code + ' is not a valid code point');
-        res.push(code < 0x10000 ? fromCharCode(code) : fromCharCode(((code -= 0x10000) >> 10) + 0xd800, code % 0x400 + 0xdc00));
-      }
-      return res.join('');
-    }});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.raw", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  $def($def.S, 'String', {raw: function raw(callSite) {
-      var tpl = $.toObject(callSite.raw),
-          len = $.toLength(tpl.length),
-          sln = arguments.length,
-          res = [],
-          i = 0;
-      while (len > i) {
-        res.push(String(tpl[i++]));
-        if (i < sln)
-          res.push(String(arguments[i]));
-      }
-      return res.join('');
-    }});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.iterator", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.string-at", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var set = require("github:zloirock/core-js@0.8.4/modules/$").set,
-      at = require("github:zloirock/core-js@0.8.4/modules/$.string-at")(true),
-      ITER = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('iter'),
-      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
-      step = $iter.step;
-  $iter.std(String, 'String', function(iterated) {
-    set(this, ITER, {
-      o: String(iterated),
-      i: 0
-    });
-  }, function() {
-    var iter = this[ITER],
-        O = iter.o,
-        index = iter.i,
-        point;
-    if (index >= O.length)
-      return step(1);
-    point = at.call(O, index);
-    iter.i += point.length;
-    return step(0, point);
-  });
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.code-point-at", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.string-at"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  $def($def.P, 'String', {codePointAt: require("github:zloirock/core-js@0.8.4/modules/$.string-at")(false)});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.includes", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  $def($def.P, 'String', {includes: function includes(searchString) {
-      if (cof(searchString) == 'RegExp')
-        throw TypeError();
-      return !!~String($.assertDefined(this)).indexOf(searchString, arguments[1]);
-    }});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.ends-with", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      toLength = $.toLength;
-  $def($def.P, 'String', {endsWith: function endsWith(searchString) {
-      if (cof(searchString) == 'RegExp')
-        throw TypeError();
-      var that = String($.assertDefined(this)),
-          endPosition = arguments[1],
-          len = toLength(that.length),
-          end = endPosition === undefined ? len : Math.min(toLength(endPosition), len);
-      searchString += '';
-      return that.slice(end - searchString.length, end) === searchString;
-    }});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.repeat", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  $def($def.P, 'String', {repeat: function repeat(count) {
-      var str = String($.assertDefined(this)),
-          res = '',
-          n = $.toInteger(count);
-      if (n < 0 || n == Infinity)
-        throw RangeError("Count can't be negative");
-      for (; n > 0; (n >>>= 1) && (str += str))
-        if (n & 1)
-          res += str;
-      return res;
-    }});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.string.starts-with", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  $def($def.P, 'String', {startsWith: function startsWith(searchString) {
-      if (cof(searchString) == 'RegExp')
-        throw TypeError();
-      var that = String($.assertDefined(this)),
-          index = $.toLength(Math.min(arguments[1], that.length));
-      searchString += '';
-      return that.slice(index, index + searchString.length) === searchString;
-    }});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.from", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.iter", "github:zloirock/core-js@0.8.4/modules/$.iter-detect"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
-      stepCall = $iter.stepCall;
-  $def($def.S + $def.F * !require("github:zloirock/core-js@0.8.4/modules/$.iter-detect")(function(iter) {
-    Array.from(iter);
-  }), 'Array', {from: function from(arrayLike) {
-      var O = Object($.assertDefined(arrayLike)),
-          mapfn = arguments[1],
-          mapping = mapfn !== undefined,
-          f = mapping ? ctx(mapfn, arguments[2], 2) : undefined,
-          index = 0,
-          length,
-          result,
-          step,
-          iterator;
-      if ($iter.is(O)) {
-        iterator = $iter.get(O);
-        result = new (typeof this == 'function' ? this : Array);
-        for (; !(step = iterator.next()).done; index++) {
-          result[index] = mapping ? stepCall(iterator, f, [step.value, index], true) : step.value;
-        }
-      } else {
-        result = new (typeof this == 'function' ? this : Array)(length = $.toLength(O.length));
-        for (; length > index; index++) {
-          result[index] = mapping ? f(O[index], index) : O[index];
-        }
-      }
-      result.length = index;
-      return result;
-    }});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.of", ["github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  $def($def.S, 'Array', {of: function of() {
-      var index = 0,
-          length = arguments.length,
-          result = new (typeof this == 'function' ? this : Array)(length);
-      while (length > index)
-        result[index] = arguments[index++];
-      result.length = length;
-      return result;
-    }});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.iterator", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.unscope", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      setUnscope = require("github:zloirock/core-js@0.8.4/modules/$.unscope"),
-      ITER = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('iter'),
-      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
-      step = $iter.step,
-      Iterators = $iter.Iterators;
-  $iter.std(Array, 'Array', function(iterated, kind) {
-    $.set(this, ITER, {
-      o: $.toObject(iterated),
-      i: 0,
-      k: kind
-    });
-  }, function() {
-    var iter = this[ITER],
-        O = iter.o,
-        kind = iter.k,
-        index = iter.i++;
-    if (!O || index >= O.length) {
-      iter.o = undefined;
-      return step(1);
-    }
-    if (kind == 'key')
-      return step(0, index);
-    if (kind == 'value')
-      return step(0, O[index]);
-    return step(0, [index, O[index]]);
-  }, 'value');
-  Iterators.Arguments = Iterators.Array;
-  setUnscope('keys');
-  setUnscope('values');
-  setUnscope('entries');
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.species", ["github:zloirock/core-js@0.8.4/modules/$.species"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  require("github:zloirock/core-js@0.8.4/modules/$.species")(Array);
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.copy-within", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.unscope"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      toIndex = $.toIndex;
-  $def($def.P, 'Array', {copyWithin: function copyWithin(target, start) {
-      var O = Object($.assertDefined(this)),
-          len = $.toLength(O.length),
-          to = toIndex(target, len),
-          from = toIndex(start, len),
-          end = arguments[2],
-          fin = end === undefined ? len : toIndex(end, len),
-          count = Math.min(fin - from, len - to),
-          inc = 1;
-      if (from < to && to < from + count) {
-        inc = -1;
-        from = from + count - 1;
-        to = to + count - 1;
-      }
-      while (count-- > 0) {
-        if (from in O)
-          O[to] = O[from];
-        else
-          delete O[to];
-        to += inc;
-        from += inc;
-      }
-      return O;
-    }});
-  require("github:zloirock/core-js@0.8.4/modules/$.unscope")('copyWithin');
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.find", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.array-methods", "github:zloirock/core-js@0.8.4/modules/$.unscope"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  $def($def.P, 'Array', {find: require("github:zloirock/core-js@0.8.4/modules/$.array-methods")(5)});
-  require("github:zloirock/core-js@0.8.4/modules/$.unscope")('find');
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.fill", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.unscope"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      toIndex = $.toIndex;
-  $def($def.P, 'Array', {fill: function fill(value) {
-      var O = Object($.assertDefined(this)),
-          length = $.toLength(O.length),
-          index = toIndex(arguments[1], length),
-          end = arguments[2],
-          endPos = end === undefined ? length : toIndex(end, length);
-      while (endPos > index)
-        O[index++] = value;
-      return O;
-    }});
-  require("github:zloirock/core-js@0.8.4/modules/$.unscope")('fill');
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.array.find-index", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.array-methods", "github:zloirock/core-js@0.8.4/modules/$.unscope"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  $def($def.P, 'Array', {findIndex: require("github:zloirock/core-js@0.8.4/modules/$.array-methods")(6)});
-  require("github:zloirock/core-js@0.8.4/modules/$.unscope")('findIndex');
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.regexp", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.replacer", "github:zloirock/core-js@0.8.4/modules/$.species"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
-      RegExp = $.g.RegExp,
-      Base = RegExp,
-      proto = RegExp.prototype;
-  if ($.FW && $.DESC) {
-    if (!function() {
-      try {
-        return RegExp(/a/g, 'i') == '/a/i';
-      } catch (e) {}
-    }()) {
-      RegExp = function RegExp(pattern, flags) {
-        return new Base(cof(pattern) == 'RegExp' && flags !== undefined ? pattern.source : pattern, flags);
-      };
-      $.each.call($.getNames(Base), function(key) {
-        key in RegExp || $.setDesc(RegExp, key, {
-          configurable: true,
-          get: function() {
-            return Base[key];
-          },
-          set: function(it) {
-            Base[key] = it;
-          }
+      childContainer.getChildRouter = function() {
+        var childRouter = undefined;
+        childContainer.registerHandler(_aureliaRouter.Router, function(c) {
+          return childRouter || (childRouter = router.createChild(childContainer));
         });
+        return childContainer.get(_aureliaRouter.Router);
+      };
+      return this.compositionEngine.createViewModel(instruction).then(function(ins) {
+        ins.bindingContext = ins.viewModel;
+        ins.router = router;
+        return ins;
       });
-      proto.constructor = RegExp;
-      RegExp.prototype = proto;
-      $.hide($.g, 'RegExp', RegExp);
-    }
-    if (/./g.flags != 'g')
-      $.setDesc(proto, 'flags', {
-        configurable: true,
-        get: require("github:zloirock/core-js@0.8.4/modules/$.replacer")(/^.*\/(\w*)$/, '$1')
-      });
-  }
-  require("github:zloirock/core-js@0.8.4/modules/$.species")(RegExp);
-  global.define = __define;
-  return module.exports;
+    };
+    var _TemplatingRouteLoader = TemplatingRouteLoader;
+    TemplatingRouteLoader = _aureliaDependencyInjection.inject(_aureliaTemplating.CompositionEngine)(TemplatingRouteLoader) || TemplatingRouteLoader;
+    return TemplatingRouteLoader;
+  })(_aureliaRouter.RouteLoader);
+  exports.TemplatingRouteLoader = TemplatingRouteLoader;
 });
 
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.promise", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.iter", "github:zloirock/core-js@0.8.4/modules/$.wks", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.task", "github:zloirock/core-js@0.8.4/modules/$.species", "github:zloirock/core-js@0.8.4/modules/$.iter-detect"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2", ["github:aurelia/templating-resources@0.15.2/aurelia-templating-resources"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/aurelia-templating-resources", ["exports", "github:aurelia/templating-resources@0.15.2/compose", "github:aurelia/templating-resources@0.15.2/if", "github:aurelia/templating-resources@0.15.2/with", "github:aurelia/templating-resources@0.15.2/repeat", "github:aurelia/templating-resources@0.15.2/show", "github:aurelia/templating-resources@0.15.2/global-behavior", "github:aurelia/templating-resources@0.15.2/sanitize-html", "github:aurelia/templating-resources@0.15.2/replaceable", "github:aurelia/templating-resources@0.15.2/focus", "github:aurelia/templating-resources@0.15.2/compile-spy", "github:aurelia/templating-resources@0.15.2/view-spy", "github:aurelia/templating@0.15.3", "github:aurelia/templating-resources@0.15.2/dynamic-element", "github:aurelia/templating-resources@0.15.2/css-resource"], function(exports, _compose, _if, _with, _repeat, _show, _globalBehavior, _sanitizeHtml, _replaceable, _focus, _compileSpy, _viewSpy, _aureliaTemplating, _dynamicElement, _cssResource) {
   'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
-      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      assert = require("github:zloirock/core-js@0.8.4/modules/$.assert"),
-      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
-      SPECIES = require("github:zloirock/core-js@0.8.4/modules/$.wks")('species'),
-      RECORD = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('record'),
-      forOf = $iter.forOf,
-      PROMISE = 'Promise',
-      global = $.g,
-      process = global.process,
-      asap = process && process.nextTick || require("github:zloirock/core-js@0.8.4/modules/$.task").set,
-      P = global[PROMISE],
-      Base = P,
-      isFunction = $.isFunction,
-      isObject = $.isObject,
-      assertFunction = assert.fn,
-      assertObject = assert.obj,
-      test;
-  function getConstructor(C) {
-    var S = assertObject(C)[SPECIES];
-    return S != undefined ? S : C;
+  exports.__esModule = true;
+  function configure(config) {
+    config.globalResources('./compose', './if', './with', './repeat', './show', './replaceable', './global-behavior', './sanitize-html', './focus', './compile-spy', './view-spy');
+    var viewEngine = config.container.get(_aureliaTemplating.ViewEngine);
+    var loader = config.aurelia.loader;
+    viewEngine.addResourcePlugin('.html', {'fetch': function fetch(address) {
+        return loader.loadTemplate(address).then(function(registryEntry) {
+          var _ref;
+          var bindable = registryEntry.template.getAttribute('bindable');
+          var elementName = address.replace('.html', '');
+          var index = elementName.lastIndexOf('/');
+          if (index !== 0) {
+            elementName = elementName.substring(index + 1);
+          }
+          if (bindable) {
+            bindable = bindable.split(',').map(function(x) {
+              return x.trim();
+            });
+            registryEntry.template.removeAttribute('bindable');
+          } else {
+            bindable = [];
+          }
+          return (_ref = {}, _ref[elementName] = _dynamicElement._createDynamicElement(elementName, address, bindable), _ref);
+        });
+      }});
+    viewEngine.addResourcePlugin('.css', {'fetch': function fetch(address) {
+        var _ref2;
+        return (_ref2 = {}, _ref2[address] = _cssResource._createCSSResource(address), _ref2);
+      }});
   }
-  function isThenable(it) {
-    var then;
-    if (isObject(it))
-      then = it.then;
-    return isFunction(then) ? then : false;
-  }
-  function isUnhandled(promise) {
-    var record = promise[RECORD],
-        chain = record.c,
-        i = 0,
-        react;
-    if (record.h)
-      return false;
-    while (chain.length > i) {
-      react = chain[i++];
-      if (react.fail || !isUnhandled(react.P))
-        return false;
-    }
-    return true;
-  }
-  function notify(record, isReject) {
-    var chain = record.c;
-    if (isReject || chain.length)
-      asap(function() {
-        var promise = record.p,
-            value = record.v,
-            ok = record.s == 1,
-            i = 0;
-        if (isReject && isUnhandled(promise)) {
-          setTimeout(function() {
-            if (isUnhandled(promise)) {
-              if (cof(process) == 'process') {
-                process.emit('unhandledRejection', value, promise);
-              } else if (global.console && isFunction(console.error)) {
-                console.error('Unhandled promise rejection', value);
-              }
+  exports.Compose = _compose.Compose;
+  exports.If = _if.If;
+  exports.With = _with.With;
+  exports.Repeat = _repeat.Repeat;
+  exports.Show = _show.Show;
+  exports.SanitizeHtmlValueConverter = _sanitizeHtml.SanitizeHtmlValueConverter;
+  exports.GlobalBehavior = _globalBehavior.GlobalBehavior;
+  exports.Replaceable = _replaceable.Replaceable;
+  exports.Focus = _focus.Focus;
+  exports.CompileSpy = _compileSpy.CompileSpy;
+  exports.ViewSpy = _viewSpy.ViewSpy;
+  exports.configure = configure;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/compose", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/task-queue@0.7.0", "github:aurelia/templating@0.15.3"], function(exports, _aureliaDependencyInjection, _aureliaTaskQueue, _aureliaTemplating) {
+  'use strict';
+  exports.__esModule = true;
+  var _createDecoratedClass = (function() {
+    function defineProperties(target, descriptors, initializers) {
+      for (var i = 0; i < descriptors.length; i++) {
+        var descriptor = descriptors[i];
+        var decorators = descriptor.decorators;
+        var key = descriptor.key;
+        delete descriptor.key;
+        delete descriptor.decorators;
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ('value' in descriptor || descriptor.initializer)
+          descriptor.writable = true;
+        if (decorators) {
+          for (var f = 0; f < decorators.length; f++) {
+            var decorator = decorators[f];
+            if (typeof decorator === 'function') {
+              descriptor = decorator(target, key, descriptor) || descriptor;
+            } else {
+              throw new TypeError('The decorator for method ' + descriptor.key + ' is of the invalid type ' + typeof decorator);
             }
-          }, 1e3);
-        } else
-          while (chain.length > i)
-            !function(react) {
-              var cb = ok ? react.ok : react.fail,
-                  ret,
-                  then;
-              try {
-                if (cb) {
-                  if (!ok)
-                    record.h = true;
-                  ret = cb === true ? value : cb(value);
-                  if (ret === react.P) {
-                    react.rej(TypeError(PROMISE + '-chain cycle'));
-                  } else if (then = isThenable(ret)) {
-                    then.call(ret, react.res, react.rej);
-                  } else
-                    react.res(ret);
-                } else
-                  react.rej(value);
-              } catch (err) {
-                react.rej(err);
-              }
-            }(chain[i++]);
-        chain.length = 0;
-      });
-  }
-  function $reject(value) {
-    var record = this;
-    if (record.d)
-      return;
-    record.d = true;
-    record = record.r || record;
-    record.v = value;
-    record.s = 2;
-    notify(record, true);
-  }
-  function $resolve(value) {
-    var record = this,
-        then,
-        wrapper;
-    if (record.d)
-      return;
-    record.d = true;
-    record = record.r || record;
-    try {
-      if (then = isThenable(value)) {
-        wrapper = {
-          r: record,
-          d: false
-        };
-        then.call(value, ctx($resolve, wrapper, 1), ctx($reject, wrapper, 1));
-      } else {
-        record.v = value;
-        record.s = 1;
-        notify(record);
+          }
+          if (descriptor.initializer !== undefined) {
+            initializers[key] = descriptor;
+            continue;
+          }
+        }
+        Object.defineProperty(target, key, descriptor);
       }
-    } catch (err) {
-      $reject.call(wrapper || {
-        r: record,
-        d: false
-      }, err);
+    }
+    return function(Constructor, protoProps, staticProps, protoInitializers, staticInitializers) {
+      if (protoProps)
+        defineProperties(Constructor.prototype, protoProps, protoInitializers);
+      if (staticProps)
+        defineProperties(Constructor, staticProps, staticInitializers);
+      return Constructor;
+    };
+  })();
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
     }
   }
-  if (!(isFunction(P) && isFunction(P.resolve) && P.resolve(test = new P(function() {})) == test)) {
-    P = function Promise(executor) {
-      assertFunction(executor);
-      var record = {
-        p: assert.inst(this, P, PROMISE),
-        c: [],
-        s: 0,
-        d: false,
-        v: undefined,
-        h: false
-      };
-      $.hide(this, RECORD, record);
-      try {
-        executor(ctx($resolve, record, 1), ctx($reject, record, 1));
-      } catch (err) {
-        $reject.call(record, err);
-      }
+  function _defineDecoratedPropertyDescriptor(target, key, descriptors) {
+    var _descriptor = descriptors[key];
+    if (!_descriptor)
+      return;
+    var descriptor = {};
+    for (var _key in _descriptor)
+      descriptor[_key] = _descriptor[_key];
+    descriptor.value = descriptor.initializer ? descriptor.initializer.call(target) : undefined;
+    Object.defineProperty(target, key, descriptor);
+  }
+  var Compose = (function() {
+    var _instanceInitializers = {};
+    _createDecoratedClass(Compose, [{
+      key: 'model',
+      decorators: [_aureliaTemplating.bindable],
+      initializer: null,
+      enumerable: true
+    }, {
+      key: 'view',
+      decorators: [_aureliaTemplating.bindable],
+      initializer: null,
+      enumerable: true
+    }, {
+      key: 'viewModel',
+      decorators: [_aureliaTemplating.bindable],
+      initializer: null,
+      enumerable: true
+    }], null, _instanceInitializers);
+    function Compose(element, container, compositionEngine, viewSlot, viewResources, taskQueue) {
+      _classCallCheck(this, _Compose);
+      _defineDecoratedPropertyDescriptor(this, 'model', _instanceInitializers);
+      _defineDecoratedPropertyDescriptor(this, 'view', _instanceInitializers);
+      _defineDecoratedPropertyDescriptor(this, 'viewModel', _instanceInitializers);
+      this.element = element;
+      this.container = container;
+      this.compositionEngine = compositionEngine;
+      this.viewSlot = viewSlot;
+      this.viewResources = viewResources;
+      this.taskQueue = taskQueue;
+    }
+    Compose.prototype.bind = function bind(bindingContext) {
+      this.$parent = bindingContext;
+      processInstruction(this, createInstruction(this, {
+        view: this.view,
+        viewModel: this.viewModel,
+        model: this.model
+      }));
     };
-    $.mix(P.prototype, {
-      then: function then(onFulfilled, onRejected) {
-        var S = assertObject(assertObject(this).constructor)[SPECIES];
-        var react = {
-          ok: isFunction(onFulfilled) ? onFulfilled : true,
-          fail: isFunction(onRejected) ? onRejected : false
-        };
-        var promise = react.P = new (S != undefined ? S : P)(function(res, rej) {
-          react.res = assertFunction(res);
-          react.rej = assertFunction(rej);
-        });
-        var record = this[RECORD];
-        record.c.push(react);
-        record.s && notify(record);
-        return promise;
-      },
-      'catch': function(onRejected) {
-        return this.then(undefined, onRejected);
+    Compose.prototype.modelChanged = function modelChanged(newValue, oldValue) {
+      var _this = this;
+      if (this.currentInstruction) {
+        this.currentInstruction.model = newValue;
+        return;
       }
+      this.taskQueue.queueMicroTask(function() {
+        if (_this.currentInstruction) {
+          _this.currentInstruction.model = newValue;
+          return;
+        }
+        var vm = _this.currentViewModel;
+        if (vm && typeof vm.activate === 'function') {
+          vm.activate(newValue);
+        }
+      });
+    };
+    Compose.prototype.viewChanged = function viewChanged(newValue, oldValue) {
+      var _this2 = this;
+      var instruction = createInstruction(this, {
+        view: newValue,
+        viewModel: this.currentViewModel || this.viewModel,
+        model: this.model
+      });
+      if (this.currentInstruction) {
+        this.currentInstruction = instruction;
+        return;
+      }
+      this.currentInstruction = instruction;
+      this.taskQueue.queueMicroTask(function() {
+        return processInstruction(_this2, _this2.currentInstruction);
+      });
+    };
+    Compose.prototype.viewModelChanged = function viewModelChanged(newValue, oldValue) {
+      var _this3 = this;
+      var instruction = createInstruction(this, {
+        viewModel: newValue,
+        view: this.view,
+        model: this.model
+      });
+      if (this.currentInstruction) {
+        this.currentInstruction = instruction;
+        return;
+      }
+      this.currentInstruction = instruction;
+      this.taskQueue.queueMicroTask(function() {
+        return processInstruction(_this3, _this3.currentInstruction);
+      });
+    };
+    var _Compose = Compose;
+    Compose = _aureliaDependencyInjection.inject(Element, _aureliaDependencyInjection.Container, _aureliaTemplating.CompositionEngine, _aureliaTemplating.ViewSlot, _aureliaTemplating.ViewResources, _aureliaTaskQueue.TaskQueue)(Compose) || Compose;
+    Compose = _aureliaTemplating.noView(Compose) || Compose;
+    Compose = _aureliaTemplating.customElement('compose')(Compose) || Compose;
+    return Compose;
+  })();
+  exports.Compose = Compose;
+  function createInstruction(composer, instruction) {
+    return Object.assign(instruction, {
+      bindingContext: composer.$parent,
+      container: composer.container,
+      viewSlot: composer.viewSlot,
+      viewResources: composer.viewResources,
+      currentBehavior: composer.currentBehavior,
+      host: composer.element
     });
   }
-  $def($def.G + $def.W + $def.F * (P != Base), {Promise: P});
-  cof.set(P, PROMISE);
-  require("github:zloirock/core-js@0.8.4/modules/$.species")(P);
-  $def($def.S, PROMISE, {
-    reject: function reject(r) {
-      return new (getConstructor(this))(function(res, rej) {
-        rej(r);
-      });
-    },
-    resolve: function resolve(x) {
-      return isObject(x) && RECORD in x && $.getProto(x) === this.prototype ? x : new (getConstructor(this))(function(res) {
-        res(x);
-      });
+  function processInstruction(composer, instruction) {
+    composer.currentInstruction = null;
+    composer.compositionEngine.compose(instruction).then(function(next) {
+      composer.currentBehavior = next;
+      composer.currentViewModel = next ? next.bindingContext : null;
+    });
+  }
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/repeat", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/binding@0.9.1", "github:aurelia/templating@0.15.3"], function(exports, _aureliaDependencyInjection, _aureliaBinding, _aureliaTemplating) {
+  'use strict';
+  exports.__esModule = true;
+  var _createDecoratedClass = (function() {
+    function defineProperties(target, descriptors, initializers) {
+      for (var i = 0; i < descriptors.length; i++) {
+        var descriptor = descriptors[i];
+        var decorators = descriptor.decorators;
+        var key = descriptor.key;
+        delete descriptor.key;
+        delete descriptor.decorators;
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ('value' in descriptor || descriptor.initializer)
+          descriptor.writable = true;
+        if (decorators) {
+          for (var f = 0; f < decorators.length; f++) {
+            var decorator = decorators[f];
+            if (typeof decorator === 'function') {
+              descriptor = decorator(target, key, descriptor) || descriptor;
+            } else {
+              throw new TypeError('The decorator for method ' + descriptor.key + ' is of the invalid type ' + typeof decorator);
+            }
+          }
+          if (descriptor.initializer !== undefined) {
+            initializers[key] = descriptor;
+            continue;
+          }
+        }
+        Object.defineProperty(target, key, descriptor);
+      }
     }
-  });
-  $def($def.S + $def.F * !require("github:zloirock/core-js@0.8.4/modules/$.iter-detect")(function(iter) {
-    P.all(iter)['catch'](function() {});
-  }), PROMISE, {
-    all: function all(iterable) {
-      var C = getConstructor(this),
-          values = [];
-      return new C(function(res, rej) {
-        forOf(iterable, false, values.push, values);
-        var remaining = values.length,
-            results = Array(remaining);
-        if (remaining)
-          $.each.call(values, function(promise, index) {
-            C.resolve(promise).then(function(value) {
-              results[index] = value;
-              --remaining || res(results);
-            }, rej);
+    return function(Constructor, protoProps, staticProps, protoInitializers, staticInitializers) {
+      if (protoProps)
+        defineProperties(Constructor.prototype, protoProps, protoInitializers);
+      if (staticProps)
+        defineProperties(Constructor, staticProps, staticInitializers);
+      return Constructor;
+    };
+  })();
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  function _defineDecoratedPropertyDescriptor(target, key, descriptors) {
+    var _descriptor = descriptors[key];
+    if (!_descriptor)
+      return;
+    var descriptor = {};
+    for (var _key in _descriptor)
+      descriptor[_key] = _descriptor[_key];
+    descriptor.value = descriptor.initializer ? descriptor.initializer.call(target) : undefined;
+    Object.defineProperty(target, key, descriptor);
+  }
+  var Repeat = (function() {
+    var _instanceInitializers = {};
+    _createDecoratedClass(Repeat, [{
+      key: 'items',
+      decorators: [_aureliaTemplating.bindable],
+      initializer: null,
+      enumerable: true
+    }, {
+      key: 'local',
+      decorators: [_aureliaTemplating.bindable],
+      initializer: null,
+      enumerable: true
+    }, {
+      key: 'key',
+      decorators: [_aureliaTemplating.bindable],
+      initializer: null,
+      enumerable: true
+    }, {
+      key: 'value',
+      decorators: [_aureliaTemplating.bindable],
+      initializer: null,
+      enumerable: true
+    }], null, _instanceInitializers);
+    function Repeat(viewFactory, viewSlot, observerLocator) {
+      _classCallCheck(this, _Repeat);
+      _defineDecoratedPropertyDescriptor(this, 'items', _instanceInitializers);
+      _defineDecoratedPropertyDescriptor(this, 'local', _instanceInitializers);
+      _defineDecoratedPropertyDescriptor(this, 'key', _instanceInitializers);
+      _defineDecoratedPropertyDescriptor(this, 'value', _instanceInitializers);
+      this.viewFactory = viewFactory;
+      this.viewSlot = viewSlot;
+      this.observerLocator = observerLocator;
+      this.local = 'item';
+      this.key = 'key';
+      this.value = 'value';
+    }
+    Repeat.prototype.bind = function bind(bindingContext) {
+      var _this = this;
+      var items = this.items;
+      var observer = undefined;
+      this.bindingContext = bindingContext;
+      if (!items) {
+        if (this.oldItems) {
+          this.removeAll();
+        }
+        return;
+      }
+      if (this.oldItems === items) {
+        if (items instanceof Map) {
+          var records = _aureliaBinding.getChangeRecords(items);
+          observer = this.observerLocator.getMapObserver(items);
+          this.handleMapChangeRecords(items, records);
+          this.disposeSubscription = observer.subscribe(function(r) {
+            _this.handleMapChangeRecords(items, r);
           });
-        else
-          res(results);
+        } else {
+          var splices = _aureliaBinding.calcSplices(items, 0, items.length, this.lastBoundItems, 0, this.lastBoundItems.length);
+          observer = this.observerLocator.getArrayObserver(items);
+          this.handleSplices(items, splices);
+          this.lastBoundItems = this.oldItems = null;
+          this.disposeSubscription = observer.subscribe(function(s) {
+            _this.handleSplices(items, s);
+          });
+          return;
+        }
+      } else if (this.oldItems) {
+        this.removeAll();
+      }
+      this.processItems();
+    };
+    Repeat.prototype.unbind = function unbind() {
+      this.oldItems = this.items;
+      if (this.items instanceof Array) {
+        this.lastBoundItems = this.items.slice(0);
+      }
+      if (this.disposeSubscription) {
+        this.disposeSubscription();
+        this.disposeSubscription = null;
+      }
+    };
+    Repeat.prototype.itemsChanged = function itemsChanged() {
+      this.processItems();
+    };
+    Repeat.prototype.processItems = function processItems() {
+      var items = this.items;
+      if (this.disposeSubscription) {
+        this.disposeSubscription();
+        this.removeAll();
+      }
+      if (!items && items !== 0) {
+        return;
+      }
+      if (items instanceof Array) {
+        this.processArrayItems(items);
+      } else if (items instanceof Map) {
+        this.processMapEntries(items);
+      } else if (typeof items === 'number') {
+        this.processNumber(items);
+      } else {
+        throw new Error('Object in "repeat" must be of type Array, Map or Number');
+      }
+    };
+    Repeat.prototype.processArrayItems = function processArrayItems(items) {
+      var _this2 = this;
+      var viewFactory = this.viewFactory;
+      var viewSlot = this.viewSlot;
+      var i = undefined;
+      var ii = undefined;
+      var row = undefined;
+      var view = undefined;
+      var observer = undefined;
+      observer = this.observerLocator.getArrayObserver(items);
+      for (i = 0, ii = items.length; i < ii; ++i) {
+        row = this.createFullBindingContext(items[i], i, ii);
+        view = viewFactory.create(row);
+        viewSlot.add(view);
+      }
+      this.disposeSubscription = observer.subscribe(function(splices) {
+        _this2.handleSplices(items, splices);
       });
-    },
-    race: function race(iterable) {
-      var C = getConstructor(this);
-      return new C(function(res, rej) {
-        forOf(iterable, false, function(promise) {
-          C.resolve(promise).then(res, rej);
+    };
+    Repeat.prototype.processMapEntries = function processMapEntries(items) {
+      var _this3 = this;
+      var viewFactory = this.viewFactory;
+      var viewSlot = this.viewSlot;
+      var index = 0;
+      var row = undefined;
+      var view = undefined;
+      var observer = undefined;
+      observer = this.observerLocator.getMapObserver(items);
+      items.forEach(function(value, key) {
+        row = _this3.createFullExecutionKvpContext(key, value, index, items.size);
+        view = viewFactory.create(row);
+        viewSlot.add(view);
+        ++index;
+      });
+      this.disposeSubscription = observer.subscribe(function(record) {
+        _this3.handleMapChangeRecords(items, record);
+      });
+    };
+    Repeat.prototype.processNumber = function processNumber(value) {
+      var viewFactory = this.viewFactory;
+      var viewSlot = this.viewSlot;
+      var childrenLength = viewSlot.children.length;
+      var i = undefined;
+      var ii = undefined;
+      var row = undefined;
+      var view = undefined;
+      var viewsToRemove = undefined;
+      value = Math.floor(value);
+      viewsToRemove = childrenLength - value;
+      if (viewsToRemove > 0) {
+        if (viewsToRemove > childrenLength) {
+          viewsToRemove = childrenLength;
+        }
+        for (i = 0, ii = viewsToRemove; i < ii; ++i) {
+          viewSlot.removeAt(childrenLength - (i + 1));
+        }
+        return;
+      }
+      for (i = childrenLength, ii = value; i < ii; ++i) {
+        row = this.createFullBindingContext(i, i, ii);
+        view = viewFactory.create(row);
+        viewSlot.add(view);
+      }
+    };
+    Repeat.prototype.createBaseBindingContext = function createBaseBindingContext(data) {
+      var context = {};
+      context[this.local] = data;
+      context.$parent = this.bindingContext;
+      return context;
+    };
+    Repeat.prototype.createBaseExecutionKvpContext = function createBaseExecutionKvpContext(key, value) {
+      var context = {};
+      context[this.key] = key;
+      context[this.value] = value;
+      context.$parent = this.bindingContext;
+      return context;
+    };
+    Repeat.prototype.createFullBindingContext = function createFullBindingContext(data, index, length) {
+      var context = this.createBaseBindingContext(data);
+      return this.updateBindingContext(context, index, length);
+    };
+    Repeat.prototype.createFullExecutionKvpContext = function createFullExecutionKvpContext(key, value, index, length) {
+      var context = this.createBaseExecutionKvpContext(key, value);
+      return this.updateBindingContext(context, index, length);
+    };
+    Repeat.prototype.updateBindingContext = function updateBindingContext(context, index, length) {
+      var first = index === 0;
+      var last = index === length - 1;
+      var even = index % 2 === 0;
+      context.$index = index;
+      context.$first = first;
+      context.$last = last;
+      context.$middle = !(first || last);
+      context.$odd = !even;
+      context.$even = even;
+      return context;
+    };
+    Repeat.prototype.handleSplices = function handleSplices(array, splices) {
+      var _this4 = this;
+      var viewLookup = new Map();
+      var viewSlot = this.viewSlot;
+      var spliceIndexLow = undefined;
+      var viewOrPromise = undefined;
+      var view = undefined;
+      var i = undefined;
+      var ii = undefined;
+      var j = undefined;
+      var jj = undefined;
+      var row = undefined;
+      var splice = undefined;
+      var addIndex = undefined;
+      var itemsLeftToAdd = undefined;
+      var removed = undefined;
+      var model = undefined;
+      var context = undefined;
+      var spliceIndex = undefined;
+      var viewsToUnbind = undefined;
+      var end = undefined;
+      for (i = 0, ii = splices.length; i < ii; ++i) {
+        splice = splices[i];
+        addIndex = spliceIndex = splice.index;
+        itemsLeftToAdd = splice.addedCount;
+        end = splice.index + splice.addedCount;
+        removed = splice.removed;
+        if (typeof spliceIndexLow === 'undefined' || spliceIndexLow === null || spliceIndexLow > splice.index) {
+          spliceIndexLow = spliceIndex;
+        }
+        for (j = 0, jj = removed.length; j < jj; ++j) {
+          if (itemsLeftToAdd > 0) {
+            view = viewSlot.children[spliceIndex + j];
+            view.detached();
+            context = this.createFullBindingContext(array[addIndex + j], spliceIndex + j, array.length);
+            view.bind(context);
+            view.attached();
+            --itemsLeftToAdd;
+          } else {
+            viewOrPromise = viewSlot.removeAt(addIndex + splice.addedCount);
+            if (viewOrPromise) {
+              viewLookup.set(removed[j], viewOrPromise);
+            }
+          }
+        }
+        addIndex += removed.length;
+        for (; itemsLeftToAdd > 0; ++addIndex) {
+          model = array[addIndex];
+          viewOrPromise = viewLookup.get(model);
+          if (viewOrPromise instanceof Promise) {
+            (function(localAddIndex, localModel) {
+              viewOrPromise.then(function(v) {
+                viewLookup['delete'](localModel);
+                viewSlot.insert(localAddIndex, v);
+              });
+            })(addIndex, model);
+          } else if (viewOrPromise) {
+            viewLookup['delete'](model);
+            viewSlot.insert(addIndex, viewOrPromise);
+          } else {
+            row = this.createBaseBindingContext(model);
+            view = this.viewFactory.create(row);
+            viewSlot.insert(addIndex, view);
+          }
+          --itemsLeftToAdd;
+        }
+      }
+      viewsToUnbind = viewLookup.size;
+      if (viewsToUnbind === 0) {
+        this.updateBindingContexts(spliceIndexLow);
+      }
+      viewLookup.forEach(function(x) {
+        if (x instanceof Promise) {
+          x.then(function(y) {
+            y.unbind();
+            viewsToUnbind--;
+            if (viewsToUnbind === 0) {
+              _this4.updateBindingContexts(spliceIndexLow);
+            }
+          });
+        } else {
+          x.unbind();
+          viewsToUnbind--;
+          if (viewsToUnbind === 0) {
+            _this4.updateBindingContexts(spliceIndexLow);
+          }
+        }
+      });
+    };
+    Repeat.prototype.updateBindingContexts = function updateBindingContexts(startIndex) {
+      var children = this.viewSlot.children;
+      var length = children.length;
+      if (startIndex > 0) {
+        startIndex = startIndex - 1;
+      }
+      for (; startIndex < length; ++startIndex) {
+        this.updateBindingContext(children[startIndex].bindingContext, startIndex, length);
+      }
+    };
+    Repeat.prototype.handleMapChangeRecords = function handleMapChangeRecords(map, records) {
+      var viewSlot = this.viewSlot;
+      var key = undefined;
+      var i = undefined;
+      var ii = undefined;
+      var view = undefined;
+      var children = undefined;
+      var length = undefined;
+      var row = undefined;
+      var removeIndex = undefined;
+      var record = undefined;
+      for (i = 0, ii = records.length; i < ii; ++i) {
+        record = records[i];
+        key = record.key;
+        switch (record.type) {
+          case 'update':
+            removeIndex = this.getViewIndexByKey(key);
+            viewSlot.removeAt(removeIndex);
+            row = this.createBaseExecutionKvpContext(key, map.get(key));
+            view = this.viewFactory.create(row);
+            viewSlot.insert(removeIndex, view);
+            break;
+          case 'add':
+            row = this.createBaseExecutionKvpContext(key, map.get(key));
+            view = this.viewFactory.create(row);
+            viewSlot.insert(map.size, view);
+            break;
+          case 'delete':
+            if (!record.oldValue) {
+              return;
+            }
+            removeIndex = this.getViewIndexByKey(key);
+            viewSlot.removeAt(removeIndex);
+            break;
+          case 'clear':
+            viewSlot.removeAll();
+            break;
+          default:
+            continue;
+        }
+      }
+      children = viewSlot.children;
+      length = children.length;
+      for (i = 0; i < length; i++) {
+        this.updateBindingContext(children[i].bindingContext, i, length);
+      }
+    };
+    Repeat.prototype.getViewIndexByKey = function getViewIndexByKey(key) {
+      var viewSlot = this.viewSlot;
+      var i = undefined;
+      var ii = undefined;
+      var child = undefined;
+      for (i = 0, ii = viewSlot.children.length; i < ii; ++i) {
+        child = viewSlot.children[i];
+        if (child.bindings[0].source[this.key] === key) {
+          return i;
+        }
+      }
+    };
+    Repeat.prototype.removeAll = function removeAll() {
+      var viewSlot = this.viewSlot;
+      var views = viewSlot.children;
+      var i = undefined;
+      viewSlot.removeAll();
+      i = views.length;
+      while (i--) {
+        views[i].unbind();
+      }
+    };
+    var _Repeat = Repeat;
+    Repeat = _aureliaDependencyInjection.inject(_aureliaTemplating.BoundViewFactory, _aureliaTemplating.ViewSlot, _aureliaBinding.ObserverLocator)(Repeat) || Repeat;
+    Repeat = _aureliaTemplating.templateController(Repeat) || Repeat;
+    Repeat = _aureliaTemplating.customAttribute('repeat')(Repeat) || Repeat;
+    return Repeat;
+  })();
+  exports.Repeat = Repeat;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/with", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/templating@0.15.3"], function(exports, _aureliaDependencyInjection, _aureliaTemplating) {
+  'use strict';
+  exports.__esModule = true;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var With = (function() {
+    function With(viewFactory, viewSlot) {
+      _classCallCheck(this, _With);
+      this.viewFactory = viewFactory;
+      this.viewSlot = viewSlot;
+    }
+    With.prototype.valueChanged = function valueChanged(newValue) {
+      if (!this.view) {
+        this.view = this.viewFactory.create(newValue);
+        this.viewSlot.add(this.view);
+      } else {
+        this.view.bind(newValue);
+      }
+    };
+    var _With = With;
+    With = _aureliaDependencyInjection.inject(_aureliaTemplating.BoundViewFactory, _aureliaTemplating.ViewSlot)(With) || With;
+    With = _aureliaTemplating.templateController(With) || With;
+    With = _aureliaTemplating.customAttribute('with')(With) || With;
+    return With;
+  })();
+  exports.With = With;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/if", ["exports", "github:aurelia/templating@0.15.3", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/task-queue@0.7.0"], function(exports, _aureliaTemplating, _aureliaDependencyInjection, _aureliaTaskQueue) {
+  'use strict';
+  exports.__esModule = true;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var If = (function() {
+    function If(viewFactory, viewSlot, taskQueue) {
+      _classCallCheck(this, _If);
+      this.viewFactory = viewFactory;
+      this.viewSlot = viewSlot;
+      this.showing = false;
+      this.taskQueue = taskQueue;
+      this.view = null;
+      this.$parent = null;
+    }
+    If.prototype.bind = function bind(bindingContext) {
+      this.$parent = bindingContext;
+      this.valueChanged(this.value);
+    };
+    If.prototype.valueChanged = function valueChanged(newValue) {
+      var _this = this;
+      if (!newValue) {
+        if (this.view !== null && this.showing) {
+          this.taskQueue.queueMicroTask(function() {
+            var viewOrPromise = _this.viewSlot.remove(_this.view);
+            if (viewOrPromise instanceof Promise) {
+              viewOrPromise.then(function() {
+                return _this.view.unbind();
+              });
+            } else {
+              _this.view.unbind();
+            }
+          });
+        }
+        this.showing = false;
+        return;
+      }
+      if (this.view === null) {
+        this.view = this.viewFactory.create(this.$parent);
+      }
+      if (!this.showing) {
+        this.showing = true;
+        if (!this.view.isBound) {
+          this.view.bind();
+        }
+        this.viewSlot.add(this.view);
+      }
+    };
+    If.prototype.unbind = function unbind() {
+      if (this.view !== null && this.viewFactory.isCaching) {
+        if (this.showing) {
+          this.showing = false;
+          this.viewSlot.remove(this.view, true, true);
+        } else {
+          this.view.returnToCache();
+        }
+        this.view = null;
+      }
+    };
+    var _If = If;
+    If = _aureliaDependencyInjection.inject(_aureliaTemplating.BoundViewFactory, _aureliaTemplating.ViewSlot, _aureliaTaskQueue.TaskQueue)(If) || If;
+    If = _aureliaTemplating.templateController(If) || If;
+    If = _aureliaTemplating.customAttribute('if')(If) || If;
+    return If;
+  })();
+  exports.If = If;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/show", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/templating@0.15.3"], function(exports, _aureliaDependencyInjection, _aureliaTemplating) {
+  'use strict';
+  exports.__esModule = true;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  if (_aureliaTemplating.hasShadowDOM) {
+    _aureliaTemplating.injectStyles('body /deep/ .aurelia-hide { display:none !important; }');
+  } else {
+    _aureliaTemplating.injectStyles('.aurelia-hide { display:none !important; }');
+  }
+  var Show = (function() {
+    function Show(element) {
+      _classCallCheck(this, _Show);
+      this.element = element;
+    }
+    Show.prototype.valueChanged = function valueChanged(newValue) {
+      if (newValue) {
+        this.element.classList.remove('aurelia-hide');
+      } else {
+        this.element.classList.add('aurelia-hide');
+      }
+    };
+    Show.prototype.bind = function bind(bindingContext) {
+      this.valueChanged(this.value);
+    };
+    var _Show = Show;
+    Show = _aureliaDependencyInjection.inject(Element)(Show) || Show;
+    Show = _aureliaTemplating.customAttribute('show')(Show) || Show;
+    return Show;
+  })();
+  exports.Show = Show;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/replaceable", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/templating@0.15.3"], function(exports, _aureliaDependencyInjection, _aureliaTemplating) {
+  'use strict';
+  exports.__esModule = true;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var Replaceable = (function() {
+    function Replaceable(viewFactory, viewSlot) {
+      _classCallCheck(this, _Replaceable);
+      viewSlot.add(viewFactory.create());
+    }
+    var _Replaceable = Replaceable;
+    Replaceable = _aureliaDependencyInjection.inject(_aureliaTemplating.BoundViewFactory, _aureliaTemplating.ViewSlot)(Replaceable) || Replaceable;
+    Replaceable = _aureliaTemplating.templateController(Replaceable) || Replaceable;
+    Replaceable = _aureliaTemplating.customAttribute('replaceable')(Replaceable) || Replaceable;
+    return Replaceable;
+  })();
+  exports.Replaceable = Replaceable;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/focus", ["exports", "github:aurelia/templating@0.15.3", "github:aurelia/binding@0.9.1", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/task-queue@0.7.0"], function(exports, _aureliaTemplating, _aureliaBinding, _aureliaDependencyInjection, _aureliaTaskQueue) {
+  'use strict';
+  exports.__esModule = true;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var Focus = (function() {
+    function Focus(element, taskQueue) {
+      var _this = this;
+      _classCallCheck(this, _Focus);
+      this.element = element;
+      this.taskQueue = taskQueue;
+      this.focusListener = function(e) {
+        _this.value = true;
+      };
+      this.blurListener = function(e) {
+        if (document.activeElement !== _this.element) {
+          _this.value = false;
+        }
+      };
+    }
+    Focus.prototype.valueChanged = function valueChanged(newValue) {
+      if (newValue) {
+        this.giveFocus();
+      } else {
+        this.element.blur();
+      }
+    };
+    Focus.prototype.giveFocus = function giveFocus() {
+      var _this2 = this;
+      this.taskQueue.queueMicroTask(function() {
+        if (_this2.value) {
+          _this2.element.focus();
+        }
+      });
+    };
+    Focus.prototype.attached = function attached() {
+      this.element.addEventListener('focus', this.focusListener);
+      this.element.addEventListener('blur', this.blurListener);
+    };
+    Focus.prototype.detached = function detached() {
+      this.element.removeEventListener('focus', this.focusListener);
+      this.element.removeEventListener('blur', this.blurListener);
+    };
+    var _Focus = Focus;
+    Focus = _aureliaDependencyInjection.inject(Element, _aureliaTaskQueue.TaskQueue)(Focus) || Focus;
+    Focus = _aureliaTemplating.customAttribute('focus', _aureliaBinding.bindingMode.twoWay)(Focus) || Focus;
+    return Focus;
+  })();
+  exports.Focus = Focus;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/global-behavior", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/templating@0.15.3", "github:aurelia/logging@0.7.0"], function(exports, _aureliaDependencyInjection, _aureliaTemplating, _aureliaLogging) {
+  'use strict';
+  exports.__esModule = true;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var GlobalBehavior = (function() {
+    function GlobalBehavior(element) {
+      _classCallCheck(this, _GlobalBehavior);
+      this.element = element;
+    }
+    GlobalBehavior.prototype.bind = function bind() {
+      var handler = GlobalBehavior.handlers[this.aureliaAttrName];
+      if (!handler) {
+        throw new Error('Binding handler not found for \'' + this.aureliaAttrName + '.' + this.aureliaCommand + '\'. Element:\n' + this.element.outerHTML + '\n');
+      }
+      try {
+        this.handler = handler.bind(this, this.element, this.aureliaCommand) || handler;
+      } catch (error) {
+        throw new _aureliaLogging.AggregateError('Conventional binding handler failed.', error);
+      }
+    };
+    GlobalBehavior.prototype.attached = function attached() {
+      if (this.handler && 'attached' in this.handler) {
+        this.handler.attached(this, this.element);
+      }
+    };
+    GlobalBehavior.prototype.detached = function detached() {
+      if (this.handler && 'detached' in this.handler) {
+        this.handler.detached(this, this.element);
+      }
+    };
+    GlobalBehavior.prototype.unbind = function unbind() {
+      if (this.handler && 'unbind' in this.handler) {
+        this.handler.unbind(this, this.element);
+      }
+      this.handler = null;
+    };
+    var _GlobalBehavior = GlobalBehavior;
+    GlobalBehavior = _aureliaDependencyInjection.inject(Element)(GlobalBehavior) || GlobalBehavior;
+    GlobalBehavior = _aureliaTemplating.dynamicOptions(GlobalBehavior) || GlobalBehavior;
+    GlobalBehavior = _aureliaTemplating.customAttribute('global-behavior')(GlobalBehavior) || GlobalBehavior;
+    return GlobalBehavior;
+  })();
+  exports.GlobalBehavior = GlobalBehavior;
+  GlobalBehavior.createSettingsFromBehavior = function(behavior) {
+    var settings = {};
+    for (var key in behavior) {
+      if (key === 'aureliaAttrName' || key === 'aureliaCommand' || !behavior.hasOwnProperty(key)) {
+        continue;
+      }
+      settings[key] = behavior[key];
+    }
+    return settings;
+  };
+  GlobalBehavior.jQueryPlugins = {};
+  GlobalBehavior.handlers = {jquery: {
+      bind: function bind(behavior, element, command) {
+        var settings = GlobalBehavior.createSettingsFromBehavior(behavior);
+        var pluginName = GlobalBehavior.jQueryPlugins[command] || command;
+        var jqueryElement = window.jQuery(element);
+        if (!jqueryElement[pluginName]) {
+          _aureliaLogging.getLogger('templating-resources').warn('Could not find the jQuery plugin ' + pluginName + ', possibly due to case mismatch. Trying to enumerate jQuery methods in lowercase. Add the correctly cased plugin name to the GlobalBehavior to avoid this performance hit.');
+          for (var prop in jqueryElement) {
+            if (prop.toLowerCase() === pluginName) {
+              pluginName = prop;
+            }
+          }
+        }
+        behavior.plugin = jqueryElement[pluginName](settings);
+      },
+      unbind: function unbind(behavior, element) {
+        if (typeof behavior.plugin.destroy === 'function') {
+          behavior.plugin.destroy();
+          behavior.plugin = null;
+        }
+      }
+    }};
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/sanitize-html", ["exports", "github:aurelia/binding@0.9.1"], function(exports, _aureliaBinding) {
+  'use strict';
+  exports.__esModule = true;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var SCRIPT_REGEX = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
+  var SanitizeHtmlValueConverter = (function() {
+    SanitizeHtmlValueConverter.defaultSanitizer = function defaultSanitizer(untrustedMarkup) {
+      return untrustedMarkup.replace(SCRIPT_REGEX, '');
+    };
+    function SanitizeHtmlValueConverter() {
+      _classCallCheck(this, _SanitizeHtmlValueConverter);
+      this.sanitizer = SanitizeHtmlValueConverter.defaultSanitizer;
+    }
+    SanitizeHtmlValueConverter.prototype.toView = function toView(untrustedMarkup) {
+      if (untrustedMarkup === null) {
+        return null;
+      }
+      return this.sanitizer(untrustedMarkup);
+    };
+    var _SanitizeHtmlValueConverter = SanitizeHtmlValueConverter;
+    SanitizeHtmlValueConverter = _aureliaBinding.valueConverter('sanitizeHtml')(SanitizeHtmlValueConverter) || SanitizeHtmlValueConverter;
+    return SanitizeHtmlValueConverter;
+  })();
+  exports.SanitizeHtmlValueConverter = SanitizeHtmlValueConverter;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/compile-spy", ["exports", "github:aurelia/templating@0.15.3", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/logging@0.7.0"], function(exports, _aureliaTemplating, _aureliaDependencyInjection, _aureliaLogging) {
+  'use strict';
+  exports.__esModule = true;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var CompileSpy = (function() {
+    function CompileSpy(element, instruction) {
+      _classCallCheck(this, _CompileSpy);
+      _aureliaLogging.getLogger('compile-spy').info(element, instruction);
+    }
+    var _CompileSpy = CompileSpy;
+    CompileSpy = _aureliaDependencyInjection.inject(Element, _aureliaTemplating.TargetInstruction)(CompileSpy) || CompileSpy;
+    CompileSpy = _aureliaTemplating.customAttribute('compile-spy')(CompileSpy) || CompileSpy;
+    return CompileSpy;
+  })();
+  exports.CompileSpy = CompileSpy;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/view-spy", ["exports", "github:aurelia/templating@0.15.3", "github:aurelia/logging@0.7.0"], function(exports, _aureliaTemplating, _aureliaLogging) {
+  'use strict';
+  exports.__esModule = true;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var ViewSpy = (function() {
+    function ViewSpy() {
+      _classCallCheck(this, _ViewSpy);
+      this.logger = _aureliaLogging.getLogger('view-spy');
+    }
+    ViewSpy.prototype.log = function log(lifecycleName, context) {
+      if (!this.value && lifecycleName === 'created') {
+        this.logger.info(lifecycleName, this.view);
+      } else if (this.value && this.value.indexOf(lifecycleName) !== -1) {
+        this.logger.info(lifecycleName, this.view, context);
+      }
+    };
+    ViewSpy.prototype.created = function created(view) {
+      this.view = view;
+      this.log('created');
+    };
+    ViewSpy.prototype.bind = function bind(bindingContext) {
+      this.log('bind', bindingContext);
+    };
+    ViewSpy.prototype.attached = function attached() {
+      this.log('attached');
+    };
+    ViewSpy.prototype.detached = function detached() {
+      this.log('detached');
+    };
+    ViewSpy.prototype.unbind = function unbind() {
+      this.log('unbind');
+    };
+    var _ViewSpy = ViewSpy;
+    ViewSpy = _aureliaTemplating.customAttribute('view-spy')(ViewSpy) || ViewSpy;
+    return ViewSpy;
+  })();
+  exports.ViewSpy = ViewSpy;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/dynamic-element", ["exports", "github:aurelia/templating@0.15.3"], function(exports, _aureliaTemplating) {
+  'use strict';
+  exports.__esModule = true;
+  exports._createDynamicElement = _createDynamicElement;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  function _createDynamicElement(name, viewUrl, bindableNames) {
+    var DynamicElement = (function() {
+      function DynamicElement() {
+        _classCallCheck(this, _DynamicElement);
+      }
+      DynamicElement.prototype.bind = function bind(bindingContext) {
+        this.$parent = bindingContext;
+      };
+      var _DynamicElement = DynamicElement;
+      DynamicElement = _aureliaTemplating.useView(viewUrl)(DynamicElement) || DynamicElement;
+      DynamicElement = _aureliaTemplating.customElement(name)(DynamicElement) || DynamicElement;
+      return DynamicElement;
+    })();
+    for (var i = 0,
+        ii = bindableNames.length; i < ii; ++i) {
+      _aureliaTemplating.bindable(bindableNames[i])(DynamicElement);
+    }
+    return DynamicElement;
+  }
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/css-resource", ["exports", "github:aurelia/templating@0.15.3", "github:aurelia/loader@0.9.0", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/path@0.9.0"], function(exports, _aureliaTemplating, _aureliaLoader, _aureliaDependencyInjection, _aureliaPath) {
+  'use strict';
+  exports.__esModule = true;
+  exports._createCSSResource = _createCSSResource;
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== 'function' && superClass !== null) {
+      throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass);
+    }
+    subClass.prototype = Object.create(superClass && superClass.prototype, {constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }});
+    if (superClass)
+      Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var cssUrlMatcher = /url\((?!['"]data)([^)]+)\)/gi;
+  function fixupCSSUrls(address, css) {
+    return css.replace(cssUrlMatcher, function(match, p1) {
+      var quote = p1.charAt(0);
+      if (quote === '\'' || quote === '"') {
+        p1 = p1.substr(1, p1.length - 2);
+      }
+      return 'url(\'' + _aureliaPath.relativeToFile(p1, address) + '\')';
+    });
+  }
+  var CSSResource = (function() {
+    function CSSResource(address) {
+      _classCallCheck(this, CSSResource);
+      this.address = address;
+      this._global = null;
+      this._scoped = null;
+    }
+    CSSResource.prototype.analyze = function analyze(container, target) {
+      this._global = new target('global');
+      this._scoped = new target('scoped');
+    };
+    CSSResource.prototype.register = function register(registry, name) {
+      registry.registerViewEngineHooks(name === 'scoped' ? this._scoped : this._global);
+    };
+    CSSResource.prototype.load = function load(container) {
+      var _this = this;
+      return container.get(_aureliaLoader.Loader).loadText(this.address).then(function(text) {
+        text = fixupCSSUrls(_this.address, text);
+        _this._global.css = text;
+        _this._scoped.css = text;
+        return _this;
+      });
+    };
+    return CSSResource;
+  })();
+  var CSSViewEngineHooks = (function() {
+    function CSSViewEngineHooks(mode) {
+      _classCallCheck(this, CSSViewEngineHooks);
+      this.mode = mode;
+      this.css = null;
+      this._alreadyGloballyInjected = false;
+    }
+    CSSViewEngineHooks.prototype.beforeCompile = function beforeCompile(content, resources, instruction) {
+      if (this.mode === 'scoped') {
+        var styleNode = _aureliaTemplating.injectStyles(this.css, content, true);
+        if (!instruction.targetShadowDOM) {
+          styleNode.setAttribute('scoped', 'scoped');
+        }
+      } else if (!this._alreadyGloballyInjected) {
+        _aureliaTemplating.injectStyles(this.css);
+        this._alreadyGloballyInjected = true;
+      }
+    };
+    return CSSViewEngineHooks;
+  })();
+  function _createCSSResource(address) {
+    var ViewCSS = (function(_CSSViewEngineHooks) {
+      _inherits(ViewCSS, _CSSViewEngineHooks);
+      function ViewCSS() {
+        _classCallCheck(this, _ViewCSS);
+        _CSSViewEngineHooks.apply(this, arguments);
+      }
+      var _ViewCSS = ViewCSS;
+      ViewCSS = _aureliaTemplating.resource(new CSSResource(address))(ViewCSS) || ViewCSS;
+      return ViewCSS;
+    })(CSSViewEngineHooks);
+    return ViewCSS;
+  }
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-binding@0.15.0", ["github:aurelia/templating-binding@0.15.0/aurelia-templating-binding"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-binding@0.15.0/aurelia-templating-binding", ["exports", "github:aurelia/logging@0.7.0", "github:aurelia/binding@0.9.1", "github:aurelia/templating@0.15.3"], function(exports, _aureliaLogging, _aureliaBinding, _aureliaTemplating) {
+  'use strict';
+  exports.__esModule = true;
+  exports.configure = configure;
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== 'function' && superClass !== null) {
+      throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass);
+    }
+    subClass.prototype = Object.create(superClass && superClass.prototype, {constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }});
+    if (superClass)
+      Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var SyntaxInterpreter = (function() {
+    SyntaxInterpreter.inject = function inject() {
+      return [_aureliaBinding.Parser, _aureliaBinding.ObserverLocator, _aureliaBinding.EventManager];
+    };
+    function SyntaxInterpreter(parser, observerLocator, eventManager) {
+      _classCallCheck(this, SyntaxInterpreter);
+      this.parser = parser;
+      this.observerLocator = observerLocator;
+      this.eventManager = eventManager;
+    }
+    SyntaxInterpreter.prototype.interpret = function interpret(resources, element, info, existingInstruction) {
+      if (info.command in this) {
+        return this[info.command](resources, element, info, existingInstruction);
+      }
+      return this.handleUnknownCommand(resources, element, info, existingInstruction);
+    };
+    SyntaxInterpreter.prototype.handleUnknownCommand = function handleUnknownCommand(resources, element, info, existingInstruction) {
+      var attrName = info.attrName;
+      var command = info.command;
+      var instruction = this.options(resources, element, info, existingInstruction);
+      instruction.alteredAttr = true;
+      instruction.attrName = 'global-behavior';
+      instruction.attributes.aureliaAttrName = attrName;
+      instruction.attributes.aureliaCommand = command;
+      return instruction;
+    };
+    SyntaxInterpreter.prototype.determineDefaultBindingMode = function determineDefaultBindingMode(element, attrName) {
+      var tagName = element.tagName.toLowerCase();
+      if (tagName === 'input') {
+        return attrName === 'value' || attrName === 'checked' || attrName === 'files' ? _aureliaBinding.bindingMode.twoWay : _aureliaBinding.bindingMode.oneWay;
+      } else if (tagName === 'textarea' || tagName === 'select') {
+        return attrName === 'value' ? _aureliaBinding.bindingMode.twoWay : _aureliaBinding.bindingMode.oneWay;
+      } else if (attrName === 'textcontent' || attrName === 'innerhtml') {
+        return element.contentEditable === 'true' ? _aureliaBinding.bindingMode.twoWay : _aureliaBinding.bindingMode.oneWay;
+      } else if (attrName === 'scrolltop' || attrName === 'scrollleft') {
+        return _aureliaBinding.bindingMode.twoWay;
+      }
+      return _aureliaBinding.bindingMode.oneWay;
+    };
+    SyntaxInterpreter.prototype.bind = function bind(resources, element, info, existingInstruction) {
+      var instruction = existingInstruction || _aureliaTemplating.BehaviorInstruction.attribute(info.attrName);
+      instruction.attributes[info.attrName] = new _aureliaBinding.BindingExpression(this.observerLocator, this.attributeMap[info.attrName] || info.attrName, this.parser.parse(info.attrValue), info.defaultBindingMode || this.determineDefaultBindingMode(element, info.attrName), resources.valueConverterLookupFunction);
+      return instruction;
+    };
+    SyntaxInterpreter.prototype.trigger = function trigger(resources, element, info) {
+      return new _aureliaBinding.ListenerExpression(this.eventManager, info.attrName, this.parser.parse(info.attrValue), false, true);
+    };
+    SyntaxInterpreter.prototype.delegate = function delegate(resources, element, info) {
+      return new _aureliaBinding.ListenerExpression(this.eventManager, info.attrName, this.parser.parse(info.attrValue), true, true);
+    };
+    SyntaxInterpreter.prototype.call = function call(resources, element, info, existingInstruction) {
+      var instruction = existingInstruction || _aureliaTemplating.BehaviorInstruction.attribute(info.attrName);
+      instruction.attributes[info.attrName] = new _aureliaBinding.CallExpression(this.observerLocator, info.attrName, this.parser.parse(info.attrValue), resources.valueConverterLookupFunction);
+      return instruction;
+    };
+    SyntaxInterpreter.prototype.options = function options(resources, element, info, existingInstruction) {
+      var instruction = existingInstruction || _aureliaTemplating.BehaviorInstruction.attribute(info.attrName);
+      var attrValue = info.attrValue;
+      var language = this.language;
+      var name = null;
+      var target = '';
+      var current = undefined;
+      var i = undefined;
+      var ii = undefined;
+      for (i = 0, ii = attrValue.length; i < ii; ++i) {
+        current = attrValue[i];
+        if (current === ';') {
+          info = language.inspectAttribute(resources, name, target.trim());
+          language.createAttributeInstruction(resources, element, info, instruction);
+          if (!instruction.attributes[info.attrName]) {
+            instruction.attributes[info.attrName] = info.attrValue;
+          }
+          target = '';
+          name = null;
+        } else if (current === ':' && name === null) {
+          name = target.trim();
+          target = '';
+        } else {
+          target += current;
+        }
+      }
+      if (name !== null) {
+        info = language.inspectAttribute(resources, name, target.trim());
+        language.createAttributeInstruction(resources, element, info, instruction);
+        if (!instruction.attributes[info.attrName]) {
+          instruction.attributes[info.attrName] = info.attrValue;
+        }
+      }
+      return instruction;
+    };
+    return SyntaxInterpreter;
+  })();
+  exports.SyntaxInterpreter = SyntaxInterpreter;
+  SyntaxInterpreter.prototype['for'] = function(resources, element, info, existingInstruction) {
+    var parts = undefined;
+    var keyValue = undefined;
+    var instruction = undefined;
+    var attrValue = undefined;
+    var isDestructuring = undefined;
+    attrValue = info.attrValue;
+    isDestructuring = attrValue.match(/[[].+[\]]/);
+    parts = isDestructuring ? attrValue.split('of ') : attrValue.split(' of ');
+    if (parts.length !== 2) {
+      throw new Error('Incorrect syntax for "for". The form is: "$local of $items" or "[$key, $value] of $items".');
+    }
+    instruction = existingInstruction || _aureliaTemplating.BehaviorInstruction.attribute(info.attrName);
+    if (isDestructuring) {
+      keyValue = parts[0].replace(/[[\]]/g, '').replace(/,/g, ' ').replace(/\s+/g, ' ').trim().split(' ');
+      instruction.attributes.key = keyValue[0];
+      instruction.attributes.value = keyValue[1];
+    } else {
+      instruction.attributes.local = parts[0];
+    }
+    instruction.attributes.items = new _aureliaBinding.BindingExpression(this.observerLocator, 'items', this.parser.parse(parts[1]), _aureliaBinding.bindingMode.oneWay, resources.valueConverterLookupFunction);
+    return instruction;
+  };
+  SyntaxInterpreter.prototype['two-way'] = function(resources, element, info, existingInstruction) {
+    var instruction = existingInstruction || _aureliaTemplating.BehaviorInstruction.attribute(info.attrName);
+    instruction.attributes[info.attrName] = new _aureliaBinding.BindingExpression(this.observerLocator, this.attributeMap[info.attrName] || info.attrName, this.parser.parse(info.attrValue), _aureliaBinding.bindingMode.twoWay, resources.valueConverterLookupFunction);
+    return instruction;
+  };
+  SyntaxInterpreter.prototype['one-way'] = function(resources, element, info, existingInstruction) {
+    var instruction = existingInstruction || _aureliaTemplating.BehaviorInstruction.attribute(info.attrName);
+    instruction.attributes[info.attrName] = new _aureliaBinding.BindingExpression(this.observerLocator, this.attributeMap[info.attrName] || info.attrName, this.parser.parse(info.attrValue), _aureliaBinding.bindingMode.oneWay, resources.valueConverterLookupFunction);
+    return instruction;
+  };
+  SyntaxInterpreter.prototype['one-time'] = function(resources, element, info, existingInstruction) {
+    var instruction = existingInstruction || _aureliaTemplating.BehaviorInstruction.attribute(info.attrName);
+    instruction.attributes[info.attrName] = new _aureliaBinding.BindingExpression(this.observerLocator, this.attributeMap[info.attrName] || info.attrName, this.parser.parse(info.attrValue), _aureliaBinding.bindingMode.oneTime, resources.valueConverterLookupFunction);
+    return instruction;
+  };
+  var info = {};
+  var logger = _aureliaLogging.getLogger('templating-binding');
+  var TemplatingBindingLanguage = (function(_BindingLanguage) {
+    _inherits(TemplatingBindingLanguage, _BindingLanguage);
+    TemplatingBindingLanguage.inject = function inject() {
+      return [_aureliaBinding.Parser, _aureliaBinding.ObserverLocator, SyntaxInterpreter];
+    };
+    function TemplatingBindingLanguage(parser, observerLocator, syntaxInterpreter) {
+      _classCallCheck(this, TemplatingBindingLanguage);
+      _BindingLanguage.call(this);
+      this.parser = parser;
+      this.observerLocator = observerLocator;
+      this.syntaxInterpreter = syntaxInterpreter;
+      this.emptyStringExpression = this.parser.parse('\'\'');
+      syntaxInterpreter.language = this;
+      this.attributeMap = syntaxInterpreter.attributeMap = {
+        'contenteditable': 'contentEditable',
+        'for': 'htmlFor',
+        'tabindex': 'tabIndex',
+        'textcontent': 'textContent',
+        'innerhtml': 'innerHTML',
+        'maxlength': 'maxLength',
+        'minlength': 'minLength',
+        'formaction': 'formAction',
+        'formenctype': 'formEncType',
+        'formmethod': 'formMethod',
+        'formnovalidate': 'formNoValidate',
+        'formtarget': 'formTarget',
+        'rowspan': 'rowSpan',
+        'colspan': 'colSpan',
+        'scrolltop': 'scrollTop',
+        'scrollleft': 'scrollLeft',
+        'readonly': 'readOnly'
+      };
+    }
+    TemplatingBindingLanguage.prototype.inspectAttribute = function inspectAttribute(resources, attrName, attrValue) {
+      var parts = attrName.split('.');
+      info.defaultBindingMode = null;
+      if (parts.length === 2) {
+        info.attrName = parts[0].trim();
+        info.attrValue = attrValue;
+        info.command = parts[1].trim();
+        if (info.command === 'ref') {
+          info.expression = new _aureliaBinding.NameExpression(attrValue, info.attrName);
+          info.command = null;
+          info.attrName = 'ref';
+        } else {
+          info.expression = null;
+        }
+      } else if (attrName === 'ref') {
+        info.attrName = attrName;
+        info.attrValue = attrValue;
+        info.command = null;
+        info.expression = new _aureliaBinding.NameExpression(attrValue, 'element');
+      } else {
+        info.attrName = attrName;
+        info.attrValue = attrValue;
+        info.command = null;
+        info.expression = this.parseContent(resources, attrName, attrValue);
+      }
+      return info;
+    };
+    TemplatingBindingLanguage.prototype.createAttributeInstruction = function createAttributeInstruction(resources, element, theInfo, existingInstruction) {
+      var instruction = undefined;
+      if (theInfo.expression) {
+        if (theInfo.attrName === 'ref') {
+          return theInfo.expression;
+        }
+        instruction = existingInstruction || _aureliaTemplating.BehaviorInstruction.attribute(theInfo.attrName);
+        instruction.attributes[theInfo.attrName] = theInfo.expression;
+      } else if (theInfo.command) {
+        instruction = this.syntaxInterpreter.interpret(resources, element, theInfo, existingInstruction);
+      }
+      return instruction;
+    };
+    TemplatingBindingLanguage.prototype.parseText = function parseText(resources, value) {
+      return this.parseContent(resources, 'textContent', value);
+    };
+    TemplatingBindingLanguage.prototype.parseContent = function parseContent(resources, attrName, attrValue) {
+      var i = attrValue.indexOf('${', 0);
+      var ii = attrValue.length;
+      var char = undefined;
+      var pos = 0;
+      var open = 0;
+      var quote = null;
+      var interpolationStart = undefined;
+      var parts = undefined;
+      var partIndex = 0;
+      while (i >= 0 && i < ii - 2) {
+        open = 1;
+        interpolationStart = i;
+        i += 2;
+        do {
+          char = attrValue[i];
+          i++;
+          if (char === "'" || char === '"') {
+            if (quote === null) {
+              quote = char;
+            } else if (quote === char) {
+              quote = null;
+            }
+            continue;
+          }
+          if (char === '\\') {
+            i++;
+            continue;
+          }
+          if (quote !== null) {
+            continue;
+          }
+          if (char === '{') {
+            open++;
+          } else if (char === '}') {
+            open--;
+          }
+        } while (open > 0 && i < ii);
+        if (open === 0) {
+          parts = parts || [];
+          if (attrValue[interpolationStart - 1] === '\\' && attrValue[interpolationStart - 2] !== '\\') {
+            parts[partIndex] = attrValue.substring(pos, interpolationStart - 1) + attrValue.substring(interpolationStart, i);
+            partIndex++;
+            parts[partIndex] = this.emptyStringExpression;
+            partIndex++;
+          } else {
+            parts[partIndex] = attrValue.substring(pos, interpolationStart);
+            partIndex++;
+            parts[partIndex] = this.parser.parse(attrValue.substring(interpolationStart + 2, i - 1));
+            partIndex++;
+          }
+          pos = i;
+          i = attrValue.indexOf('${', i);
+        } else {
+          break;
+        }
+      }
+      if (partIndex === 0) {
+        return null;
+      }
+      parts[partIndex] = attrValue.substr(pos);
+      return new InterpolationBindingExpression(this.observerLocator, this.attributeMap[attrName] || attrName, parts, _aureliaBinding.bindingMode.oneWay, resources.valueConverterLookupFunction, attrName);
+    };
+    return TemplatingBindingLanguage;
+  })(_aureliaTemplating.BindingLanguage);
+  exports.TemplatingBindingLanguage = TemplatingBindingLanguage;
+  var InterpolationBindingExpression = (function() {
+    function InterpolationBindingExpression(observerLocator, targetProperty, parts, mode, valueConverterLookupFunction, attribute) {
+      _classCallCheck(this, InterpolationBindingExpression);
+      this.observerLocator = observerLocator;
+      this.targetProperty = targetProperty;
+      this.parts = parts;
+      this.mode = mode;
+      this.valueConverterLookupFunction = valueConverterLookupFunction;
+      this.attribute = this.attrToRemove = attribute;
+      this.discrete = false;
+    }
+    InterpolationBindingExpression.prototype.createBinding = function createBinding(target) {
+      return new InterpolationBinding(this.observerLocator, this.parts, target, this.targetProperty, this.mode, this.valueConverterLookupFunction);
+    };
+    return InterpolationBindingExpression;
+  })();
+  exports.InterpolationBindingExpression = InterpolationBindingExpression;
+  var InterpolationBinding = (function() {
+    function InterpolationBinding(observerLocator, parts, target, targetProperty, mode, valueConverterLookupFunction) {
+      _classCallCheck(this, InterpolationBinding);
+      if (targetProperty === 'style') {
+        logger.info('Internet Explorer does not support interpolation in "style" attributes.  Use the style attribute\'s alias, "css" instead.');
+      } else if (target.parentElement && target.parentElement.nodeName === 'TEXTAREA' && targetProperty === 'textContent') {
+        throw new Error('Interpolation binding cannot be used in the content of a textarea element.  Use <textarea value.bind="expression"></textarea> instead.');
+      }
+      this.observerLocator = observerLocator;
+      this.parts = parts;
+      this.targetProperty = observerLocator.getObserver(target, targetProperty);
+      this.mode = mode;
+      this.valueConverterLookupFunction = valueConverterLookupFunction;
+      this.toDispose = [];
+    }
+    InterpolationBinding.prototype.getObserver = function getObserver(obj, propertyName) {
+      return this.observerLocator.getObserver(obj, propertyName);
+    };
+    InterpolationBinding.prototype.bind = function bind(source) {
+      this.source = source;
+      if (this.mode === _aureliaBinding.bindingMode.oneWay) {
+        this.unbind();
+        this.connect();
+        this.setValue();
+      } else {
+        this.setValue();
+      }
+    };
+    InterpolationBinding.prototype.setValue = function setValue() {
+      var value = this.interpolate();
+      this.targetProperty.setValue(value);
+    };
+    InterpolationBinding.prototype.partChanged = function partChanged(newValue, oldValue, connecting) {
+      var _this = this;
+      var map = undefined;
+      var data = undefined;
+      if (!connecting) {
+        this.setValue();
+      }
+      if (oldValue instanceof Array) {
+        map = this.arrayPartMap;
+        data = map ? map.get(oldValue) : null;
+        if (data) {
+          data.refs--;
+          if (data.refs === 0) {
+            data.dispose();
+            map['delete'](oldValue);
+          }
+        }
+      }
+      if (newValue instanceof Array) {
+        map = this.arrayPartMap || (this.arrayPartMap = new Map());
+        data = map.get(newValue);
+        if (!data) {
+          data = {
+            refs: 0,
+            dispose: this.observerLocator.getArrayObserver(newValue).subscribe(function() {
+              return _this.setValue();
+            })
+          };
+          map.set(newValue, data);
+        }
+        data.refs++;
+      }
+    };
+    InterpolationBinding.prototype.connect = function connect() {
+      var result = undefined;
+      var parts = this.parts;
+      var source = this.source;
+      var toDispose = this.toDispose = [];
+      var partChanged = this.partChanged.bind(this);
+      var i = undefined;
+      var ii = undefined;
+      for (i = 0, ii = parts.length; i < ii; ++i) {
+        if (i % 2 !== 0) {
+          result = parts[i].connect(this, source);
+          if (result.observer) {
+            toDispose.push(result.observer.subscribe(partChanged));
+          }
+          if (result.value instanceof Array) {
+            partChanged(result.value, undefined, true);
+          }
+        }
+      }
+    };
+    InterpolationBinding.prototype.interpolate = function interpolate() {
+      var value = '';
+      var parts = this.parts;
+      var source = this.source;
+      var valueConverterLookupFunction = this.valueConverterLookupFunction;
+      var i = undefined;
+      var ii = undefined;
+      var temp = undefined;
+      for (i = 0, ii = parts.length; i < ii; ++i) {
+        if (i % 2 === 0) {
+          value += parts[i];
+        } else {
+          temp = parts[i].evaluate(source, valueConverterLookupFunction);
+          value += typeof temp !== 'undefined' && temp !== null ? temp.toString() : '';
+        }
+      }
+      return value;
+    };
+    InterpolationBinding.prototype.unbind = function unbind() {
+      var i = undefined;
+      var ii = undefined;
+      var toDispose = this.toDispose;
+      var map = this.arrayPartMap;
+      if (toDispose) {
+        for (i = 0, ii = toDispose.length; i < ii; ++i) {
+          toDispose[i]();
+        }
+      }
+      this.toDispose = null;
+      if (map) {
+        for (var _iterator = map.values(),
+            _isArray = Array.isArray(_iterator),
+            _i = 0,
+            _iterator = _isArray ? _iterator : _iterator[Symbol.iterator](); ; ) {
+          if (_isArray) {
+            if (_i >= _iterator.length)
+              break;
+            toDispose = _iterator[_i++];
+          } else {
+            _i = _iterator.next();
+            if (_i.done)
+              break;
+            toDispose = _i.value;
+          }
+          toDispose.dispose();
+        }
+        map.clear();
+      }
+      this.arrayPartMap = null;
+    };
+    return InterpolationBinding;
+  })();
+  function configure(config) {
+    var instance = undefined;
+    var getInstance = function getInstance(c) {
+      return instance || (instance = c.invoke(TemplatingBindingLanguage));
+    };
+    if (config.container.hasHandler(TemplatingBindingLanguage)) {
+      instance = config.container.get(TemplatingBindingLanguage);
+    } else {
+      config.container.registerHandler(TemplatingBindingLanguage, getInstance);
+    }
+    config.container.registerHandler(_aureliaTemplating.BindingLanguage, getInstance);
+  }
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/animator-css@0.16.0", ["github:aurelia/animator-css@0.16.0/aurelia-animator-css"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/animator-css@0.16.0/aurelia-animator-css", ["exports", "github:aurelia/templating@0.15.3"], function(exports, _aureliaTemplating) {
+  'use strict';
+  exports.__esModule = true;
+  exports.configure = configure;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var CssAnimator = (function() {
+    function CssAnimator() {
+      _classCallCheck(this, CssAnimator);
+      this.animationStack = [];
+      this.useAnimationDoneClasses = false;
+      this.animationEnteredClass = 'au-entered';
+      this.animationLeftClass = 'au-left';
+      this.isAnimating = false;
+      this.animationTimeout = 50;
+    }
+    CssAnimator.prototype._addMultipleEventListener = function _addMultipleEventListener(el, s, fn) {
+      var evts = s.split(' ');
+      for (var i = 0,
+          ii = evts.length; i < ii; ++i) {
+        el.addEventListener(evts[i], fn, false);
+      }
+    };
+    CssAnimator.prototype._addAnimationToStack = function _addAnimationToStack(animId) {
+      if (this.animationStack.indexOf(animId) < 0) {
+        this.animationStack.push(animId);
+      }
+    };
+    CssAnimator.prototype._removeAnimationFromStack = function _removeAnimationFromStack(animId) {
+      var idx = this.animationStack.indexOf(animId);
+      if (idx > -1) {
+        this.animationStack.splice(idx, 1);
+      }
+    };
+    CssAnimator.prototype._getElementAnimationDelay = function _getElementAnimationDelay(element) {
+      var styl = window.getComputedStyle(element);
+      var prop = undefined;
+      var delay = undefined;
+      if (styl.getPropertyValue('animation-delay')) {
+        prop = 'animation-delay';
+      } else if (styl.getPropertyValue('-webkit-animation-delay')) {
+        prop = '-webkit-animation-delay';
+      } else if (styl.getPropertyValue('-moz-animation-delay')) {
+        prop = '-moz-animation-delay';
+      } else {
+        return 0;
+      }
+      delay = styl.getPropertyValue(prop);
+      delay = Number(delay.replace(/[^\d\.]/g, ''));
+      return delay * 1000;
+    };
+    CssAnimator.prototype._performSingleAnimate = function _performSingleAnimate(element, className) {
+      var _this = this;
+      this._triggerDOMEvent(_aureliaTemplating.animationEvent.animateBegin, element);
+      return this.addClass(element, className, true).then(function(result) {
+        _this._triggerDOMEvent(_aureliaTemplating.animationEvent.animateActive, element);
+        if (result !== false) {
+          return _this.removeClass(element, className, true).then(function() {
+            _this._triggerDOMEvent(_aureliaTemplating.animationEvent.animateDone, element);
+          });
+        }
+        return false;
+      })['catch'](function() {
+        _this._triggerDOMEvent(_aureliaTemplating.animationEvent.animateTimeout, element);
+      });
+    };
+    CssAnimator.prototype._triggerDOMEvent = function _triggerDOMEvent(eventType, element) {
+      var evt = new window.CustomEvent(eventType, {
+        bubbles: true,
+        cancelable: true,
+        detail: element
+      });
+      document.dispatchEvent(evt);
+    };
+    CssAnimator.prototype.animate = function animate(element, className) {
+      var _this2 = this;
+      if (Array.isArray(element)) {
+        return Promise.all(element.map(function(el) {
+          return _this2._performSingleAnimate(el, className);
+        }));
+      }
+      return this._performSingleAnimate(element, className);
+    };
+    CssAnimator.prototype.runSequence = function runSequence(animations) {
+      var _this3 = this;
+      this._triggerDOMEvent(_aureliaTemplating.animationEvent.sequenceBegin, null);
+      return animations.reduce(function(p, anim) {
+        return p.then(function() {
+          return _this3.animate(anim.element, anim.className);
+        });
+      }, Promise.resolve(true)).then(function() {
+        _this3._triggerDOMEvent(_aureliaTemplating.animationEvent.sequenceDone, null);
+      });
+    };
+    CssAnimator.prototype.move = function move() {
+      return Promise.resolve(false);
+    };
+    CssAnimator.prototype.enter = function enter(element) {
+      var _this4 = this;
+      return new Promise(function(resolve, reject) {
+        var animId = element.toString() + Math.random();
+        var classList = element.classList;
+        _this4._triggerDOMEvent(_aureliaTemplating.animationEvent.enterBegin, element);
+        if (_this4.useAnimationDoneClasses) {
+          classList.remove(_this4.animationEnteredClass);
+          classList.remove(_this4.animationLeftClass);
+        }
+        classList.add('au-enter');
+        var animStart = undefined;
+        _this4._addMultipleEventListener(element, 'webkitAnimationStart animationstart', animStart = function(evAnimStart) {
+          _this4.isAnimating = true;
+          _this4._triggerDOMEvent(_aureliaTemplating.animationEvent.enterActive, element);
+          evAnimStart.stopPropagation();
+          _this4._addAnimationToStack(animId);
+          var animEnd = undefined;
+          _this4._addMultipleEventListener(element, 'webkitAnimationEnd animationend', animEnd = function(evAnimEnd) {
+            evAnimEnd.stopPropagation();
+            classList.remove('au-enter-active');
+            classList.remove('au-enter');
+            _this4._removeAnimationFromStack(animId);
+            evAnimEnd.target.removeEventListener(evAnimEnd.type, animEnd);
+            if (_this4.useAnimationDoneClasses && _this4.animationEnteredClass !== undefined && _this4.animationEnteredClass !== null) {
+              classList.add(_this4.animationEnteredClass);
+            }
+            _this4.isAnimating = false;
+            _this4._triggerDOMEvent(_aureliaTemplating.animationEvent.enterDone, element);
+            resolve(true);
+          }, false);
+          evAnimStart.target.removeEventListener(evAnimStart.type, animStart);
+        }, false);
+        var parent = element.parentElement;
+        var delay = 0;
+        if (parent !== null && parent !== undefined && (parent.classList.contains('au-stagger') || parent.classList.contains('au-stagger-enter'))) {
+          var elemPos = Array.prototype.indexOf.call(parent.childNodes, element);
+          delay = _this4._getElementAnimationDelay(parent) * elemPos;
+          _this4._triggerDOMEvent(_aureliaTemplating.animationEvent.staggerNext, element);
+          setTimeout(function() {
+            classList.add('au-enter-active');
+          }, delay);
+        } else {
+          classList.add('au-enter-active');
+        }
+        setTimeout(function() {
+          if (_this4.animationStack.indexOf(animId) < 0) {
+            classList.remove('au-enter-active');
+            classList.remove('au-enter');
+            _this4._triggerDOMEvent(_aureliaTemplating.animationEvent.enterTimeout, element);
+            resolve(false);
+          }
+        }, _this4._getElementAnimationDelay(element) + _this4.animationTimeout + delay);
+      });
+    };
+    CssAnimator.prototype.leave = function leave(element) {
+      var _this5 = this;
+      return new Promise(function(resolve, reject) {
+        var animId = element.toString() + Math.random();
+        var classList = element.classList;
+        _this5._triggerDOMEvent(_aureliaTemplating.animationEvent.leaveBegin, element);
+        if (_this5.useAnimationDoneClasses) {
+          classList.remove(_this5.animationEnteredClass);
+          classList.remove(_this5.animationLeftClass);
+        }
+        classList.add('au-leave');
+        var animStart = undefined;
+        _this5._addMultipleEventListener(element, 'webkitAnimationStart animationstart', animStart = function(evAnimStart) {
+          _this5.isAnimating = true;
+          _this5._triggerDOMEvent(_aureliaTemplating.animationEvent.leaveActive, element);
+          evAnimStart.stopPropagation();
+          _this5._addAnimationToStack(animId);
+          var animEnd = undefined;
+          _this5._addMultipleEventListener(element, 'webkitAnimationEnd animationend', animEnd = function(evAnimEnd) {
+            evAnimEnd.stopPropagation();
+            classList.remove('au-leave-active');
+            classList.remove('au-leave');
+            _this5._removeAnimationFromStack(animId);
+            evAnimEnd.target.removeEventListener(evAnimEnd.type, animEnd);
+            if (_this5.useAnimationDoneClasses && _this5.animationLeftClass !== undefined && _this5.animationLeftClass !== null) {
+              classList.add(_this5.animationLeftClass);
+            }
+            _this5.isAnimating = false;
+            _this5._triggerDOMEvent(_aureliaTemplating.animationEvent.leaveDone, element);
+            resolve(true);
+          }, false);
+          evAnimStart.target.removeEventListener(evAnimStart.type, animStart);
+        }, false);
+        var parent = element.parentElement;
+        var delay = 0;
+        if (parent !== null && parent !== undefined && (parent.classList.contains('au-stagger') || parent.classList.contains('au-stagger-leave'))) {
+          var elemPos = Array.prototype.indexOf.call(parent.childNodes, element);
+          delay = _this5._getElementAnimationDelay(parent) * elemPos;
+          _this5._triggerDOMEvent(_aureliaTemplating.animationEvent.staggerNext, element);
+          setTimeout(function() {
+            classList.add('au-leave-active');
+          }, delay);
+        } else {
+          classList.add('au-leave-active');
+        }
+        setTimeout(function() {
+          if (_this5.animationStack.indexOf(animId) < 0) {
+            classList.remove('au-leave-active');
+            classList.remove('au-leave');
+            _this5._triggerDOMEvent(_aureliaTemplating.animationEvent.leaveTimeout, element);
+            resolve(false);
+          }
+        }, _this5._getElementAnimationDelay(element) + _this5.animationTimeout + delay);
+      });
+    };
+    CssAnimator.prototype.removeClass = function removeClass(element, className) {
+      var _this6 = this;
+      var suppressEvents = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
+      return new Promise(function(resolve, reject) {
+        var classList = element.classList;
+        if (!classList.contains(className)) {
+          resolve(false);
+          return;
+        }
+        if (suppressEvents !== true) {
+          _this6._triggerDOMEvent(_aureliaTemplating.animationEvent.removeClassBegin, element);
+        }
+        var animId = element.toString() + className + Math.random();
+        classList.remove(className);
+        var animStart = undefined;
+        _this6._addMultipleEventListener(element, 'webkitAnimationStart animationstart', animStart = function(evAnimStart) {
+          _this6.isAnimating = true;
+          if (suppressEvents !== true) {
+            _this6._triggerDOMEvent(_aureliaTemplating.animationEvent.removeClassActive, element);
+          }
+          evAnimStart.stopPropagation();
+          _this6._addAnimationToStack(animId);
+          var animEnd = undefined;
+          _this6._addMultipleEventListener(element, 'webkitAnimationEnd animationend', animEnd = function(evAnimEnd) {
+            evAnimEnd.stopPropagation();
+            classList.remove(className + '-remove');
+            _this6._removeAnimationFromStack(animId);
+            evAnimEnd.target.removeEventListener(evAnimEnd.type, animEnd);
+            _this6.isAnimating = false;
+            if (suppressEvents !== true) {
+              _this6._triggerDOMEvent(_aureliaTemplating.animationEvent.removeClassDone, element);
+            }
+            resolve(true);
+          }, false);
+          evAnimStart.target.removeEventListener(evAnimStart.type, animStart);
+        }, false);
+        classList.add(className + '-remove');
+        setTimeout(function() {
+          if (_this6.animationStack.indexOf(animId) < 0) {
+            classList.remove(className + '-remove');
+            classList.remove(className);
+            if (suppressEvents !== true) {
+              _this6._triggerDOMEvent(_aureliaTemplating.animationEvent.removeClassTimeout, element);
+            }
+            resolve(false);
+          }
+        }, _this6._getElementAnimationDelay(element) + _this6.animationTimeout);
+      });
+    };
+    CssAnimator.prototype.addClass = function addClass(element, className) {
+      var _this7 = this;
+      var suppressEvents = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
+      return new Promise(function(resolve, reject) {
+        var animId = element.toString() + className + Math.random();
+        var classList = element.classList;
+        if (suppressEvents !== true) {
+          _this7._triggerDOMEvent(_aureliaTemplating.animationEvent.addClassBegin, element);
+        }
+        var animStart = undefined;
+        _this7._addMultipleEventListener(element, 'webkitAnimationStart animationstart', animStart = function(evAnimStart) {
+          _this7.isAnimating = true;
+          if (suppressEvents !== true) {
+            _this7._triggerDOMEvent(_aureliaTemplating.animationEvent.addClassActive, element);
+          }
+          evAnimStart.stopPropagation();
+          _this7._addAnimationToStack(animId);
+          var animEnd = undefined;
+          _this7._addMultipleEventListener(element, 'webkitAnimationEnd animationend', animEnd = function(evAnimEnd) {
+            evAnimEnd.stopPropagation();
+            classList.add(className);
+            classList.remove(className + '-add');
+            _this7._removeAnimationFromStack(animId);
+            evAnimEnd.target.removeEventListener(evAnimEnd.type, animEnd);
+            _this7.isAnimating = false;
+            if (suppressEvents !== true) {
+              _this7._triggerDOMEvent(_aureliaTemplating.animationEvent.addClassDone, element);
+            }
+            resolve(true);
+          }, false);
+          evAnimStart.target.removeEventListener(evAnimStart.type, animStart);
+        }, false);
+        classList.add(className + '-add');
+        setTimeout(function() {
+          if (_this7.animationStack.indexOf(animId) < 0) {
+            classList.remove(className + '-add');
+            classList.add(className);
+            if (suppressEvents !== true) {
+              _this7._triggerDOMEvent(_aureliaTemplating.animationEvent.addClassTimeout, element);
+            }
+            resolve(false);
+          }
+        }, _this7._getElementAnimationDelay(element) + _this7.animationTimeout);
+      });
+    };
+    return CssAnimator;
+  })();
+  exports.CssAnimator = CssAnimator;
+  function configure(config, callback) {
+    var animator = config.container.get(CssAnimator);
+    _aureliaTemplating.Animator.configureDefault(config.container, animator);
+    if (typeof callback === 'function') {
+      callback(animator);
+    }
+  }
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/fetch-client@0.2.0", ["github:aurelia/fetch-client@0.2.0/aurelia-fetch-client"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/fetch-client@0.2.0/aurelia-fetch-client", ["exports", "npm:core-js@0.9.18"], function(exports, _coreJs) {
+  'use strict';
+  exports.__esModule = true;
+  exports.json = json;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  function json(body) {
+    return new Blob([JSON.stringify(body)], {type: 'application/json'});
+  }
+  var HttpClientConfiguration = (function() {
+    function HttpClientConfiguration() {
+      _classCallCheck(this, HttpClientConfiguration);
+      this.baseUrl = '';
+      this.defaults = {};
+      this.interceptors = [];
+    }
+    HttpClientConfiguration.prototype.withBaseUrl = function withBaseUrl(baseUrl) {
+      this.baseUrl = baseUrl;
+      return this;
+    };
+    HttpClientConfiguration.prototype.withDefaults = function withDefaults(defaults) {
+      this.defaults = defaults;
+      return this;
+    };
+    HttpClientConfiguration.prototype.withInterceptor = function withInterceptor(interceptor) {
+      this.interceptors.push(interceptor);
+      return this;
+    };
+    HttpClientConfiguration.prototype.useStandardConfiguration = function useStandardConfiguration() {
+      var standardConfig = {credentials: 'same-origin'};
+      Object.assign(this.defaults, standardConfig, this.defaults);
+      return this.rejectErrorResponses();
+    };
+    HttpClientConfiguration.prototype.rejectErrorResponses = function rejectErrorResponses() {
+      return this.withInterceptor({response: rejectOnError});
+    };
+    return HttpClientConfiguration;
+  })();
+  exports.HttpClientConfiguration = HttpClientConfiguration;
+  function rejectOnError(response) {
+    if (!response.ok) {
+      throw response;
+    }
+    return response;
+  }
+  var HttpClient = (function() {
+    function HttpClient() {
+      _classCallCheck(this, HttpClient);
+      this.activeRequestCount = 0;
+      this.isRequesting = false;
+      this.interceptors = [];
+      this.isConfigured = false;
+      this.baseUrl = '';
+      this.defaults = null;
+    }
+    HttpClient.prototype.configure = function configure(config) {
+      var _interceptors;
+      var normalizedConfig = undefined;
+      if (typeof config === 'string') {
+        normalizedConfig = {baseUrl: config};
+      } else if (typeof config === 'object') {
+        normalizedConfig = {defaults: config};
+      } else if (typeof config === 'function') {
+        normalizedConfig = new HttpClientConfiguration();
+        config(normalizedConfig);
+      } else {
+        throw new Error('invalid config');
+      }
+      var defaults = normalizedConfig.defaults;
+      if (defaults && defaults.headers instanceof Headers) {
+        throw new Error('Default headers must be a plain object.');
+      }
+      this.baseUrl = normalizedConfig.baseUrl;
+      this.defaults = defaults;
+      (_interceptors = this.interceptors).push.apply(_interceptors, normalizedConfig.interceptors || []);
+      this.isConfigured = true;
+      return this;
+    };
+    HttpClient.prototype.fetch = (function(_fetch) {
+      function fetch(_x, _x2) {
+        return _fetch.apply(this, arguments);
+      }
+      fetch.toString = function() {
+        return _fetch.toString();
+      };
+      return fetch;
+    })(function(input, init) {
+      var _this = this;
+      trackRequestStart.call(this);
+      var request = Promise.resolve().then(function() {
+        return buildRequest.call(_this, input, init, _this.defaults);
+      });
+      var promise = processRequest(request, this.interceptors).then(function(result) {
+        var response = null;
+        if (result instanceof Response) {
+          response = result;
+        } else if (result instanceof Request) {
+          response = fetch(result);
+        } else {
+          throw new Error('An invalid result was returned by the interceptor chain. Expected a Request or Response instance, but got [' + result + ']');
+        }
+        return processResponse(response, _this.interceptors);
+      });
+      return trackRequestEndWith.call(this, promise);
+    });
+    return HttpClient;
+  })();
+  exports.HttpClient = HttpClient;
+  function trackRequestStart() {
+    this.isRequesting = !!++this.activeRequestCount;
+  }
+  function trackRequestEnd() {
+    this.isRequesting = !!--this.activeRequestCount;
+  }
+  function trackRequestEndWith(promise) {
+    var handle = trackRequestEnd.bind(this);
+    promise.then(handle, handle);
+    return promise;
+  }
+  function buildRequest(input) {
+    var init = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+    var defaults = this.defaults || {};
+    var source = undefined;
+    var url = undefined;
+    var body = undefined;
+    if (input instanceof Request) {
+      if (!this.isConfigured) {
+        return input;
+      }
+      source = input;
+      url = input.url;
+      body = input.blob();
+    } else {
+      source = init;
+      url = input;
+      body = init.body;
+    }
+    var requestInit = Object.assign({}, defaults, source, {body: body});
+    var request = new Request((this.baseUrl || '') + url, requestInit);
+    setDefaultHeaders(request.headers, defaults.headers);
+    return request;
+  }
+  function setDefaultHeaders(headers, defaultHeaders) {
+    for (var _name in defaultHeaders || {}) {
+      if (defaultHeaders.hasOwnProperty(_name) && !headers.has(_name)) {
+        headers.set(_name, defaultHeaders[_name]);
+      }
+    }
+  }
+  function processRequest(request, interceptors) {
+    return applyInterceptors(request, interceptors, 'request', 'requestError');
+  }
+  function processResponse(response, interceptors) {
+    return applyInterceptors(response, interceptors, 'response', 'responseError');
+  }
+  function applyInterceptors(input, interceptors, successName, errorName) {
+    return (interceptors || []).reduce(function(chain, interceptor) {
+      var successHandler = interceptor[successName];
+      var errorHandler = interceptor[errorName];
+      return chain.then(successHandler && successHandler.bind(interceptor), errorHandler && errorHandler.bind(interceptor));
+    }, Promise.resolve(input));
+  }
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/bootstrapper@0.17.0", ["github:aurelia/bootstrapper@0.17.0/aurelia-bootstrapper"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/bootstrapper@0.17.0/aurelia-bootstrapper", ["exports", "npm:core-js@0.9.18", "github:aurelia/framework@0.16.0"], function(exports, _coreJs, _aureliaFramework) {
+  'use strict';
+  exports.__esModule = true;
+  exports.bootstrap = bootstrap;
+  function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : {'default': obj};
+  }
+  var _core = _interopRequireDefault(_coreJs);
+  var logger = _aureliaFramework.LogManager.getLogger('bootstrapper');
+  var readyQueue = [];
+  var isReady = false;
+  function onReady(callback) {
+    return new Promise(function(resolve, reject) {
+      if (!isReady) {
+        readyQueue.push(function() {
+          try {
+            resolve(callback());
+          } catch (e) {
+            reject(e);
+          }
+        });
+      } else {
+        resolve(callback());
+      }
+    });
+  }
+  function bootstrap(configure) {
+    return onReady(function() {
+      var loader = new window.AureliaLoader();
+      var aurelia = new _aureliaFramework.Aurelia(loader);
+      return configure(aurelia);
+    });
+  }
+  function ready(global) {
+    return new Promise(function(resolve, reject) {
+      if (global.document.readyState === 'complete') {
+        resolve(global.document);
+      } else {
+        global.document.addEventListener('DOMContentLoaded', completed, false);
+        global.addEventListener('load', completed, false);
+      }
+      function completed() {
+        global.document.removeEventListener('DOMContentLoaded', completed, false);
+        global.removeEventListener('load', completed, false);
+        resolve(global.document);
+      }
+    });
+  }
+  function ensureLoader() {
+    if (!window.AureliaLoader) {
+      if (window.System && !window.System.isFake) {
+        return System.normalize('aurelia-bootstrapper').then(function(bootstrapperName) {
+          return System.normalize('aurelia-loader-default', bootstrapperName).then(function(loaderName) {
+            return System['import'](loaderName);
+          });
+        });
+      } else if (window.require) {
+        return new Promise(function(resolve, reject) {
+          require(['aurelia-loader-default'], resolve, reject);
+        });
+      }
+      throw new Error('No window.AureliaLoader is defined and there is neither a System API (ES6) or a Require API (AMD) available to load your app.');
+    }
+    return Promise.resolve();
+  }
+  function preparePlatform() {
+    return System.normalize('aurelia-bootstrapper').then(function(bootstrapperName) {
+      return System.normalize('aurelia-framework', bootstrapperName).then(function(frameworkName) {
+        System.map['aurelia-framework'] = frameworkName;
+        return System.normalize('aurelia-loader', frameworkName).then(function(loaderName) {
+          var toLoad = [];
+          toLoad.push(System.normalize('aurelia-dependency-injection', frameworkName).then(function(name) {
+            System.map['aurelia-dependency-injection'] = name;
+          }));
+          toLoad.push(System.normalize('aurelia-router', bootstrapperName).then(function(name) {
+            System.map['aurelia-router'] = name;
+          }));
+          toLoad.push(System.normalize('aurelia-logging-console', bootstrapperName).then(function(name) {
+            System.map['aurelia-logging-console'] = name;
+          }));
+          if (!('content' in document.createElement('template'))) {
+            logger.debug('loading the HTMLTemplateElement polyfill');
+            toLoad.push(System.normalize('aurelia-html-template-element', loaderName).then(function(name) {
+              return System['import'](name);
+            }));
+          }
+          return Promise.all(toLoad);
         });
       });
-    }
-  });
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.map", ["github:zloirock/core-js@0.8.4/modules/$.collection-strong", "github:zloirock/core-js@0.8.4/modules/$.collection"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var strong = require("github:zloirock/core-js@0.8.4/modules/$.collection-strong");
-  require("github:zloirock/core-js@0.8.4/modules/$.collection")('Map', {
-    get: function get(key) {
-      var entry = strong.getEntry(this, key);
-      return entry && entry.v;
-    },
-    set: function set(key, value) {
-      return strong.def(this, key === 0 ? 0 : key, value);
-    }
-  }, strong, true);
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.set", ["github:zloirock/core-js@0.8.4/modules/$.collection-strong", "github:zloirock/core-js@0.8.4/modules/$.collection"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var strong = require("github:zloirock/core-js@0.8.4/modules/$.collection-strong");
-  require("github:zloirock/core-js@0.8.4/modules/$.collection")('Set', {add: function add(value) {
-      return strong.def(this, value = value === 0 ? 0 : value, value);
-    }}, strong);
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.weak-map", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.collection-weak", "github:zloirock/core-js@0.8.4/modules/$.collection"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      weak = require("github:zloirock/core-js@0.8.4/modules/$.collection-weak"),
-      leakStore = weak.leakStore,
-      ID = weak.ID,
-      WEAK = weak.WEAK,
-      has = $.has,
-      isObject = $.isObject,
-      isFrozen = Object.isFrozen || $.core.Object.isFrozen,
-      tmp = {};
-  var WeakMap = require("github:zloirock/core-js@0.8.4/modules/$.collection")('WeakMap', {
-    get: function get(key) {
-      if (isObject(key)) {
-        if (isFrozen(key))
-          return leakStore(this).get(key);
-        if (has(key, WEAK))
-          return key[WEAK][this[ID]];
-      }
-    },
-    set: function set(key, value) {
-      return weak.def(this, key, value);
-    }
-  }, weak, true, true);
-  if ($.FW && new WeakMap().set((Object.freeze || Object)(tmp), 7).get(tmp) != 7) {
-    $.each.call(['delete', 'has', 'get', 'set'], function(key) {
-      var method = WeakMap.prototype[key];
-      WeakMap.prototype[key] = function(a, b) {
-        if (isObject(a) && isFrozen(a)) {
-          var result = leakStore(this)[key](a, b);
-          return key == 'set' ? this : result;
-        }
-        return method.call(this, a, b);
-      };
     });
   }
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.weak-set", ["github:zloirock/core-js@0.8.4/modules/$.collection-weak", "github:zloirock/core-js@0.8.4/modules/$.collection"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var weak = require("github:zloirock/core-js@0.8.4/modules/$.collection-weak");
-  require("github:zloirock/core-js@0.8.4/modules/$.collection")('WeakSet', {add: function add(value) {
-      return weak.def(this, value, true);
-    }}, weak, false, true);
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es6.reflect", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.set-proto", "github:zloirock/core-js@0.8.4/modules/$.iter", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.own-keys"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      setProto = require("github:zloirock/core-js@0.8.4/modules/$.set-proto"),
-      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
-      ITER = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('iter'),
-      step = $iter.step,
-      assert = require("github:zloirock/core-js@0.8.4/modules/$.assert"),
-      isObject = $.isObject,
-      getDesc = $.getDesc,
-      setDesc = $.setDesc,
-      getProto = $.getProto,
-      apply = Function.apply,
-      assertObject = assert.obj,
-      _isExtensible = Object.isExtensible || $.it;
-  function Enumerate(iterated) {
-    var keys = [],
-        key;
-    for (key in iterated)
-      keys.push(key);
-    $.set(this, ITER, {
-      o: iterated,
-      a: keys,
-      i: 0
-    });
+  function runningLocally() {
+    return window.location.protocol !== 'http' && window.location.protocol !== 'https';
   }
-  $iter.create(Enumerate, 'Object', function() {
-    var iter = this[ITER],
-        keys = iter.a,
-        key;
-    do {
-      if (iter.i >= keys.length)
-        return step(1);
-    } while (!((key = keys[iter.i++]) in iter.o));
-    return step(0, key);
-  });
-  function wrap(fn) {
-    return function(it) {
-      assertObject(it);
-      try {
-        fn.apply(undefined, arguments);
-        return true;
-      } catch (e) {
-        return false;
-      }
-    };
+  function handleApp(appHost) {
+    var configModuleId = appHost.getAttribute('aurelia-app');
+    return configModuleId ? aureliaLoader.config(appHost, configModuleId) : aureliaLoader.defaultConfig(appHost);
   }
-  function get(target, propertyKey) {
-    var receiver = arguments.length < 3 ? target : arguments[2],
-        desc = getDesc(assertObject(target), propertyKey),
-        proto;
-    if (desc)
-      return $.has(desc, 'value') ? desc.value : desc.get === undefined ? undefined : desc.get.call(receiver);
-    return isObject(proto = getProto(target)) ? get(proto, propertyKey, receiver) : undefined;
-  }
-  function set(target, propertyKey, V) {
-    var receiver = arguments.length < 4 ? target : arguments[3],
-        ownDesc = getDesc(assertObject(target), propertyKey),
-        existingDescriptor,
-        proto;
-    if (!ownDesc) {
-      if (isObject(proto = getProto(target))) {
-        return set(proto, propertyKey, V, receiver);
-      }
-      ownDesc = $.desc(0);
-    }
-    if ($.has(ownDesc, 'value')) {
-      if (ownDesc.writable === false || !isObject(receiver))
-        return false;
-      existingDescriptor = getDesc(receiver, propertyKey) || $.desc(0);
-      existingDescriptor.value = V;
-      setDesc(receiver, propertyKey, existingDescriptor);
-      return true;
-    }
-    return ownDesc.set === undefined ? false : (ownDesc.set.call(receiver, V), true);
-  }
-  var reflect = {
-    apply: require("github:zloirock/core-js@0.8.4/modules/$.ctx")(Function.call, apply, 3),
-    construct: function construct(target, argumentsList) {
-      var proto = assert.fn(arguments.length < 3 ? target : arguments[2]).prototype,
-          instance = $.create(isObject(proto) ? proto : Object.prototype),
-          result = apply.call(target, instance, argumentsList);
-      return isObject(result) ? result : instance;
-    },
-    defineProperty: wrap(setDesc),
-    deleteProperty: function deleteProperty(target, propertyKey) {
-      var desc = getDesc(assertObject(target), propertyKey);
-      return desc && !desc.configurable ? false : delete target[propertyKey];
-    },
-    enumerate: function enumerate(target) {
-      return new Enumerate(assertObject(target));
-    },
-    get: get,
-    getOwnPropertyDescriptor: function getOwnPropertyDescriptor(target, propertyKey) {
-      return getDesc(assertObject(target), propertyKey);
-    },
-    getPrototypeOf: function getPrototypeOf(target) {
-      return getProto(assertObject(target));
-    },
-    has: function has(target, propertyKey) {
-      return propertyKey in target;
-    },
-    isExtensible: function isExtensible(target) {
-      return !!_isExtensible(assertObject(target));
-    },
-    ownKeys: require("github:zloirock/core-js@0.8.4/modules/$.own-keys"),
-    preventExtensions: wrap(Object.preventExtensions || $.it),
-    set: set
-  };
-  if (setProto)
-    reflect.setPrototypeOf = function setPrototypeOf(target, proto) {
-      setProto.check(target, proto);
-      try {
-        setProto.set(target, proto);
-        return true;
-      } catch (e) {
-        return false;
-      }
-    };
-  $def($def.G, {Reflect: {}});
-  $def($def.S, 'Reflect', reflect);
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es7.array.includes", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.array-includes", "github:zloirock/core-js@0.8.4/modules/$.unscope"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  $def($def.P, 'Array', {includes: require("github:zloirock/core-js@0.8.4/modules/$.array-includes")(true)});
-  require("github:zloirock/core-js@0.8.4/modules/$.unscope")('includes');
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es7.string.at", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.string-at"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  $def($def.P, 'String', {at: require("github:zloirock/core-js@0.8.4/modules/$.string-at")(true)});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es7.regexp.escape", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.replacer"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  $def($def.S, 'RegExp', {escape: require("github:zloirock/core-js@0.8.4/modules/$.replacer")(/([\\\-[\]{}()*+?.,^$|])/g, '\\$1', true)});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es7.object.get-own-property-descriptors", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.own-keys"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      ownKeys = require("github:zloirock/core-js@0.8.4/modules/$.own-keys");
-  $def($def.S, 'Object', {getOwnPropertyDescriptors: function getOwnPropertyDescriptors(object) {
-      var O = $.toObject(object),
-          result = {};
-      $.each.call(ownKeys(O), function(key) {
-        $.setDesc(result, key, $.desc(0, $.getDesc(O, key)));
+  var aureliaLoader = {
+    config: function config(appHost, configModuleId) {
+      var loader = new window.AureliaLoader();
+      return loader.loadModule(configModuleId).then(function(m) {
+        var aurelia = new _aureliaFramework.Aurelia(loader);
+        aurelia.host = appHost;
+        return m.configure(aurelia);
       });
-      return result;
-    }});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es7.object.to-array", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def");
-  function createObjectToArray(isEntries) {
-    return function(object) {
-      var O = $.toObject(object),
-          keys = $.getKeys(O),
-          length = keys.length,
-          i = 0,
-          result = Array(length),
-          key;
-      if (isEntries)
-        while (length > i)
-          result[i] = [key = keys[i++], O[key]];
-      else
-        while (length > i)
-          result[i] = O[keys[i++]];
-      return result;
-    };
-  }
-  $def($def.S, 'Object', {
-    values: createObjectToArray(false),
-    entries: createObjectToArray(true)
-  });
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/es7.set.to-json", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      forOf = require("github:zloirock/core-js@0.8.4/modules/$.iter").forOf;
-  $def($def.P, 'Set', {toJSON: function() {
-      var arr = [];
-      forOf(this, false, arr.push, arr);
-      return arr;
-    }});
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/js.array.statics", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.ctx"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      $Array = $.core.Array || Array,
-      statics = {};
-  function setStatics(keys, length) {
-    $.each.call(keys.split(','), function(key) {
-      if (length == undefined && key in $Array)
-        statics[key] = $Array[key];
-      else if (key in [])
-        statics[key] = require("github:zloirock/core-js@0.8.4/modules/$.ctx")(Function.call, [][key], length);
-    });
-  }
-  setStatics('pop,reverse,shift,keys,values,entries', 1);
-  setStatics('indexOf,every,some,forEach,map,filter,find,findIndex,includes', 3);
-  setStatics('join,slice,concat,push,splice,unshift,sort,lastIndexOf,' + 'reduce,reduceRight,copyWithin,fill,turn');
-  $def($def.S, 'Array', statics);
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/web.timers", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.invoke", "github:zloirock/core-js@0.8.4/modules/$.partial"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      invoke = require("github:zloirock/core-js@0.8.4/modules/$.invoke"),
-      partial = require("github:zloirock/core-js@0.8.4/modules/$.partial"),
-      navigator = $.g.navigator,
-      MSIE = !!navigator && /MSIE .\./.test(navigator.userAgent);
-  function wrap(set) {
-    return MSIE ? function(fn, time) {
-      return set(invoke(partial, [].slice.call(arguments, 2), $.isFunction(fn) ? fn : Function(fn)), time);
-    } : set;
-  }
-  $def($def.G + $def.B + $def.F * MSIE, {
-    setTimeout: wrap($.g.setTimeout),
-    setInterval: wrap($.g.setInterval)
-  });
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/web.immediate", ["github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.task"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      $task = require("github:zloirock/core-js@0.8.4/modules/$.task");
-  $def($def.G + $def.B, {
-    setImmediate: $task.set,
-    clearImmediate: $task.clear
-  });
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/web.dom.iterable", ["github:zloirock/core-js@0.8.4/modules/es6.array.iterator", "github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.iter", "github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  require("github:zloirock/core-js@0.8.4/modules/es6.array.iterator");
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      Iterators = require("github:zloirock/core-js@0.8.4/modules/$.iter").Iterators,
-      ITERATOR = require("github:zloirock/core-js@0.8.4/modules/$.wks")('iterator'),
-      ArrayValues = Iterators.Array,
-      NodeList = $.g.NodeList;
-  if ($.FW && NodeList && !(ITERATOR in NodeList.prototype)) {
-    $.hide(NodeList.prototype, ITERATOR, ArrayValues);
-  }
-  Iterators.NodeList = ArrayValues;
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.ctx", ["github:zloirock/core-js@0.8.4/modules/$.assert"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var assertFunction = require("github:zloirock/core-js@0.8.4/modules/$.assert").fn;
-  module.exports = function(fn, that, length) {
-    assertFunction(fn);
-    if (~length && that === undefined)
-      return fn;
-    switch (length) {
-      case 1:
-        return function(a) {
-          return fn.call(that, a);
-        };
-      case 2:
-        return function(a, b) {
-          return fn.call(that, a, b);
-        };
-      case 3:
-        return function(a, b, c) {
-          return fn.call(that, a, b, c);
-        };
-    }
-    return function() {
-      return fn.apply(that, arguments);
-    };
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.def", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      global = $.g,
-      core = $.core,
-      isFunction = $.isFunction;
-  function ctx(fn, that) {
-    return function() {
-      return fn.apply(that, arguments);
-    };
-  }
-  global.core = core;
-  $def.F = 1;
-  $def.G = 2;
-  $def.S = 4;
-  $def.P = 8;
-  $def.B = 16;
-  $def.W = 32;
-  function $def(type, name, source) {
-    var key,
-        own,
-        out,
-        exp,
-        isGlobal = type & $def.G,
-        target = isGlobal ? global : type & $def.S ? global[name] : (global[name] || {}).prototype,
-        exports = isGlobal ? core : core[name] || (core[name] = {});
-    if (isGlobal)
-      source = name;
-    for (key in source) {
-      own = !(type & $def.F) && target && key in target;
-      out = (own ? target : source)[key];
-      if (type & $def.B && own)
-        exp = ctx(out, global);
-      else
-        exp = type & $def.P && isFunction(out) ? ctx(Function.call, out) : out;
-      if (target && !own) {
-        if (isGlobal)
-          target[key] = out;
-        else
-          delete target[key] && $.hide(target, key, out);
-      }
-      if (exports[key] != out)
-        $.hide(exports, key, exp);
-    }
-  }
-  module.exports = $def;
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.assign", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$");
-  module.exports = Object.assign || function assign(target, source) {
-    var T = Object($.assertDefined(target)),
-        l = arguments.length,
-        i = 1;
-    while (l > i) {
-      var S = $.ES5Object(arguments[i++]),
-          keys = $.getKeys(S),
-          length = keys.length,
-          j = 0,
-          key;
-      while (length > j)
-        T[key = keys[j++]] = S[key];
-    }
-    return T;
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.keyof", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$");
-  module.exports = function(object, el) {
-    var O = $.toObject(object),
-        keys = $.getKeys(O),
-        length = keys.length,
-        index = 0,
-        key;
-    while (length > index)
-      if (O[key = keys[index++]] === el)
-        return key;
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.uid", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var sid = 0;
-  function uid(key) {
-    return 'Symbol(' + key + ')_' + (++sid + Math.random()).toString(36);
-  }
-  uid.safe = require("github:zloirock/core-js@0.8.4/modules/$").g.Symbol || uid;
-  module.exports = uid;
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.assert", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$");
-  function assert(condition, msg1, msg2) {
-    if (!condition)
-      throw TypeError(msg2 ? msg1 + msg2 : msg1);
-  }
-  assert.def = $.assertDefined;
-  assert.fn = function(it) {
-    if (!$.isFunction(it))
-      throw TypeError(it + ' is not a function!');
-    return it;
-  };
-  assert.obj = function(it) {
-    if (!$.isObject(it))
-      throw TypeError(it + ' is not an object!');
-    return it;
-  };
-  assert.inst = function(it, Constructor, name) {
-    if (!(it instanceof Constructor))
-      throw TypeError(name + ": use the 'new' operator!");
-    return it;
-  };
-  module.exports = assert;
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.iter", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
-      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      assertObject = require("github:zloirock/core-js@0.8.4/modules/$.assert").obj,
-      SYMBOL_ITERATOR = require("github:zloirock/core-js@0.8.4/modules/$.wks")('iterator'),
-      FF_ITERATOR = '@@iterator',
-      Iterators = {},
-      IteratorPrototype = {};
-  var BUGGY = 'keys' in [] && !('next' in [].keys());
-  setIterator(IteratorPrototype, $.that);
-  function setIterator(O, value) {
-    $.hide(O, SYMBOL_ITERATOR, value);
-    if (FF_ITERATOR in [])
-      $.hide(O, FF_ITERATOR, value);
-  }
-  function defineIterator(Constructor, NAME, value, DEFAULT) {
-    var proto = Constructor.prototype,
-        iter = proto[SYMBOL_ITERATOR] || proto[FF_ITERATOR] || DEFAULT && proto[DEFAULT] || value;
-    if ($.FW)
-      setIterator(proto, iter);
-    if (iter !== value) {
-      var iterProto = $.getProto(iter.call(new Constructor));
-      cof.set(iterProto, NAME + ' Iterator', true);
-      if ($.FW)
-        $.has(proto, FF_ITERATOR) && setIterator(iterProto, $.that);
-    }
-    Iterators[NAME] = iter;
-    Iterators[NAME + ' Iterator'] = $.that;
-    return iter;
-  }
-  function getIterator(it) {
-    var Symbol = $.g.Symbol,
-        ext = it[Symbol && Symbol.iterator || FF_ITERATOR],
-        getIter = ext || it[SYMBOL_ITERATOR] || Iterators[cof.classof(it)];
-    return assertObject(getIter.call(it));
-  }
-  function closeIterator(iterator) {
-    var ret = iterator['return'];
-    if (ret !== undefined)
-      assertObject(ret.call(iterator));
-  }
-  function stepCall(iterator, fn, value, entries) {
-    try {
-      return entries ? fn(assertObject(value)[0], value[1]) : fn(value);
-    } catch (e) {
-      closeIterator(iterator);
-      throw e;
-    }
-  }
-  var $iter = module.exports = {
-    BUGGY: BUGGY,
-    Iterators: Iterators,
-    prototype: IteratorPrototype,
-    step: function(done, value) {
-      return {
-        value: value,
-        done: !!done
-      };
     },
-    stepCall: stepCall,
-    close: closeIterator,
-    is: function(it) {
-      var O = Object(it),
-          Symbol = $.g.Symbol,
-          SYM = Symbol && Symbol.iterator || FF_ITERATOR;
-      return SYM in O || SYMBOL_ITERATOR in O || $.has(Iterators, cof.classof(O));
-    },
-    get: getIterator,
-    set: setIterator,
-    create: function(Constructor, NAME, next, proto) {
-      Constructor.prototype = $.create(proto || $iter.prototype, {next: $.desc(1, next)});
-      cof.set(Constructor, NAME + ' Iterator');
-    },
-    define: defineIterator,
-    std: function(Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCE) {
-      function createIter(kind) {
-        return function() {
-          return new Constructor(this, kind);
-        };
+    defaultConfig: function defaultConfig(appHost) {
+      var aurelia = new _aureliaFramework.Aurelia();
+      aurelia.host = appHost;
+      if (runningLocally()) {
+        aurelia.use.developmentLogging();
       }
-      $iter.create(Constructor, NAME, next);
-      var entries = createIter('key+value'),
-          values = createIter('value'),
-          proto = Base.prototype,
-          methods,
-          key;
-      if (DEFAULT == 'value')
-        values = defineIterator(Base, NAME, values, 'values');
-      else
-        entries = defineIterator(Base, NAME, entries, 'entries');
-      if (DEFAULT) {
-        methods = {
-          entries: entries,
-          keys: IS_SET ? values : createIter('key'),
-          values: values
-        };
-        $def($def.P + $def.F * BUGGY, NAME, methods);
-        if (FORCE)
-          for (key in methods) {
-            if (!(key in proto))
-              $.hide(proto, key, methods[key]);
-          }
-      }
-    },
-    forOf: function(iterable, entries, fn, that) {
-      var iterator = getIterator(iterable),
-          f = ctx(fn, that, entries ? 2 : 1),
-          step;
-      while (!(step = iterator.next()).done) {
-        if (stepCall(iterator, f, step.value, entries) === false) {
-          return closeIterator(iterator);
-        }
-      }
+      aurelia.use.standardConfiguration();
+      return aurelia.start().then(function(a) {
+        return a.setRoot();
+      });
     }
   };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.partial", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.invoke", "github:zloirock/core-js@0.8.4/modules/$.assert"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      invoke = require("github:zloirock/core-js@0.8.4/modules/$.invoke"),
-      assertFunction = require("github:zloirock/core-js@0.8.4/modules/$.assert").fn;
-  module.exports = function() {
-    var fn = assertFunction(this),
-        length = arguments.length,
-        pargs = Array(length),
-        i = 0,
-        _ = $.path._,
-        holder = false;
-    while (length > i)
-      if ((pargs[i] = arguments[i++]) === _)
-        holder = true;
-    return function() {
-      var that = this,
-          _length = arguments.length,
-          j = 0,
-          k = 0,
-          args;
-      if (!holder && !_length)
-        return invoke(fn, pargs, that);
-      args = pargs.slice();
-      if (holder)
-        for (; length > j; j++)
-          if (args[j] === _)
-            args[j] = arguments[k++];
-      while (_length > k)
-        args.push(arguments[k++]);
-      return invoke(fn, args, that);
-    };
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.invoke", [], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  module.exports = function(fn, args, that) {
-    var un = that === undefined;
-    switch (args.length) {
-      case 0:
-        return un ? fn() : fn.call(that);
-      case 1:
-        return un ? fn(args[0]) : fn.call(that, args[0]);
-      case 2:
-        return un ? fn(args[0], args[1]) : fn.call(that, args[0], args[1]);
-      case 3:
-        return un ? fn(args[0], args[1], args[2]) : fn.call(that, args[0], args[1], args[2]);
-      case 4:
-        return un ? fn(args[0], args[1], args[2], args[3]) : fn.call(that, args[0], args[1], args[2], args[3]);
-      case 5:
-        return un ? fn(args[0], args[1], args[2], args[3], args[4]) : fn.call(that, args[0], args[1], args[2], args[3], args[4]);
-    }
-    return fn.apply(that, args);
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.cof", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      TAG = require("github:zloirock/core-js@0.8.4/modules/$.wks")('toStringTag'),
-      toString = {}.toString;
-  function cof(it) {
-    return toString.call(it).slice(8, -1);
-  }
-  cof.classof = function(it) {
-    var O,
-        T;
-    return it == undefined ? it === undefined ? 'Undefined' : 'Null' : typeof(T = (O = Object(it))[TAG]) == 'string' ? T : cof(O);
-  };
-  cof.set = function(it, tag, stat) {
-    if (it && !$.has(it = stat ? it : it.prototype, TAG))
-      $.hide(it, TAG, tag);
-  };
-  module.exports = cof;
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.own-keys", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.assert"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      assertObject = require("github:zloirock/core-js@0.8.4/modules/$.assert").obj;
-  module.exports = function ownKeys(it) {
-    assertObject(it);
-    return $.getSymbols ? $.getNames(it).concat($.getSymbols(it)) : $.getNames(it);
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.unscope", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      UNSCOPABLES = require("github:zloirock/core-js@0.8.4/modules/$.wks")('unscopables');
-  if ($.FW && !(UNSCOPABLES in []))
-    $.hide(Array.prototype, UNSCOPABLES, {});
-  module.exports = function(key) {
-    if ($.FW)
-      [][UNSCOPABLES][key] = true;
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.replacer", [], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  module.exports = function(regExp, replace, isStatic) {
-    var replacer = replace === Object(replace) ? function(part) {
-      return replace[part];
-    } : replace;
-    return function(it) {
-      return String(isStatic ? it : this).replace(regExp, replacer);
-    };
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.fw", [], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  module.exports = function($) {
-    $.FW = true;
-    $.path = $.g;
-    return $;
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.array-includes", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$");
-  module.exports = function(IS_INCLUDES) {
-    return function(el) {
-      var O = $.toObject(this),
-          length = $.toLength(O.length),
-          index = $.toIndex(arguments[1], length),
-          value;
-      if (IS_INCLUDES && el != el)
-        while (length > index) {
-          value = O[index++];
-          if (value != value)
-            return true;
-        }
-      else
-        for (; length > index; index++)
-          if (IS_INCLUDES || index in O) {
-            if (O[index] === el)
-              return IS_INCLUDES || index;
-          }
-      return !IS_INCLUDES && -1;
-    };
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.wks", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.uid"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var global = require("github:zloirock/core-js@0.8.4/modules/$").g,
-      store = {};
-  module.exports = function(name) {
-    return store[name] || (store[name] = global.Symbol && global.Symbol[name] || require("github:zloirock/core-js@0.8.4/modules/$.uid").safe('Symbol.' + name));
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.array-methods", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx");
-  module.exports = function(TYPE) {
-    var IS_MAP = TYPE == 1,
-        IS_FILTER = TYPE == 2,
-        IS_SOME = TYPE == 3,
-        IS_EVERY = TYPE == 4,
-        IS_FIND_INDEX = TYPE == 6,
-        NO_HOLES = TYPE == 5 || IS_FIND_INDEX;
-    return function(callbackfn) {
-      var O = Object($.assertDefined(this)),
-          self = $.ES5Object(O),
-          f = ctx(callbackfn, arguments[1], 3),
-          length = $.toLength(self.length),
-          index = 0,
-          result = IS_MAP ? Array(length) : IS_FILTER ? [] : undefined,
-          val,
-          res;
-      for (; length > index; index++)
-        if (NO_HOLES || index in self) {
-          val = self[index];
-          res = f(val, index, O);
-          if (TYPE) {
-            if (IS_MAP)
-              result[index] = res;
-            else if (res)
-              switch (TYPE) {
-                case 3:
-                  return true;
-                case 5:
-                  return val;
-                case 6:
-                  return index;
-                case 2:
-                  result.push(val);
-              }
-            else if (IS_EVERY)
-              return false;
-          }
-        }
-      return IS_FIND_INDEX ? -1 : IS_SOME || IS_EVERY ? IS_EVERY : result;
-    };
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.set-proto", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.ctx"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      assert = require("github:zloirock/core-js@0.8.4/modules/$.assert");
-  function check(O, proto) {
-    assert.obj(O);
-    assert(proto === null || $.isObject(proto), proto, ": can't set as prototype!");
-  }
-  module.exports = {
-    set: Object.setPrototypeOf || ('__proto__' in {} ? function(buggy, set) {
-      try {
-        set = require("github:zloirock/core-js@0.8.4/modules/$.ctx")(Function.call, $.getDesc(Object.prototype, '__proto__').set, 2);
-        set({}, []);
-      } catch (e) {
-        buggy = true;
-      }
-      return function setPrototypeOf(O, proto) {
-        check(O, proto);
-        if (buggy)
-          O.__proto__ = proto;
-        else
-          set(O, proto);
-        return O;
-      };
-    }() : undefined),
-    check: check
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.iter-detect", ["github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var SYMBOL_ITERATOR = require("github:zloirock/core-js@0.8.4/modules/$.wks")('iterator'),
-      SAFE_CLOSING = false;
-  try {
-    var riter = [7][SYMBOL_ITERATOR]();
-    riter['return'] = function() {
-      SAFE_CLOSING = true;
-    };
-    Array.from(riter, function() {
-      throw 2;
-    });
-  } catch (e) {}
-  module.exports = function(exec) {
-    if (!SAFE_CLOSING)
-      return false;
-    var safe = false;
-    try {
-      var arr = [7],
-          iter = arr[SYMBOL_ITERATOR]();
-      iter.next = function() {
-        safe = true;
-      };
-      arr[SYMBOL_ITERATOR] = function() {
-        return iter;
-      };
-      exec(arr);
-    } catch (e) {}
-    return safe;
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.task", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.invoke"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
-      cof = require("github:zloirock/core-js@0.8.4/modules/$.cof"),
-      invoke = require("github:zloirock/core-js@0.8.4/modules/$.invoke"),
-      global = $.g,
-      isFunction = $.isFunction,
-      html = $.html,
-      document = global.document,
-      process = global.process,
-      setTask = global.setImmediate,
-      clearTask = global.clearImmediate,
-      postMessage = global.postMessage,
-      addEventListener = global.addEventListener,
-      MessageChannel = global.MessageChannel,
-      counter = 0,
-      queue = {},
-      ONREADYSTATECHANGE = 'onreadystatechange',
-      defer,
-      channel,
-      port;
   function run() {
-    var id = +this;
-    if ($.has(queue, id)) {
-      var fn = queue[id];
-      delete queue[id];
-      fn();
-    }
-  }
-  function listner(event) {
-    run.call(event.data);
-  }
-  if (!isFunction(setTask) || !isFunction(clearTask)) {
-    setTask = function(fn) {
-      var args = [],
-          i = 1;
-      while (arguments.length > i)
-        args.push(arguments[i++]);
-      queue[++counter] = function() {
-        invoke(isFunction(fn) ? fn : Function(fn), args);
-      };
-      defer(counter);
-      return counter;
-    };
-    clearTask = function(id) {
-      delete queue[id];
-    };
-    if (cof(process) == 'process') {
-      defer = function(id) {
-        process.nextTick(ctx(run, id, 1));
-      };
-    } else if (addEventListener && isFunction(postMessage) && !global.importScripts) {
-      defer = function(id) {
-        postMessage(id, '*');
-      };
-      addEventListener('message', listner, false);
-    } else if (isFunction(MessageChannel)) {
-      channel = new MessageChannel;
-      port = channel.port2;
-      channel.port1.onmessage = listner;
-      defer = ctx(port.postMessage, port, 1);
-    } else if (document && ONREADYSTATECHANGE in document.createElement('script')) {
-      defer = function(id) {
-        html.appendChild(document.createElement('script'))[ONREADYSTATECHANGE] = function() {
-          html.removeChild(this);
-          run.call(id);
-        };
-      };
-    } else {
-      defer = function(id) {
-        setTimeout(ctx(run, id, 1), 0);
-      };
-    }
-  }
-  module.exports = {
-    set: setTask,
-    clear: clearTask
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.string-at", ["github:zloirock/core-js@0.8.4/modules/$"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$");
-  module.exports = function(TO_STRING) {
-    return function(pos) {
-      var s = String($.assertDefined(this)),
-          i = $.toInteger(pos),
-          l = s.length,
-          a,
-          b;
-      if (i < 0 || i >= l)
-        return TO_STRING ? '' : undefined;
-      a = s.charCodeAt(i);
-      return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff ? TO_STRING ? s.charAt(i) : a : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
-    };
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.species", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.wks"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$");
-  module.exports = function(C) {
-    if ($.DESC && $.FW)
-      $.setDesc(C, require("github:zloirock/core-js@0.8.4/modules/$.wks")('species'), {
-        configurable: true,
-        get: $.that
-      });
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.collection-strong", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.ctx", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.iter"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      ctx = require("github:zloirock/core-js@0.8.4/modules/$.ctx"),
-      safe = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe,
-      assert = require("github:zloirock/core-js@0.8.4/modules/$.assert"),
-      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
-      has = $.has,
-      set = $.set,
-      isObject = $.isObject,
-      hide = $.hide,
-      step = $iter.step,
-      isFrozen = Object.isFrozen || $.core.Object.isFrozen,
-      ID = safe('id'),
-      O1 = safe('O1'),
-      LAST = safe('last'),
-      FIRST = safe('first'),
-      ITER = safe('iter'),
-      SIZE = $.DESC ? safe('size') : 'size',
-      id = 0;
-  function fastKey(it, create) {
-    if (!isObject(it))
-      return (typeof it == 'string' ? 'S' : 'P') + it;
-    if (isFrozen(it))
-      return 'F';
-    if (!has(it, ID)) {
-      if (!create)
-        return 'E';
-      hide(it, ID, ++id);
-    }
-    return 'O' + it[ID];
-  }
-  function getEntry(that, key) {
-    var index = fastKey(key),
-        entry;
-    if (index != 'F')
-      return that[O1][index];
-    for (entry = that[FIRST]; entry; entry = entry.n) {
-      if (entry.k == key)
-        return entry;
-    }
-  }
-  module.exports = {
-    getConstructor: function(NAME, IS_MAP, ADDER) {
-      function C(iterable) {
-        var that = assert.inst(this, C, NAME);
-        set(that, O1, $.create(null));
-        set(that, SIZE, 0);
-        set(that, LAST, undefined);
-        set(that, FIRST, undefined);
-        if (iterable != undefined)
-          $iter.forOf(iterable, IS_MAP, that[ADDER], that);
-      }
-      $.mix(C.prototype, {
-        clear: function clear() {
-          for (var that = this,
-              data = that[O1],
-              entry = that[FIRST]; entry; entry = entry.n) {
-            entry.r = true;
-            if (entry.p)
-              entry.p = entry.p.n = undefined;
-            delete data[entry.i];
+    return ready(window).then(function(doc) {
+      var appHost = doc.querySelectorAll('[aurelia-app]');
+      return ensureLoader().then(function() {
+        return preparePlatform().then(function() {
+          for (var i = 0,
+              ii = appHost.length; i < ii; ++i) {
+            handleApp(appHost[i]);
           }
-          that[FIRST] = that[LAST] = undefined;
-          that[SIZE] = 0;
-        },
-        'delete': function(key) {
-          var that = this,
-              entry = getEntry(that, key);
-          if (entry) {
-            var next = entry.n,
-                prev = entry.p;
-            delete that[O1][entry.i];
-            entry.r = true;
-            if (prev)
-              prev.n = next;
-            if (next)
-              next.p = prev;
-            if (that[FIRST] == entry)
-              that[FIRST] = next;
-            if (that[LAST] == entry)
-              that[LAST] = prev;
-            that[SIZE]--;
+          isReady = true;
+          for (var i = 0,
+              ii = readyQueue.length; i < ii; ++i) {
+            readyQueue[i]();
           }
-          return !!entry;
-        },
-        forEach: function forEach(callbackfn) {
-          var f = ctx(callbackfn, arguments[1], 3),
-              entry;
-          while (entry = entry ? entry.n : this[FIRST]) {
-            f(entry.v, entry.k, this);
-            while (entry && entry.r)
-              entry = entry.p;
-          }
-        },
-        has: function has(key) {
-          return !!getEntry(this, key);
-        }
-      });
-      if ($.DESC)
-        $.setDesc(C.prototype, 'size', {get: function() {
-            return assert.def(this[SIZE]);
-          }});
-      return C;
-    },
-    def: function(that, key, value) {
-      var entry = getEntry(that, key),
-          prev,
-          index;
-      if (entry) {
-        entry.v = value;
-      } else {
-        that[LAST] = entry = {
-          i: index = fastKey(key, true),
-          k: key,
-          v: value,
-          p: prev = that[LAST],
-          n: undefined,
-          r: false
-        };
-        if (!that[FIRST])
-          that[FIRST] = entry;
-        if (prev)
-          prev.n = entry;
-        that[SIZE]++;
-        if (index != 'F')
-          that[O1][index] = entry;
-      }
-      return that;
-    },
-    getEntry: getEntry,
-    getIterConstructor: function() {
-      return function(iterated, kind) {
-        set(this, ITER, {
-          o: iterated,
-          k: kind
+          readyQueue = [];
         });
-      };
-    },
-    next: function() {
-      var iter = this[ITER],
-          kind = iter.k,
-          entry = iter.l;
-      while (entry && entry.r)
-        entry = entry.p;
-      if (!iter.o || !(iter.l = entry = entry ? entry.n : iter.o[FIRST])) {
-        iter.o = undefined;
-        return step(1);
-      }
-      if (kind == 'key')
-        return step(0, entry.k);
-      if (kind == 'value')
-        return step(0, entry.v);
-      return step(0, [entry.k, entry.v]);
-    }
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.collection", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.def", "github:zloirock/core-js@0.8.4/modules/$.iter", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.iter-detect", "github:zloirock/core-js@0.8.4/modules/$.cof", "github:zloirock/core-js@0.8.4/modules/$.species"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      $def = require("github:zloirock/core-js@0.8.4/modules/$.def"),
-      $iter = require("github:zloirock/core-js@0.8.4/modules/$.iter"),
-      assertInstance = require("github:zloirock/core-js@0.8.4/modules/$.assert").inst;
-  module.exports = function(NAME, methods, common, IS_MAP, isWeak) {
-    var Base = $.g[NAME],
-        C = Base,
-        ADDER = IS_MAP ? 'set' : 'add',
-        proto = C && C.prototype,
-        O = {};
-    function fixMethod(KEY, CHAIN) {
-      var method = proto[KEY];
-      if ($.FW)
-        proto[KEY] = function(a, b) {
-          var result = method.call(this, a === 0 ? 0 : a, b);
-          return CHAIN ? this : result;
-        };
-    }
-    if (!$.isFunction(C) || !(isWeak || !$iter.BUGGY && proto.forEach && proto.entries)) {
-      C = common.getConstructor(NAME, IS_MAP, ADDER);
-      $.mix(C.prototype, methods);
-    } else {
-      var inst = new C,
-          chain = inst[ADDER](isWeak ? {} : -0, 1),
-          buggyZero;
-      if (!require("github:zloirock/core-js@0.8.4/modules/$.iter-detect")(function(iter) {
-        new C(iter);
-      })) {
-        C = function(iterable) {
-          assertInstance(this, C, NAME);
-          var that = new Base;
-          if (iterable != undefined)
-            $iter.forOf(iterable, IS_MAP, that[ADDER], that);
-          return that;
-        };
-        C.prototype = proto;
-        if ($.FW)
-          proto.constructor = C;
-      }
-      isWeak || inst.forEach(function(val, key) {
-        buggyZero = 1 / key === -Infinity;
       });
-      if (buggyZero) {
-        fixMethod('delete');
-        fixMethod('has');
-        IS_MAP && fixMethod('get');
-      }
-      if (buggyZero || chain !== inst)
-        fixMethod(ADDER, true);
-    }
-    require("github:zloirock/core-js@0.8.4/modules/$.cof").set(C, NAME);
-    require("github:zloirock/core-js@0.8.4/modules/$.species")(C);
-    O[NAME] = C;
-    $def($def.G + $def.W + $def.F * (C != Base), O);
-    if (!isWeak)
-      $iter.std(C, NAME, common.getIterConstructor(), common.next, IS_MAP ? 'key+value' : 'value', !IS_MAP, true);
-    return C;
-  };
-  global.define = __define;
-  return module.exports;
-});
-
-System.registerDynamic("github:zloirock/core-js@0.8.4/modules/$.collection-weak", ["github:zloirock/core-js@0.8.4/modules/$", "github:zloirock/core-js@0.8.4/modules/$.uid", "github:zloirock/core-js@0.8.4/modules/$.assert", "github:zloirock/core-js@0.8.4/modules/$.iter", "github:zloirock/core-js@0.8.4/modules/$.array-methods"], true, function(require, exports, module) {
-  ;
-  var global = this,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var $ = require("github:zloirock/core-js@0.8.4/modules/$"),
-      safe = require("github:zloirock/core-js@0.8.4/modules/$.uid").safe,
-      assert = require("github:zloirock/core-js@0.8.4/modules/$.assert"),
-      forOf = require("github:zloirock/core-js@0.8.4/modules/$.iter").forOf,
-      _has = $.has,
-      isObject = $.isObject,
-      hide = $.hide,
-      isFrozen = Object.isFrozen || $.core.Object.isFrozen,
-      id = 0,
-      ID = safe('id'),
-      WEAK = safe('weak'),
-      LEAK = safe('leak'),
-      method = require("github:zloirock/core-js@0.8.4/modules/$.array-methods"),
-      find = method(5),
-      findIndex = method(6);
-  function findFrozen(store, key) {
-    return find.call(store.array, function(it) {
-      return it[0] === key;
     });
   }
-  function leakStore(that) {
-    return that[LEAK] || hide(that, LEAK, {
-      array: [],
-      get: function(key) {
-        var entry = findFrozen(this, key);
-        if (entry)
-          return entry[1];
-      },
-      has: function(key) {
-        return !!findFrozen(this, key);
-      },
-      set: function(key, value) {
-        var entry = findFrozen(this, key);
-        if (entry)
-          entry[1] = value;
-        else
-          this.array.push([key, value]);
-      },
-      'delete': function(key) {
-        var index = findIndex.call(this.array, function(it) {
-          return it[0] === key;
-        });
-        if (~index)
-          this.array.splice(index, 1);
-        return !!~index;
-      }
-    })[LEAK];
-  }
-  module.exports = {
-    getConstructor: function(NAME, IS_MAP, ADDER) {
-      function C(iterable) {
-        $.set(assert.inst(this, C, NAME), ID, id++);
-        if (iterable != undefined)
-          forOf(iterable, IS_MAP, this[ADDER], this);
-      }
-      $.mix(C.prototype, {
-        'delete': function(key) {
-          if (!isObject(key))
-            return false;
-          if (isFrozen(key))
-            return leakStore(this)['delete'](key);
-          return _has(key, WEAK) && _has(key[WEAK], this[ID]) && delete key[WEAK][this[ID]];
-        },
-        has: function has(key) {
-          if (!isObject(key))
-            return false;
-          if (isFrozen(key))
-            return leakStore(this).has(key);
-          return _has(key, WEAK) && _has(key[WEAK], this[ID]);
-        }
-      });
-      return C;
-    },
-    def: function(that, key, value) {
-      if (isFrozen(assert.obj(key))) {
-        leakStore(that).set(key, value);
-      } else {
-        _has(key, WEAK) || hide(key, WEAK, {});
-        key[WEAK][that[ID]] = value;
-      }
-      return that;
-    },
-    leakStore: leakStore,
-    WEAK: WEAK,
-    ID: ID
-  };
-  global.define = __define;
-  return module.exports;
+  run();
 });
 
-//# sourceMappingURL=aurelia.js.map
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/framework@0.16.0", ["github:aurelia/framework@0.16.0/aurelia-framework"], function(main) {
+  return main;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/framework@0.16.0/aurelia-framework", ["exports", "npm:core-js@0.9.18", "github:aurelia/logging@0.7.0", "github:aurelia/templating@0.15.3", "github:aurelia/path@0.9.0", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/loader@0.9.0", "github:aurelia/binding@0.9.1", "github:aurelia/metadata@0.8.0", "github:aurelia/task-queue@0.7.0"], function(exports, _coreJs, _aureliaLogging, _aureliaTemplating, _aureliaPath, _aureliaDependencyInjection, _aureliaLoader, _aureliaBinding, _aureliaMetadata, _aureliaTaskQueue) {
+  'use strict';
+  exports.__esModule = true;
+  function _interopExportWildcard(obj, defaults) {
+    var newObj = defaults({}, obj);
+    delete newObj['default'];
+    return newObj;
+  }
+  function _defaults(obj, defaults) {
+    var keys = Object.getOwnPropertyNames(defaults);
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      var value = Object.getOwnPropertyDescriptor(defaults, key);
+      if (value && value.configurable && obj[key] === undefined) {
+        Object.defineProperty(obj, key, value);
+      }
+    }
+    return obj;
+  }
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var logger = _aureliaLogging.getLogger('aurelia');
+  function runTasks(config, tasks) {
+    var current = undefined;
+    var next = function next() {
+      if (current = tasks.shift()) {
+        return Promise.resolve(current(config)).then(next);
+      }
+      return Promise.resolve();
+    };
+    return next();
+  }
+  function loadPlugin(config, loader, info) {
+    logger.debug('Loading plugin ' + info.moduleId + '.');
+    config.resourcesRelativeTo = info.resourcesRelativeTo;
+    return loader.loadModule(info.moduleId).then(function(m) {
+      if ('configure' in m) {
+        return Promise.resolve(m.configure(config, info.config || {})).then(function() {
+          config.resourcesRelativeTo = null;
+          logger.debug('Configured plugin ' + info.moduleId + '.');
+        });
+      }
+      config.resourcesRelativeTo = null;
+      logger.debug('Loaded plugin ' + info.moduleId + '.');
+    });
+  }
+  function loadResources(container, resourcesToLoad, appResources) {
+    var viewEngine = container.get(_aureliaTemplating.ViewEngine);
+    var importIds = Object.keys(resourcesToLoad);
+    var names = new Array(importIds.length);
+    for (var i = 0,
+        ii = importIds.length; i < ii; ++i) {
+      names[i] = resourcesToLoad[importIds[i]];
+    }
+    return viewEngine.importViewResources(importIds, names, appResources);
+  }
+  function assertProcessed(plugins) {
+    if (plugins.processed) {
+      throw new Error('This config instance has already been applied. To load more plugins or global resources, create a new FrameworkConfiguration instance.');
+    }
+  }
+  var FrameworkConfiguration = (function() {
+    function FrameworkConfiguration(aurelia) {
+      var _this = this;
+      _classCallCheck(this, FrameworkConfiguration);
+      this.aurelia = aurelia;
+      this.container = aurelia.container;
+      this.info = [];
+      this.processed = false;
+      this.preTasks = [];
+      this.postTasks = [];
+      this.resourcesToLoad = {};
+      this.preTask(function() {
+        return System.normalize('aurelia-bootstrapper').then(function(bootstrapperName) {
+          return _this.bootstrapperName = bootstrapperName;
+        });
+      });
+      this.postTask(function() {
+        return loadResources(aurelia.container, _this.resourcesToLoad, aurelia.resources);
+      });
+    }
+    FrameworkConfiguration.prototype.instance = function instance(type, _instance) {
+      this.container.registerInstance(type, _instance);
+      return this;
+    };
+    FrameworkConfiguration.prototype.singleton = function singleton(type, implementation) {
+      this.container.registerSingleton(type, implementation);
+      return this;
+    };
+    FrameworkConfiguration.prototype.transient = function transient(type, implementation) {
+      this.container.registerTransient(type, implementation);
+      return this;
+    };
+    FrameworkConfiguration.prototype.preTask = function preTask(task) {
+      assertProcessed(this);
+      this.preTasks.push(task);
+      return this;
+    };
+    FrameworkConfiguration.prototype.postTask = function postTask(task) {
+      assertProcessed(this);
+      this.postTasks.push(task);
+      return this;
+    };
+    FrameworkConfiguration.prototype.feature = function feature(plugin, config) {
+      plugin = plugin.endsWith('.js') || plugin.endsWith('.ts') ? plugin.substring(0, plugin.length - 3) : plugin;
+      return this.plugin({
+        moduleId: plugin + '/index',
+        resourcesRelativeTo: plugin,
+        config: config || {}
+      });
+    };
+    FrameworkConfiguration.prototype.globalResources = function globalResources(resources) {
+      assertProcessed(this);
+      var toAdd = Array.isArray(resources) ? resources : arguments;
+      var resource = undefined;
+      var path = undefined;
+      var resourcesRelativeTo = this.resourcesRelativeTo || '';
+      for (var i = 0,
+          ii = toAdd.length; i < ii; ++i) {
+        resource = toAdd[i];
+        if (typeof resource !== 'string') {
+          throw new Error('Invalid resource path [' + resource + ']. Resources must be specified as relative module IDs.');
+        }
+        path = _aureliaPath.join(resourcesRelativeTo, resource);
+        this.resourcesToLoad[path] = this.resourcesToLoad[path];
+      }
+      return this;
+    };
+    FrameworkConfiguration.prototype.globalName = function globalName(resourcePath, newName) {
+      assertProcessed(this);
+      this.resourcesToLoad[resourcePath] = newName;
+      return this;
+    };
+    FrameworkConfiguration.prototype.plugin = function plugin(_plugin, config) {
+      assertProcessed(this);
+      if (typeof _plugin === 'string') {
+        _plugin = _plugin.endsWith('.js') || _plugin.endsWith('.ts') ? _plugin.substring(0, _plugin.length - 3) : _plugin;
+        return this.plugin({
+          moduleId: _plugin,
+          resourcesRelativeTo: _plugin,
+          config: config || {}
+        });
+      }
+      this.info.push(_plugin);
+      return this;
+    };
+    FrameworkConfiguration.prototype._addNormalizedPlugin = function _addNormalizedPlugin(name, config) {
+      var _this2 = this;
+      var plugin = {
+        moduleId: name,
+        resourcesRelativeTo: name,
+        config: config || {}
+      };
+      this.plugin(plugin);
+      this.preTask(function() {
+        return System.normalize(name, _this2.bootstrapperName).then(function(normalizedName) {
+          normalizedName = normalizedName.endsWith('.js') || normalizedName.endsWith('.ts') ? normalizedName.substring(0, normalizedName.length - 3) : normalizedName;
+          plugin.moduleId = normalizedName;
+          plugin.resourcesRelativeTo = normalizedName;
+          System.map[name] = normalizedName;
+        });
+      });
+      return this;
+    };
+    FrameworkConfiguration.prototype.defaultBindingLanguage = function defaultBindingLanguage() {
+      return this._addNormalizedPlugin('aurelia-templating-binding');
+    };
+    FrameworkConfiguration.prototype.router = function router() {
+      return this._addNormalizedPlugin('aurelia-templating-router');
+    };
+    FrameworkConfiguration.prototype.history = function history() {
+      return this._addNormalizedPlugin('aurelia-history-browser');
+    };
+    FrameworkConfiguration.prototype.defaultResources = function defaultResources() {
+      return this._addNormalizedPlugin('aurelia-templating-resources');
+    };
+    FrameworkConfiguration.prototype.eventAggregator = function eventAggregator() {
+      return this._addNormalizedPlugin('aurelia-event-aggregator');
+    };
+    FrameworkConfiguration.prototype.standardConfiguration = function standardConfiguration() {
+      return this.defaultBindingLanguage().defaultResources().history().router().eventAggregator();
+    };
+    FrameworkConfiguration.prototype.developmentLogging = function developmentLogging() {
+      var _this3 = this;
+      this.preTask(function() {
+        return System.normalize('aurelia-logging-console', _this3.bootstrapperName).then(function(name) {
+          return _this3.aurelia.loader.loadModule(name).then(function(m) {
+            _aureliaLogging.addAppender(new m.ConsoleAppender());
+            _aureliaLogging.setLevel(_aureliaLogging.logLevel.debug);
+          });
+        });
+      });
+      return this;
+    };
+    FrameworkConfiguration.prototype.apply = function apply() {
+      var _this4 = this;
+      if (this.processed) {
+        return Promise.resolve();
+      }
+      return runTasks(this, this.preTasks).then(function() {
+        var loader = _this4.aurelia.loader;
+        var info = _this4.info;
+        var current = undefined;
+        var next = function next() {
+          if (current = info.shift()) {
+            return loadPlugin(_this4, loader, current).then(next);
+          }
+          _this4.processed = true;
+          return Promise.resolve();
+        };
+        return next().then(function() {
+          return runTasks(_this4, _this4.postTasks);
+        });
+      });
+    };
+    return FrameworkConfiguration;
+  })();
+  exports.FrameworkConfiguration = FrameworkConfiguration;
+  if (!window.CustomEvent || typeof window.CustomEvent !== 'function') {
+    var _CustomEvent = function _CustomEvent(event, params) {
+      params = params || {
+        bubbles: false,
+        cancelable: false,
+        detail: undefined
+      };
+      var evt = document.createEvent('CustomEvent');
+      evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+      return evt;
+    };
+    _CustomEvent.prototype = window.Event.prototype;
+    window.CustomEvent = _CustomEvent;
+  }
+  function preventActionlessFormSubmit() {
+    document.body.addEventListener('submit', function(evt) {
+      var target = evt.target;
+      var action = target.action;
+      if (target.tagName.toLowerCase() === 'form' && !action) {
+        evt.preventDefault();
+      }
+    });
+  }
+  var Aurelia = (function() {
+    function Aurelia(loader, container, resources) {
+      _classCallCheck(this, Aurelia);
+      this.loader = loader || new window.AureliaLoader();
+      this.container = container || new _aureliaDependencyInjection.Container();
+      this.resources = resources || new _aureliaTemplating.ViewResources();
+      this.use = new FrameworkConfiguration(this);
+      this.logger = _aureliaLogging.getLogger('aurelia');
+      this.hostConfigured = false;
+      this.host = null;
+      this.use.instance(Aurelia, this);
+      this.use.instance(_aureliaLoader.Loader, this.loader);
+      this.use.instance(_aureliaTemplating.ViewResources, this.resources);
+      this.container.makeGlobal();
+    }
+    Aurelia.prototype.start = function start() {
+      var _this5 = this;
+      if (this.started) {
+        return Promise.resolve(this);
+      }
+      this.started = true;
+      this.logger.info('Aurelia Starting');
+      return this.use.apply().then(function() {
+        preventActionlessFormSubmit();
+        if (!_this5.container.hasHandler(_aureliaTemplating.BindingLanguage)) {
+          var message = 'You must configure Aurelia with a BindingLanguage implementation.';
+          _this5.logger.error(message);
+          throw new Error(message);
+        }
+        if (!_this5.container.hasHandler(_aureliaTemplating.Animator)) {
+          _aureliaTemplating.Animator.configureDefault(_this5.container);
+        }
+        _this5.logger.info('Aurelia Started');
+        var evt = new window.CustomEvent('aurelia-started', {
+          bubbles: true,
+          cancelable: true
+        });
+        document.dispatchEvent(evt);
+        return _this5;
+      });
+    };
+    Aurelia.prototype.enhance = function enhance() {
+      var _this6 = this;
+      var bindingContext = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+      var applicationHost = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
+      this._configureHost(applicationHost);
+      return new Promise(function(resolve) {
+        var viewEngine = _this6.container.get(_aureliaTemplating.ViewEngine);
+        _this6.root = viewEngine.enhance(_this6.container, _this6.host, _this6.resources, bindingContext);
+        _this6.root.attached();
+        _this6._onAureliaComposed();
+        return _this6;
+      });
+    };
+    Aurelia.prototype.setRoot = function setRoot() {
+      var _this7 = this;
+      var root = arguments.length <= 0 || arguments[0] === undefined ? 'app' : arguments[0];
+      var applicationHost = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
+      var compositionEngine = undefined;
+      var instruction = {};
+      this._configureHost(applicationHost);
+      compositionEngine = this.container.get(_aureliaTemplating.CompositionEngine);
+      instruction.viewModel = root;
+      instruction.container = instruction.childContainer = this.container;
+      instruction.viewSlot = this.hostSlot;
+      instruction.host = this.host;
+      return compositionEngine.compose(instruction).then(function(r) {
+        _this7.root = r;
+        instruction.viewSlot.attached();
+        _this7._onAureliaComposed();
+        return _this7;
+      });
+    };
+    Aurelia.prototype._configureHost = function _configureHost(applicationHost) {
+      if (this.hostConfigured) {
+        return;
+      }
+      applicationHost = applicationHost || this.host;
+      if (!applicationHost || typeof applicationHost === 'string') {
+        this.host = document.getElementById(applicationHost || 'applicationHost') || document.body;
+      } else {
+        this.host = applicationHost;
+      }
+      this.hostConfigured = true;
+      this.host.aurelia = this;
+      this.hostSlot = new _aureliaTemplating.ViewSlot(this.host, true);
+      this.hostSlot.transformChildNodesIntoView();
+      this.container.registerInstance(_aureliaTemplating.DOMBoundary, this.host);
+    };
+    Aurelia.prototype._onAureliaComposed = function _onAureliaComposed() {
+      var evt = new window.CustomEvent('aurelia-composed', {
+        bubbles: true,
+        cancelable: true
+      });
+      setTimeout(function() {
+        return document.dispatchEvent(evt);
+      }, 1);
+    };
+    return Aurelia;
+  })();
+  exports.Aurelia = Aurelia;
+  _defaults(exports, _interopExportWildcard(_aureliaDependencyInjection, _defaults));
+  _defaults(exports, _interopExportWildcard(_aureliaBinding, _defaults));
+  _defaults(exports, _interopExportWildcard(_aureliaMetadata, _defaults));
+  _defaults(exports, _interopExportWildcard(_aureliaTemplating, _defaults));
+  _defaults(exports, _interopExportWildcard(_aureliaLoader, _defaults));
+  _defaults(exports, _interopExportWildcard(_aureliaTaskQueue, _defaults));
+  _defaults(exports, _interopExportWildcard(_aureliaPath, _defaults));
+  var LogManager = _aureliaLogging;
+  exports.LogManager = LogManager;
+});
+
+_removeDefine();
+})();
