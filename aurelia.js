@@ -11424,7 +11424,7 @@ _removeDefine();
 })();
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/templating-router@0.16.1/router-view", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/templating@0.15.3", "github:aurelia/router@0.12.0", "github:aurelia/metadata@0.8.0"], function(exports, _aureliaDependencyInjection, _aureliaTemplating, _aureliaRouter, _aureliaMetadata) {
+define("github:aurelia/templating-router@0.16.1/route-loader", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/templating@0.15.3", "github:aurelia/router@0.12.0", "github:aurelia/path@0.9.0", "github:aurelia/metadata@0.8.0"], function(exports, _aureliaDependencyInjection, _aureliaTemplating, _aureliaRouter, _aureliaPath, _aureliaMetadata) {
   'use strict';
   exports.__esModule = true;
   function _classCallCheck(instance, Constructor) {
@@ -11432,62 +11432,51 @@ define("github:aurelia/templating-router@0.16.1/router-view", ["exports", "githu
       throw new TypeError('Cannot call a class as a function');
     }
   }
-  var RouterView = (function() {
-    function RouterView(element, container, viewSlot, router) {
-      _classCallCheck(this, _RouterView);
-      this.element = element;
-      this.container = container;
-      this.viewSlot = viewSlot;
-      this.router = router;
-      this.router.registerViewPort(this, this.element.getAttribute('name'));
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== 'function' && superClass !== null) {
+      throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass);
     }
-    RouterView.prototype.bind = function bind(bindingContext) {
-      this.container.viewModel = bindingContext;
-    };
-    RouterView.prototype.process = function process(viewPortInstruction, waitToSwap) {
-      var _this = this;
-      var component = viewPortInstruction.component;
-      var viewStrategy = component.view;
-      var childContainer = component.childContainer;
-      var viewModel = component.bindingContext;
-      var viewModelResource = component.viewModelResource;
-      var metadata = viewModelResource.metadata;
-      if (!viewStrategy && 'getViewStrategy' in viewModel) {
-        viewStrategy = viewModel.getViewStrategy();
-      }
-      if (viewStrategy) {
-        viewStrategy = _aureliaTemplating.ViewStrategy.normalize(viewStrategy);
-        viewStrategy.makeRelativeTo(_aureliaMetadata.Origin.get(component.router.container.viewModel.constructor).moduleId);
-      }
-      return metadata.load(childContainer, viewModelResource.value, viewStrategy, true).then(function(viewFactory) {
-        viewPortInstruction.behavior = metadata.create(childContainer, _aureliaTemplating.BehaviorInstruction.dynamic(_this.element, viewModel, viewFactory));
-        if (waitToSwap) {
-          return;
-        }
-        _this.swap(viewPortInstruction);
+    subClass.prototype = Object.create(superClass && superClass.prototype, {constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }});
+    if (superClass)
+      Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+  var TemplatingRouteLoader = (function(_RouteLoader) {
+    _inherits(TemplatingRouteLoader, _RouteLoader);
+    function TemplatingRouteLoader(compositionEngine) {
+      _classCallCheck(this, _TemplatingRouteLoader);
+      _RouteLoader.call(this);
+      this.compositionEngine = compositionEngine;
+    }
+    TemplatingRouteLoader.prototype.loadRoute = function loadRoute(router, config) {
+      var childContainer = router.container.createChild();
+      var instruction = {
+        viewModel: _aureliaPath.relativeToFile(config.moduleId, _aureliaMetadata.Origin.get(router.container.viewModel.constructor).moduleId),
+        childContainer: childContainer,
+        view: config.view || config.viewStrategy
+      };
+      childContainer.getChildRouter = function() {
+        var childRouter = undefined;
+        childContainer.registerHandler(_aureliaRouter.Router, function(c) {
+          return childRouter || (childRouter = router.createChild(childContainer));
+        });
+        return childContainer.get(_aureliaRouter.Router);
+      };
+      return this.compositionEngine.createViewModel(instruction).then(function(ins) {
+        ins.bindingContext = ins.viewModel;
+        ins.router = router;
+        return ins;
       });
     };
-    RouterView.prototype.swap = function swap(viewPortInstruction) {
-      var _this2 = this;
-      var removeResponse = this.viewSlot.removeAll(true);
-      if (removeResponse instanceof Promise) {
-        return removeResponse.then(function() {
-          viewPortInstruction.behavior.view.bind(viewPortInstruction.behavior.bindingContext);
-          _this2.viewSlot.add(viewPortInstruction.behavior.view);
-          _this2.view = viewPortInstruction.behavior.view;
-        });
-      }
-      viewPortInstruction.behavior.view.bind(viewPortInstruction.behavior.bindingContext);
-      this.viewSlot.add(viewPortInstruction.behavior.view);
-      this.view = viewPortInstruction.behavior.view;
-    };
-    var _RouterView = RouterView;
-    RouterView = _aureliaDependencyInjection.inject(Element, _aureliaDependencyInjection.Container, _aureliaTemplating.ViewSlot, _aureliaRouter.Router)(RouterView) || RouterView;
-    RouterView = _aureliaTemplating.noView(RouterView) || RouterView;
-    RouterView = _aureliaTemplating.customElement('router-view')(RouterView) || RouterView;
-    return RouterView;
-  })();
-  exports.RouterView = RouterView;
+    var _TemplatingRouteLoader = TemplatingRouteLoader;
+    TemplatingRouteLoader = _aureliaDependencyInjection.inject(_aureliaTemplating.CompositionEngine)(TemplatingRouteLoader) || TemplatingRouteLoader;
+    return TemplatingRouteLoader;
+  })(_aureliaRouter.RouteLoader);
+  exports.TemplatingRouteLoader = TemplatingRouteLoader;
 });
 
 _removeDefine();
@@ -19100,7 +19089,7 @@ _removeDefine();
 })();
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/templating-router@0.16.1/route-loader", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/templating@0.15.3", "github:aurelia/router@0.12.0", "github:aurelia/path@0.9.0", "github:aurelia/metadata@0.8.0"], function(exports, _aureliaDependencyInjection, _aureliaTemplating, _aureliaRouter, _aureliaPath, _aureliaMetadata) {
+define("github:aurelia/templating-router@0.16.1/router-view", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/templating@0.15.3", "github:aurelia/router@0.12.0", "github:aurelia/metadata@0.8.0"], function(exports, _aureliaDependencyInjection, _aureliaTemplating, _aureliaRouter, _aureliaMetadata) {
   'use strict';
   exports.__esModule = true;
   function _classCallCheck(instance, Constructor) {
@@ -19108,51 +19097,62 @@ define("github:aurelia/templating-router@0.16.1/route-loader", ["exports", "gith
       throw new TypeError('Cannot call a class as a function');
     }
   }
-  function _inherits(subClass, superClass) {
-    if (typeof superClass !== 'function' && superClass !== null) {
-      throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass);
+  var RouterView = (function() {
+    function RouterView(element, container, viewSlot, router) {
+      _classCallCheck(this, _RouterView);
+      this.element = element;
+      this.container = container;
+      this.viewSlot = viewSlot;
+      this.router = router;
+      this.router.registerViewPort(this, this.element.getAttribute('name'));
     }
-    subClass.prototype = Object.create(superClass && superClass.prototype, {constructor: {
-        value: subClass,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }});
-    if (superClass)
-      Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-  }
-  var TemplatingRouteLoader = (function(_RouteLoader) {
-    _inherits(TemplatingRouteLoader, _RouteLoader);
-    function TemplatingRouteLoader(compositionEngine) {
-      _classCallCheck(this, _TemplatingRouteLoader);
-      _RouteLoader.call(this);
-      this.compositionEngine = compositionEngine;
-    }
-    TemplatingRouteLoader.prototype.loadRoute = function loadRoute(router, config) {
-      var childContainer = router.container.createChild();
-      var instruction = {
-        viewModel: _aureliaPath.relativeToFile(config.moduleId, _aureliaMetadata.Origin.get(router.container.viewModel.constructor).moduleId),
-        childContainer: childContainer,
-        view: config.view || config.viewStrategy
-      };
-      childContainer.getChildRouter = function() {
-        var childRouter = undefined;
-        childContainer.registerHandler(_aureliaRouter.Router, function(c) {
-          return childRouter || (childRouter = router.createChild(childContainer));
-        });
-        return childContainer.get(_aureliaRouter.Router);
-      };
-      return this.compositionEngine.createViewModel(instruction).then(function(ins) {
-        ins.bindingContext = ins.viewModel;
-        ins.router = router;
-        return ins;
+    RouterView.prototype.bind = function bind(bindingContext) {
+      this.container.viewModel = bindingContext;
+    };
+    RouterView.prototype.process = function process(viewPortInstruction, waitToSwap) {
+      var _this = this;
+      var component = viewPortInstruction.component;
+      var viewStrategy = component.view;
+      var childContainer = component.childContainer;
+      var viewModel = component.bindingContext;
+      var viewModelResource = component.viewModelResource;
+      var metadata = viewModelResource.metadata;
+      if (!viewStrategy && 'getViewStrategy' in viewModel) {
+        viewStrategy = viewModel.getViewStrategy();
+      }
+      if (viewStrategy) {
+        viewStrategy = _aureliaTemplating.ViewStrategy.normalize(viewStrategy);
+        viewStrategy.makeRelativeTo(_aureliaMetadata.Origin.get(component.router.container.viewModel.constructor).moduleId);
+      }
+      return metadata.load(childContainer, viewModelResource.value, viewStrategy, true).then(function(viewFactory) {
+        viewPortInstruction.behavior = metadata.create(childContainer, _aureliaTemplating.BehaviorInstruction.dynamic(_this.element, viewModel, viewFactory));
+        if (waitToSwap) {
+          return;
+        }
+        _this.swap(viewPortInstruction);
       });
     };
-    var _TemplatingRouteLoader = TemplatingRouteLoader;
-    TemplatingRouteLoader = _aureliaDependencyInjection.inject(_aureliaTemplating.CompositionEngine)(TemplatingRouteLoader) || TemplatingRouteLoader;
-    return TemplatingRouteLoader;
-  })(_aureliaRouter.RouteLoader);
-  exports.TemplatingRouteLoader = TemplatingRouteLoader;
+    RouterView.prototype.swap = function swap(viewPortInstruction) {
+      var _this2 = this;
+      var removeResponse = this.viewSlot.removeAll(true);
+      if (removeResponse instanceof Promise) {
+        return removeResponse.then(function() {
+          viewPortInstruction.behavior.view.bind(viewPortInstruction.behavior.bindingContext);
+          _this2.viewSlot.add(viewPortInstruction.behavior.view);
+          _this2.view = viewPortInstruction.behavior.view;
+        });
+      }
+      viewPortInstruction.behavior.view.bind(viewPortInstruction.behavior.bindingContext);
+      this.viewSlot.add(viewPortInstruction.behavior.view);
+      this.view = viewPortInstruction.behavior.view;
+    };
+    var _RouterView = RouterView;
+    RouterView = _aureliaDependencyInjection.inject(Element, _aureliaDependencyInjection.Container, _aureliaTemplating.ViewSlot, _aureliaRouter.Router)(RouterView) || RouterView;
+    RouterView = _aureliaTemplating.noView(RouterView) || RouterView;
+    RouterView = _aureliaTemplating.customElement('router-view')(RouterView) || RouterView;
+    return RouterView;
+  })();
+  exports.RouterView = RouterView;
 });
 
 _removeDefine();
@@ -19217,172 +19217,110 @@ _removeDefine();
 })();
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/templating-resources@0.15.2/compose", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/task-queue@0.7.0", "github:aurelia/templating@0.15.3"], function(exports, _aureliaDependencyInjection, _aureliaTaskQueue, _aureliaTemplating) {
+define("github:aurelia/templating-resources@0.15.2/if", ["exports", "github:aurelia/templating@0.15.3", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/task-queue@0.7.0"], function(exports, _aureliaTemplating, _aureliaDependencyInjection, _aureliaTaskQueue) {
   'use strict';
   exports.__esModule = true;
-  var _createDecoratedClass = (function() {
-    function defineProperties(target, descriptors, initializers) {
-      for (var i = 0; i < descriptors.length; i++) {
-        var descriptor = descriptors[i];
-        var decorators = descriptor.decorators;
-        var key = descriptor.key;
-        delete descriptor.key;
-        delete descriptor.decorators;
-        descriptor.enumerable = descriptor.enumerable || false;
-        descriptor.configurable = true;
-        if ('value' in descriptor || descriptor.initializer)
-          descriptor.writable = true;
-        if (decorators) {
-          for (var f = 0; f < decorators.length; f++) {
-            var decorator = decorators[f];
-            if (typeof decorator === 'function') {
-              descriptor = decorator(target, key, descriptor) || descriptor;
-            } else {
-              throw new TypeError('The decorator for method ' + descriptor.key + ' is of the invalid type ' + typeof decorator);
-            }
-          }
-          if (descriptor.initializer !== undefined) {
-            initializers[key] = descriptor;
-            continue;
-          }
-        }
-        Object.defineProperty(target, key, descriptor);
-      }
-    }
-    return function(Constructor, protoProps, staticProps, protoInitializers, staticInitializers) {
-      if (protoProps)
-        defineProperties(Constructor.prototype, protoProps, protoInitializers);
-      if (staticProps)
-        defineProperties(Constructor, staticProps, staticInitializers);
-      return Constructor;
-    };
-  })();
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
       throw new TypeError('Cannot call a class as a function');
     }
   }
-  function _defineDecoratedPropertyDescriptor(target, key, descriptors) {
-    var _descriptor = descriptors[key];
-    if (!_descriptor)
-      return;
-    var descriptor = {};
-    for (var _key in _descriptor)
-      descriptor[_key] = _descriptor[_key];
-    descriptor.value = descriptor.initializer ? descriptor.initializer.call(target) : undefined;
-    Object.defineProperty(target, key, descriptor);
-  }
-  var Compose = (function() {
-    var _instanceInitializers = {};
-    _createDecoratedClass(Compose, [{
-      key: 'model',
-      decorators: [_aureliaTemplating.bindable],
-      initializer: null,
-      enumerable: true
-    }, {
-      key: 'view',
-      decorators: [_aureliaTemplating.bindable],
-      initializer: null,
-      enumerable: true
-    }, {
-      key: 'viewModel',
-      decorators: [_aureliaTemplating.bindable],
-      initializer: null,
-      enumerable: true
-    }], null, _instanceInitializers);
-    function Compose(element, container, compositionEngine, viewSlot, viewResources, taskQueue) {
-      _classCallCheck(this, _Compose);
-      _defineDecoratedPropertyDescriptor(this, 'model', _instanceInitializers);
-      _defineDecoratedPropertyDescriptor(this, 'view', _instanceInitializers);
-      _defineDecoratedPropertyDescriptor(this, 'viewModel', _instanceInitializers);
-      this.element = element;
-      this.container = container;
-      this.compositionEngine = compositionEngine;
+  var If = (function() {
+    function If(viewFactory, viewSlot, taskQueue) {
+      _classCallCheck(this, _If);
+      this.viewFactory = viewFactory;
       this.viewSlot = viewSlot;
-      this.viewResources = viewResources;
+      this.showing = false;
       this.taskQueue = taskQueue;
+      this.view = null;
+      this.$parent = null;
     }
-    Compose.prototype.bind = function bind(bindingContext) {
+    If.prototype.bind = function bind(bindingContext) {
       this.$parent = bindingContext;
-      processInstruction(this, createInstruction(this, {
-        view: this.view,
-        viewModel: this.viewModel,
-        model: this.model
-      }));
+      this.valueChanged(this.value);
     };
-    Compose.prototype.modelChanged = function modelChanged(newValue, oldValue) {
+    If.prototype.valueChanged = function valueChanged(newValue) {
       var _this = this;
-      if (this.currentInstruction) {
-        this.currentInstruction.model = newValue;
-        return;
-      }
-      this.taskQueue.queueMicroTask(function() {
-        if (_this.currentInstruction) {
-          _this.currentInstruction.model = newValue;
-          return;
+      if (!newValue) {
+        if (this.view !== null && this.showing) {
+          this.taskQueue.queueMicroTask(function() {
+            var viewOrPromise = _this.viewSlot.remove(_this.view);
+            if (viewOrPromise instanceof Promise) {
+              viewOrPromise.then(function() {
+                return _this.view.unbind();
+              });
+            } else {
+              _this.view.unbind();
+            }
+          });
         }
-        var vm = _this.currentViewModel;
-        if (vm && typeof vm.activate === 'function') {
-          vm.activate(newValue);
+        this.showing = false;
+        return;
+      }
+      if (this.view === null) {
+        this.view = this.viewFactory.create(this.$parent);
+      }
+      if (!this.showing) {
+        this.showing = true;
+        if (!this.view.isBound) {
+          this.view.bind();
         }
-      });
-    };
-    Compose.prototype.viewChanged = function viewChanged(newValue, oldValue) {
-      var _this2 = this;
-      var instruction = createInstruction(this, {
-        view: newValue,
-        viewModel: this.currentViewModel || this.viewModel,
-        model: this.model
-      });
-      if (this.currentInstruction) {
-        this.currentInstruction = instruction;
-        return;
+        this.viewSlot.add(this.view);
       }
-      this.currentInstruction = instruction;
-      this.taskQueue.queueMicroTask(function() {
-        return processInstruction(_this2, _this2.currentInstruction);
-      });
     };
-    Compose.prototype.viewModelChanged = function viewModelChanged(newValue, oldValue) {
-      var _this3 = this;
-      var instruction = createInstruction(this, {
-        viewModel: newValue,
-        view: this.view,
-        model: this.model
-      });
-      if (this.currentInstruction) {
-        this.currentInstruction = instruction;
-        return;
+    If.prototype.unbind = function unbind() {
+      if (this.view !== null && this.viewFactory.isCaching) {
+        if (this.showing) {
+          this.showing = false;
+          this.viewSlot.remove(this.view, true, true);
+        } else {
+          this.view.returnToCache();
+        }
+        this.view = null;
       }
-      this.currentInstruction = instruction;
-      this.taskQueue.queueMicroTask(function() {
-        return processInstruction(_this3, _this3.currentInstruction);
-      });
     };
-    var _Compose = Compose;
-    Compose = _aureliaDependencyInjection.inject(Element, _aureliaDependencyInjection.Container, _aureliaTemplating.CompositionEngine, _aureliaTemplating.ViewSlot, _aureliaTemplating.ViewResources, _aureliaTaskQueue.TaskQueue)(Compose) || Compose;
-    Compose = _aureliaTemplating.noView(Compose) || Compose;
-    Compose = _aureliaTemplating.customElement('compose')(Compose) || Compose;
-    return Compose;
+    var _If = If;
+    If = _aureliaDependencyInjection.inject(_aureliaTemplating.BoundViewFactory, _aureliaTemplating.ViewSlot, _aureliaTaskQueue.TaskQueue)(If) || If;
+    If = _aureliaTemplating.templateController(If) || If;
+    If = _aureliaTemplating.customAttribute('if')(If) || If;
+    return If;
   })();
-  exports.Compose = Compose;
-  function createInstruction(composer, instruction) {
-    return Object.assign(instruction, {
-      bindingContext: composer.$parent,
-      container: composer.container,
-      viewSlot: composer.viewSlot,
-      viewResources: composer.viewResources,
-      currentBehavior: composer.currentBehavior,
-      host: composer.element
-    });
+  exports.If = If;
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/with", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/templating@0.15.3"], function(exports, _aureliaDependencyInjection, _aureliaTemplating) {
+  'use strict';
+  exports.__esModule = true;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
   }
-  function processInstruction(composer, instruction) {
-    composer.currentInstruction = null;
-    composer.compositionEngine.compose(instruction).then(function(next) {
-      composer.currentBehavior = next;
-      composer.currentViewModel = next ? next.bindingContext : null;
-    });
-  }
+  var With = (function() {
+    function With(viewFactory, viewSlot) {
+      _classCallCheck(this, _With);
+      this.viewFactory = viewFactory;
+      this.viewSlot = viewSlot;
+    }
+    With.prototype.valueChanged = function valueChanged(newValue) {
+      if (!this.view) {
+        this.view = this.viewFactory.create(newValue);
+        this.viewSlot.add(this.view);
+      } else {
+        this.view.bind(newValue);
+      }
+    };
+    var _With = With;
+    With = _aureliaDependencyInjection.inject(_aureliaTemplating.BoundViewFactory, _aureliaTemplating.ViewSlot)(With) || With;
+    With = _aureliaTemplating.templateController(With) || With;
+    With = _aureliaTemplating.customAttribute('with')(With) || With;
+    return With;
+  })();
+  exports.With = With;
 });
 
 _removeDefine();
@@ -19824,116 +19762,6 @@ _removeDefine();
 })();
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/templating-resources@0.15.2/with", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/templating@0.15.3"], function(exports, _aureliaDependencyInjection, _aureliaTemplating) {
-  'use strict';
-  exports.__esModule = true;
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError('Cannot call a class as a function');
-    }
-  }
-  var With = (function() {
-    function With(viewFactory, viewSlot) {
-      _classCallCheck(this, _With);
-      this.viewFactory = viewFactory;
-      this.viewSlot = viewSlot;
-    }
-    With.prototype.valueChanged = function valueChanged(newValue) {
-      if (!this.view) {
-        this.view = this.viewFactory.create(newValue);
-        this.viewSlot.add(this.view);
-      } else {
-        this.view.bind(newValue);
-      }
-    };
-    var _With = With;
-    With = _aureliaDependencyInjection.inject(_aureliaTemplating.BoundViewFactory, _aureliaTemplating.ViewSlot)(With) || With;
-    With = _aureliaTemplating.templateController(With) || With;
-    With = _aureliaTemplating.customAttribute('with')(With) || With;
-    return With;
-  })();
-  exports.With = With;
-});
-
-_removeDefine();
-})();
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/templating-resources@0.15.2/if", ["exports", "github:aurelia/templating@0.15.3", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/task-queue@0.7.0"], function(exports, _aureliaTemplating, _aureliaDependencyInjection, _aureliaTaskQueue) {
-  'use strict';
-  exports.__esModule = true;
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError('Cannot call a class as a function');
-    }
-  }
-  var If = (function() {
-    function If(viewFactory, viewSlot, taskQueue) {
-      _classCallCheck(this, _If);
-      this.viewFactory = viewFactory;
-      this.viewSlot = viewSlot;
-      this.showing = false;
-      this.taskQueue = taskQueue;
-      this.view = null;
-      this.$parent = null;
-    }
-    If.prototype.bind = function bind(bindingContext) {
-      this.$parent = bindingContext;
-      this.valueChanged(this.value);
-    };
-    If.prototype.valueChanged = function valueChanged(newValue) {
-      var _this = this;
-      if (!newValue) {
-        if (this.view !== null && this.showing) {
-          this.taskQueue.queueMicroTask(function() {
-            var viewOrPromise = _this.viewSlot.remove(_this.view);
-            if (viewOrPromise instanceof Promise) {
-              viewOrPromise.then(function() {
-                return _this.view.unbind();
-              });
-            } else {
-              _this.view.unbind();
-            }
-          });
-        }
-        this.showing = false;
-        return;
-      }
-      if (this.view === null) {
-        this.view = this.viewFactory.create(this.$parent);
-      }
-      if (!this.showing) {
-        this.showing = true;
-        if (!this.view.isBound) {
-          this.view.bind();
-        }
-        this.viewSlot.add(this.view);
-      }
-    };
-    If.prototype.unbind = function unbind() {
-      if (this.view !== null && this.viewFactory.isCaching) {
-        if (this.showing) {
-          this.showing = false;
-          this.viewSlot.remove(this.view, true, true);
-        } else {
-          this.view.returnToCache();
-        }
-        this.view = null;
-      }
-    };
-    var _If = If;
-    If = _aureliaDependencyInjection.inject(_aureliaTemplating.BoundViewFactory, _aureliaTemplating.ViewSlot, _aureliaTaskQueue.TaskQueue)(If) || If;
-    If = _aureliaTemplating.templateController(If) || If;
-    If = _aureliaTemplating.customAttribute('if')(If) || If;
-    return If;
-  })();
-  exports.If = If;
-});
-
-_removeDefine();
-})();
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
 define("github:aurelia/templating-resources@0.15.2/show", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/templating@0.15.3"], function(exports, _aureliaDependencyInjection, _aureliaTemplating) {
   'use strict';
   exports.__esModule = true;
@@ -19974,6 +19802,178 @@ _removeDefine();
 })();
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/compose", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/task-queue@0.7.0", "github:aurelia/templating@0.15.3"], function(exports, _aureliaDependencyInjection, _aureliaTaskQueue, _aureliaTemplating) {
+  'use strict';
+  exports.__esModule = true;
+  var _createDecoratedClass = (function() {
+    function defineProperties(target, descriptors, initializers) {
+      for (var i = 0; i < descriptors.length; i++) {
+        var descriptor = descriptors[i];
+        var decorators = descriptor.decorators;
+        var key = descriptor.key;
+        delete descriptor.key;
+        delete descriptor.decorators;
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ('value' in descriptor || descriptor.initializer)
+          descriptor.writable = true;
+        if (decorators) {
+          for (var f = 0; f < decorators.length; f++) {
+            var decorator = decorators[f];
+            if (typeof decorator === 'function') {
+              descriptor = decorator(target, key, descriptor) || descriptor;
+            } else {
+              throw new TypeError('The decorator for method ' + descriptor.key + ' is of the invalid type ' + typeof decorator);
+            }
+          }
+          if (descriptor.initializer !== undefined) {
+            initializers[key] = descriptor;
+            continue;
+          }
+        }
+        Object.defineProperty(target, key, descriptor);
+      }
+    }
+    return function(Constructor, protoProps, staticProps, protoInitializers, staticInitializers) {
+      if (protoProps)
+        defineProperties(Constructor.prototype, protoProps, protoInitializers);
+      if (staticProps)
+        defineProperties(Constructor, staticProps, staticInitializers);
+      return Constructor;
+    };
+  })();
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  function _defineDecoratedPropertyDescriptor(target, key, descriptors) {
+    var _descriptor = descriptors[key];
+    if (!_descriptor)
+      return;
+    var descriptor = {};
+    for (var _key in _descriptor)
+      descriptor[_key] = _descriptor[_key];
+    descriptor.value = descriptor.initializer ? descriptor.initializer.call(target) : undefined;
+    Object.defineProperty(target, key, descriptor);
+  }
+  var Compose = (function() {
+    var _instanceInitializers = {};
+    _createDecoratedClass(Compose, [{
+      key: 'model',
+      decorators: [_aureliaTemplating.bindable],
+      initializer: null,
+      enumerable: true
+    }, {
+      key: 'view',
+      decorators: [_aureliaTemplating.bindable],
+      initializer: null,
+      enumerable: true
+    }, {
+      key: 'viewModel',
+      decorators: [_aureliaTemplating.bindable],
+      initializer: null,
+      enumerable: true
+    }], null, _instanceInitializers);
+    function Compose(element, container, compositionEngine, viewSlot, viewResources, taskQueue) {
+      _classCallCheck(this, _Compose);
+      _defineDecoratedPropertyDescriptor(this, 'model', _instanceInitializers);
+      _defineDecoratedPropertyDescriptor(this, 'view', _instanceInitializers);
+      _defineDecoratedPropertyDescriptor(this, 'viewModel', _instanceInitializers);
+      this.element = element;
+      this.container = container;
+      this.compositionEngine = compositionEngine;
+      this.viewSlot = viewSlot;
+      this.viewResources = viewResources;
+      this.taskQueue = taskQueue;
+    }
+    Compose.prototype.bind = function bind(bindingContext) {
+      this.$parent = bindingContext;
+      processInstruction(this, createInstruction(this, {
+        view: this.view,
+        viewModel: this.viewModel,
+        model: this.model
+      }));
+    };
+    Compose.prototype.modelChanged = function modelChanged(newValue, oldValue) {
+      var _this = this;
+      if (this.currentInstruction) {
+        this.currentInstruction.model = newValue;
+        return;
+      }
+      this.taskQueue.queueMicroTask(function() {
+        if (_this.currentInstruction) {
+          _this.currentInstruction.model = newValue;
+          return;
+        }
+        var vm = _this.currentViewModel;
+        if (vm && typeof vm.activate === 'function') {
+          vm.activate(newValue);
+        }
+      });
+    };
+    Compose.prototype.viewChanged = function viewChanged(newValue, oldValue) {
+      var _this2 = this;
+      var instruction = createInstruction(this, {
+        view: newValue,
+        viewModel: this.currentViewModel || this.viewModel,
+        model: this.model
+      });
+      if (this.currentInstruction) {
+        this.currentInstruction = instruction;
+        return;
+      }
+      this.currentInstruction = instruction;
+      this.taskQueue.queueMicroTask(function() {
+        return processInstruction(_this2, _this2.currentInstruction);
+      });
+    };
+    Compose.prototype.viewModelChanged = function viewModelChanged(newValue, oldValue) {
+      var _this3 = this;
+      var instruction = createInstruction(this, {
+        viewModel: newValue,
+        view: this.view,
+        model: this.model
+      });
+      if (this.currentInstruction) {
+        this.currentInstruction = instruction;
+        return;
+      }
+      this.currentInstruction = instruction;
+      this.taskQueue.queueMicroTask(function() {
+        return processInstruction(_this3, _this3.currentInstruction);
+      });
+    };
+    var _Compose = Compose;
+    Compose = _aureliaDependencyInjection.inject(Element, _aureliaDependencyInjection.Container, _aureliaTemplating.CompositionEngine, _aureliaTemplating.ViewSlot, _aureliaTemplating.ViewResources, _aureliaTaskQueue.TaskQueue)(Compose) || Compose;
+    Compose = _aureliaTemplating.noView(Compose) || Compose;
+    Compose = _aureliaTemplating.customElement('compose')(Compose) || Compose;
+    return Compose;
+  })();
+  exports.Compose = Compose;
+  function createInstruction(composer, instruction) {
+    return Object.assign(instruction, {
+      bindingContext: composer.$parent,
+      container: composer.container,
+      viewSlot: composer.viewSlot,
+      viewResources: composer.viewResources,
+      currentBehavior: composer.currentBehavior,
+      host: composer.element
+    });
+  }
+  function processInstruction(composer, instruction) {
+    composer.currentInstruction = null;
+    composer.compositionEngine.compose(instruction).then(function(next) {
+      composer.currentBehavior = next;
+      composer.currentViewModel = next ? next.bindingContext : null;
+    });
+  }
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
 define("github:aurelia/templating-resources@0.15.2/replaceable", ["exports", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/templating@0.15.3"], function(exports, _aureliaDependencyInjection, _aureliaTemplating) {
   'use strict';
   exports.__esModule = true;
@@ -19994,64 +19994,6 @@ define("github:aurelia/templating-resources@0.15.2/replaceable", ["exports", "gi
     return Replaceable;
   })();
   exports.Replaceable = Replaceable;
-});
-
-_removeDefine();
-})();
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/templating-resources@0.15.2/focus", ["exports", "github:aurelia/templating@0.15.3", "github:aurelia/binding@0.9.1", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/task-queue@0.7.0"], function(exports, _aureliaTemplating, _aureliaBinding, _aureliaDependencyInjection, _aureliaTaskQueue) {
-  'use strict';
-  exports.__esModule = true;
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError('Cannot call a class as a function');
-    }
-  }
-  var Focus = (function() {
-    function Focus(element, taskQueue) {
-      var _this = this;
-      _classCallCheck(this, _Focus);
-      this.element = element;
-      this.taskQueue = taskQueue;
-      this.focusListener = function(e) {
-        _this.value = true;
-      };
-      this.blurListener = function(e) {
-        if (document.activeElement !== _this.element) {
-          _this.value = false;
-        }
-      };
-    }
-    Focus.prototype.valueChanged = function valueChanged(newValue) {
-      if (newValue) {
-        this.giveFocus();
-      } else {
-        this.element.blur();
-      }
-    };
-    Focus.prototype.giveFocus = function giveFocus() {
-      var _this2 = this;
-      this.taskQueue.queueMicroTask(function() {
-        if (_this2.value) {
-          _this2.element.focus();
-        }
-      });
-    };
-    Focus.prototype.attached = function attached() {
-      this.element.addEventListener('focus', this.focusListener);
-      this.element.addEventListener('blur', this.blurListener);
-    };
-    Focus.prototype.detached = function detached() {
-      this.element.removeEventListener('focus', this.focusListener);
-      this.element.removeEventListener('blur', this.blurListener);
-    };
-    var _Focus = Focus;
-    Focus = _aureliaDependencyInjection.inject(Element, _aureliaTaskQueue.TaskQueue)(Focus) || Focus;
-    Focus = _aureliaTemplating.customAttribute('focus', _aureliaBinding.bindingMode.twoWay)(Focus) || Focus;
-    return Focus;
-  })();
-  exports.Focus = Focus;
 });
 
 _removeDefine();
@@ -20203,6 +20145,40 @@ _removeDefine();
 })();
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/dynamic-element", ["exports", "github:aurelia/templating@0.15.3"], function(exports, _aureliaTemplating) {
+  'use strict';
+  exports.__esModule = true;
+  exports._createDynamicElement = _createDynamicElement;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  function _createDynamicElement(name, viewUrl, bindableNames) {
+    var DynamicElement = (function() {
+      function DynamicElement() {
+        _classCallCheck(this, _DynamicElement);
+      }
+      DynamicElement.prototype.bind = function bind(bindingContext) {
+        this.$parent = bindingContext;
+      };
+      var _DynamicElement = DynamicElement;
+      DynamicElement = _aureliaTemplating.useView(viewUrl)(DynamicElement) || DynamicElement;
+      DynamicElement = _aureliaTemplating.customElement(name)(DynamicElement) || DynamicElement;
+      return DynamicElement;
+    })();
+    for (var i = 0,
+        ii = bindableNames.length; i < ii; ++i) {
+      _aureliaTemplating.bindable(bindableNames[i])(DynamicElement);
+    }
+    return DynamicElement;
+  }
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
 define("github:aurelia/templating-resources@0.15.2/view-spy", ["exports", "github:aurelia/templating@0.15.3", "github:aurelia/logging@0.7.0"], function(exports, _aureliaTemplating, _aureliaLogging) {
   'use strict';
   exports.__esModule = true;
@@ -20244,40 +20220,6 @@ define("github:aurelia/templating-resources@0.15.2/view-spy", ["exports", "githu
     return ViewSpy;
   })();
   exports.ViewSpy = ViewSpy;
-});
-
-_removeDefine();
-})();
-(function() {
-var _removeDefine = System.get("@@amd-helpers").createDefine();
-define("github:aurelia/templating-resources@0.15.2/dynamic-element", ["exports", "github:aurelia/templating@0.15.3"], function(exports, _aureliaTemplating) {
-  'use strict';
-  exports.__esModule = true;
-  exports._createDynamicElement = _createDynamicElement;
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError('Cannot call a class as a function');
-    }
-  }
-  function _createDynamicElement(name, viewUrl, bindableNames) {
-    var DynamicElement = (function() {
-      function DynamicElement() {
-        _classCallCheck(this, _DynamicElement);
-      }
-      DynamicElement.prototype.bind = function bind(bindingContext) {
-        this.$parent = bindingContext;
-      };
-      var _DynamicElement = DynamicElement;
-      DynamicElement = _aureliaTemplating.useView(viewUrl)(DynamicElement) || DynamicElement;
-      DynamicElement = _aureliaTemplating.customElement(name)(DynamicElement) || DynamicElement;
-      return DynamicElement;
-    })();
-    for (var i = 0,
-        ii = bindableNames.length; i < ii; ++i) {
-      _aureliaTemplating.bindable(bindableNames[i])(DynamicElement);
-    }
-    return DynamicElement;
-  }
 });
 
 _removeDefine();
@@ -20374,6 +20316,64 @@ define("github:aurelia/templating-resources@0.15.2/css-resource", ["exports", "g
     })(CSSViewEngineHooks);
     return ViewCSS;
   }
+});
+
+_removeDefine();
+})();
+(function() {
+var _removeDefine = System.get("@@amd-helpers").createDefine();
+define("github:aurelia/templating-resources@0.15.2/focus", ["exports", "github:aurelia/templating@0.15.3", "github:aurelia/binding@0.9.1", "github:aurelia/dependency-injection@0.10.1", "github:aurelia/task-queue@0.7.0"], function(exports, _aureliaTemplating, _aureliaBinding, _aureliaDependencyInjection, _aureliaTaskQueue) {
+  'use strict';
+  exports.__esModule = true;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+  var Focus = (function() {
+    function Focus(element, taskQueue) {
+      var _this = this;
+      _classCallCheck(this, _Focus);
+      this.element = element;
+      this.taskQueue = taskQueue;
+      this.focusListener = function(e) {
+        _this.value = true;
+      };
+      this.blurListener = function(e) {
+        if (document.activeElement !== _this.element) {
+          _this.value = false;
+        }
+      };
+    }
+    Focus.prototype.valueChanged = function valueChanged(newValue) {
+      if (newValue) {
+        this.giveFocus();
+      } else {
+        this.element.blur();
+      }
+    };
+    Focus.prototype.giveFocus = function giveFocus() {
+      var _this2 = this;
+      this.taskQueue.queueMicroTask(function() {
+        if (_this2.value) {
+          _this2.element.focus();
+        }
+      });
+    };
+    Focus.prototype.attached = function attached() {
+      this.element.addEventListener('focus', this.focusListener);
+      this.element.addEventListener('blur', this.blurListener);
+    };
+    Focus.prototype.detached = function detached() {
+      this.element.removeEventListener('focus', this.focusListener);
+      this.element.removeEventListener('blur', this.blurListener);
+    };
+    var _Focus = Focus;
+    Focus = _aureliaDependencyInjection.inject(Element, _aureliaTaskQueue.TaskQueue)(Focus) || Focus;
+    Focus = _aureliaTemplating.customAttribute('focus', _aureliaBinding.bindingMode.twoWay)(Focus) || Focus;
+    return Focus;
+  })();
+  exports.Focus = Focus;
 });
 
 _removeDefine();
@@ -20855,6 +20855,28 @@ define("github:aurelia/templating-binding@0.15.0/aurelia-templating-binding", ["
 
 _removeDefine();
 })();
+System.registerDynamic("github:systemjs/plugin-text@0.0.2", ["github:systemjs/plugin-text@0.0.2/text"], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  module.exports = require("github:systemjs/plugin-text@0.0.2/text");
+  global.define = __define;
+  return module.exports;
+});
+
+System.registerDynamic("github:systemjs/plugin-text@0.0.2/text", [], true, function(require, exports, module) {
+  ;
+  var global = this,
+      __define = global.define;
+  global.define = undefined;
+  exports.translate = function(load) {
+    return 'module.exports = "' + load.source.replace(/(["\\])/g, '\\$1').replace(/[\f]/g, "\\f").replace(/[\b]/g, "\\b").replace(/[\n]/g, "\\n").replace(/[\t]/g, "\\t").replace(/[\r]/g, "\\r").replace(/[\u2028]/g, "\\u2028").replace(/[\u2029]/g, "\\u2029") + '";';
+  };
+  global.define = __define;
+  return module.exports;
+});
+
 (function() {
 var _removeDefine = System.get("@@amd-helpers").createDefine();
 define("github:aurelia/animator-css@0.16.0", ["github:aurelia/animator-css@0.16.0/aurelia-animator-css"], function(main) {
