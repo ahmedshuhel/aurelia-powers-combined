@@ -1,0 +1,31 @@
+{
+  "jspm": {
+    "directories": {},
+    "dependencies": {
+      "aurelia-animator-css": "github:aurelia/animator-css@^0.16.0",
+      "aurelia-bootstrapper": "github:aurelia/bootstrapper@^0.17.0",
+      "aurelia-fetch-client": "github:aurelia/fetch-client@^0.2.0",
+      "aurelia-router": "github:aurelia/router@^0.12.0"
+    },
+    "devDependencies": {
+      "babel": "npm:babel-core@^5.8.22",
+      "babel-runtime": "npm:babel-runtime@^5.8.20",
+      "core-js": "npm:core-js@^1.1.0"
+    }
+  },
+  "name": "aurelia-powers-combined",
+  "version": "1.0.0",
+  "description": "The combinded powers of captain aurelia planet",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "gulp": "^3.9.0"
+  },
+  "dependencies": {
+    "aurelia-bundler": "^0.1.7"
+  }
+}
