@@ -11,6 +11,7 @@ var config = {
         'aurelia-fetch-client',
         'aurelia-router',
         'aurelia-animator-css',
+        'aurelia-html-template-element',
         'text',
         'core-js',
         'github:aurelia/templating-binding',

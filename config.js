@@ -18,6 +18,7 @@ System.config({
     "aurelia-animator-css": "github:aurelia/animator-css@0.16.0",
     "aurelia-bootstrapper": "github:aurelia/bootstrapper@0.17.0",
     "aurelia-fetch-client": "github:aurelia/fetch-client@0.2.0",
+    "aurelia-html-template-element": "github:aurelia/html-template-element@0.3.0",
     "aurelia-router": "github:aurelia/router@0.12.0",
     "babel": "npm:babel-core@5.8.24",
     "babel-runtime": "npm:babel-runtime@5.8.24",
